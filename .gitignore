@@ -35,7 +35,7 @@ gradle-app.setting
 # Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
 !gradle-wrapper.jar
 
-# Avoid ignore Gradle wrappper properties
+# Avoid ignore Gradle wrapper properties
 !gradle-wrapper.properties
 
 # Cache of project
@@ -50,9 +50,9 @@ gradle-app.setting
 # IntelliJ IDEA
 .idea/
 
-# ignore target
-hiagent-api/target/
-hiagent-components/target/
-hiagent-eva/target/
-hiagent-observe/target/
+# Maven build output
+target/
+**/target/
 
+.vscode/
+.env

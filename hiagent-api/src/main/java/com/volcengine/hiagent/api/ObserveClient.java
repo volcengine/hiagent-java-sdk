@@ -83,4 +83,48 @@ public class ObserveClient {
                 CreateApiTokenResponse.class);
         return apiResponse.getData();
     }
+
+    /**
+     * Create API Token
+     *
+     * @param body CreateApiTokenRequest (required)
+     * @return CreateApiTokenResponse
+     * @throws ApiException If fail to call the API, e.g. server error or cannot
+     *                      deserialize the response body
+     */
+    public ListTraceSpansResponse listTraceSpans(ListTraceSpansRequest body) throws ApiException {
+        Object localVarPostBody = body;
+
+        // create path and map variables
+        String localVarPath = "/ListTraceSpans/2025-05-01/observe/post/application_json/";
+
+        List<Pair> localVarQueryParams = new ArrayList<Pair>();
+        List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
+
+        Map<String, String> localVarHeaderParams = new HashMap<String, String>();
+
+        Map<String, Object> localVarFormParams = new HashMap<String, Object>();
+
+        final String[] localVarAccepts = {
+                "application/json"
+        };
+        final String localVarAccept = apiClient.selectHeaderAccept(localVarAccepts);
+        if (localVarAccept != null)
+            localVarHeaderParams.put("Accept", localVarAccept);
+
+        final String[] localVarContentTypes = {
+                "application/json"
+        };
+        final String localVarContentType = apiClient.selectHeaderContentType(localVarContentTypes);
+        localVarHeaderParams.put("Content-Type", localVarContentType);
+
+        String[] localVarAuthNames = new String[] { "volcengineSign" };
+        com.squareup.okhttp.Call call = apiClient.buildCall(localVarPath, "POST", localVarQueryParams,
+                localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarFormParams,
+                localVarAuthNames, null);
+
+        ApiResponse<ListTraceSpansResponse> apiResponse = apiClient.execute(call,
+                ListTraceSpansResponse.class);
+        return apiResponse.getData();
+    }
 }

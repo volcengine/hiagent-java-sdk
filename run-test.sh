@@ -67,24 +67,44 @@ echo "  WORKSPACE_ID: $WORKSPACE_ID"
 echo "  CUSTOM_APP_ID: $CUSTOM_APP_ID"
 echo
 
-# 进入正确的目录
-echo "进入 hiagent-api 目录..."
-cd hiagent-api || {
-    echo "❌ 无法进入 hiagent-api 目录"
-    echo "请确保在项目根目录运行此脚本"
-    exit 1
-}
-
-echo "正在编译项目..."
-mvn clean compile -q
-
-if [ $? -ne 0 ]; then
-    echo "❌ 编译失败"
+# 根据类名确定模块
+MODULE_DIR=""
+if [[ $TEST_CLASS == com.volcengine.hiagent.api.* ]]; then
+    MODULE_DIR="hiagent-api"
+elif [[ $TEST_CLASS == com.volcengine.hiagent.observe.* ]]; then
+    MODULE_DIR="hiagent-observe"
+elif [[ $TEST_CLASS == com.volcengine.hiagent.components.* ]]; then
+    MODULE_DIR="hiagent-components"
+elif [[ $TEST_CLASS == com.volcengine.hiagent.eva.* ]]; then
+    MODULE_DIR="hiagent-eva"
+else
+    echo "❌ 无法确定模块，类名: $TEST_CLASS"
+    echo "支持的包前缀："
+    echo "  - com.volcengine.hiagent.api.*"
+    echo "  - com.volcengine.hiagent.observe.*"
+    echo "  - com.volcengine.hiagent.components.*"
+    echo "  - com.volcengine.hiagent.eva.*"
     exit 1
 fi
 
-echo "✓ 编译成功"
+# 进入正确的目录
+echo "正在安装整个项目到本地仓库..."
+mvn clean install -q -DskipTests
+
+if [ $? -ne 0 ]; then
+    echo "❌ 安装失败"
+    exit 1
+fi
+
+echo "✓ 安装成功"
 echo
+
+echo "进入 $MODULE_DIR 目录..."
+cd "$MODULE_DIR" || {
+    echo "❌ 无法进入 $MODULE_DIR 目录"
+    echo "请确保在项目根目录运行此脚本"
+    exit 1
+}
 
 echo "正在运行 $TEST_CLASS..."
 echo "=================================="

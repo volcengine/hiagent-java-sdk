@@ -19,7 +19,7 @@ import com.volcengine.hiagent.api.ObserveClient;
 import com.volcengine.hiagent.api.model.*;
 import com.volcengine.sign.Credentials;
 
-public class TestCreateApiToken {
+public class TestListTraceSpans {
   public static void main(String[] args) {
     String ak = System.getenv("VOLC_ACCESSKEY");
     String sk = System.getenv("VOLC_SECRETKEY");
@@ -27,21 +27,18 @@ public class TestCreateApiToken {
     String endpoint = System.getenv("HIAGENT_TOP_ENDPOINT");
 
     String workspaceID = System.getenv("WORKSPACE_ID");
-    String customAppID = System.getenv("CUSTOM_APP_ID");
 
     ApiClient apiClient = new ApiClient()
         .setCredentials(Credentials.getCredentials(ak, sk))
         .setRegion(region).setEndpoint(endpoint).setDisableSSL(true);
 
     ObserveClient api = new ObserveClient(apiClient);
-    CreateApiTokenRequest createApiTokenReq = new CreateApiTokenRequest();
+    ListTraceSpansRequest createApiTokenReq = new ListTraceSpansRequest();
     createApiTokenReq.setWorkspaceID(workspaceID);
-    createApiTokenReq.setCustomAppID(customAppID);
 
     try {
-      CreateApiTokenResponse response = api.createApiToken(createApiTokenReq);
-      System.out.println(response.getToken());
-      System.out.println(response.getExpiresIn());
+      ListTraceSpansResponse response = api.listTraceSpans(createApiTokenReq);
+      System.out.println(response);
     } catch (ApiException e) {
       System.err.println("API调用发生异常:");
       System.err.println("错误码: " + e.getCode());

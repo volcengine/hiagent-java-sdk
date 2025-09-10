@@ -15,16 +15,25 @@ package com.volcengine.hiagent.eva;
 
 import com.volcengine.hiagent.api.EvaClient;
 import com.volcengine.hiagent.api.model.eva.*;
+import com.volcengine.hiagent.api.model.eva.base.Cell;
+import com.volcengine.hiagent.api.model.eva.base.EvaTaskItem;
+import com.volcengine.hiagent.api.model.eva.base.EvaTaskResultUpdateTargetContent;
 import com.volcengine.hiagent.api.model.eva.base.ModelAgentConfig;
 import org.jetbrains.annotations.Nullable;
 
-import javax.validation.constraints.Null;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+import static java.lang.Thread.sleep;
 
 public class EvaService {
     public interface Interface {
         public CreateEvaTaskResponse CreateEvaTask(CreateEvaTaskRequest req) throws Error;
 
         public ExecEvaTaskRowGroupResponse ExecEvaTaskRowGroup(ExecEvaTaskRowGroupRequest req) throws Error;
+
+        public EvaTaskItem GetEvaTask(GetEvaTaskRequest req) throws Error;
 
         public GetEvaTaskReportResponse GetEvaTaskReport(GetEvaTaskReportRequest req) throws Error;
 
@@ -46,6 +55,11 @@ public class EvaService {
         }
 
         @Override
+        public EvaTaskItem GetEvaTask(GetEvaTaskRequest req) throws Error {
+            return null;
+        }
+
+        @Override
         public GetEvaTaskReportResponse GetEvaTaskReport(GetEvaTaskReportRequest req) throws Error {
             return null;
         }
@@ -60,7 +74,8 @@ public class EvaService {
             return null;
         }
     }
-    public CreateEvaTaskResponse createTask(
+
+    private CreateEvaTaskResponse createTask(
             Client client,
             String workspaceID,
             String datasetID,
@@ -73,18 +88,37 @@ public class EvaService {
     ){
         return new CreateEvaTaskResponse();
     }
-    public GetEvaTaskReportResponse run(String workspaceID, String datasetID, String datasetVersionID, String taskName, String rulesetID, long maxConversations, ModelAgentConfig targetConfig, InferenceFunction inferenceFunction) throws Error {
+
+    private CreateEvaTaskResponse convert_to_case_data_list(
+            Client client,
+            String workspaceID,
+            String datasetID,
+            String datasetVersionID,
+            String taskName,
+            String rulesetID,
+            @Nullable String description,
+            @Nullable ModelAgentConfig modelAgentConfig,
+            boolean runImmediately
+    ) {
+        return new CreateEvaTaskResponse();
+    }
+
+    public GetEvaTaskReportResponse run(String workspaceID, String targetID, String datasetID, String datasetVersionID, String taskName, String rulesetID, long maxConversations, ModelAgentConfig targetConfig, InferenceFunction inferenceFunction) throws Error {
         System.out.println("EVA service running...");
         try {
             var client = new Client();
             // 1. Create evaluation task
             System.out.printf("Creating evaluation task: %s\n", taskName);
-            var createTaskResp = createTask(client, workspaceID,datasetID,datasetVersionID,taskName,rulesetID,null, targetConfig, true);
-            System.out.printf("Task created successfully: %s\n",createTaskResp.getTaskID());
+            var taskID = createTask(client, workspaceID, datasetID, datasetVersionID, taskName, rulesetID, null, targetConfig, true).getTaskID();
+            System.out.printf("Task created successfully: %s\n", taskID);
             // 2. Get dataset column information
             System.out.println("Fetching dataset columns...");
-            var listColumnsResponse = client.ListEvaDatasetColumns(new ListEvaDatasetColumnsRequest(workspaceID,datasetID,datasetVersionID,false));
-            System.out.printf("Fetched %d columns",listColumnsResponse.getColumns().size());
+            var columns = client.ListEvaDatasetColumns(new ListEvaDatasetColumnsRequest(workspaceID, datasetID, datasetVersionID, false)).getColumns();
+            System.out.printf("Fetched %d columns", columns.size());
+            var columnID2Name = new HashMap<String, String>();
+            columns.forEach(column -> {
+                columnID2Name.put(column.getID(), column.getName());
+            });
             // 3. Get dataset conversations
             System.out.println("Fetching dataset conversations...");
             var listCases = client.ListEvaDatasetConversations(new ListEvaDatasetConversationsRequest(
@@ -101,12 +135,59 @@ public class EvaService {
             System.out.printf("Fetched %d cases",listCases.getItems().size());
             // 4. Execute inference and submit results
             System.out.println("Running inference and submitting results...");
-            listCases.getItems().forEach(listCasesItem -> {
-
+            listCases.getItems().forEach(caseItem -> {
+                var caseData = new ArrayList<Map<String, Cell>>();
+                assert caseItem.getRepeatedData() != null;
+                caseItem.getRepeatedData().forEach(repeatedDataItem -> {
+                    var rowData = new HashMap<String, Cell>();
+                    repeatedDataItem.keySet().forEach(key -> {
+                        rowData.put(columnID2Name.get(key), repeatedDataItem.get(key));
+                    });
+                    caseData.add(rowData);
+                });
+                client.ExecEvaTaskRowGroup(new ExecEvaTaskRowGroupRequest(
+                        workspaceID,
+                        taskID,
+                        caseItem.getDatasetCaseID(),
+                        new ArrayList<EvaTaskResultUpdateTargetContent>() {{
+                            add(new EvaTaskResultUpdateTargetContent(
+                                    "CustomAPP",
+                                    targetID,
+                                    inferenceFunction.execute(caseData)
+                            ));
+                        }}
+                ));
+                System.out.printf("Results submitted for row [%s]\n", caseItem.getDatasetCaseID());
             });
             // 5. Wait for processing to complete
+            System.out.println("Waiting for evaluation to complete...");
+            var terminalEvaTaskStatus = new ArrayList<String>() {{
+                add("Succeed");
+                add("PartialSucceed");
+                add("Failed");
+                add("Cancelled");
+                add("Paused");
+            }};
+            var retryCount = 0;
+            do {
+                sleep(1000);
+                retryCount++;
+                if (retryCount > 100) {
+                    break;
+                }
+            } while (!terminalEvaTaskStatus.contains(client.GetEvaTask(new GetEvaTaskRequest(
+                    workspaceID,
+                    taskID,
+                    null
+            )).getStatus()));
             // 6. Get evaluation report
-            return new GetEvaTaskReportResponse();
+            var getReportResp = client.GetEvaTaskReport(new GetEvaTaskReportRequest(
+                    workspaceID,
+                    taskID
+            ));
+            assert getReportResp.getRules() != null;
+            System.out.printf("Evaluation completed with status: [%s]\n", getReportResp.getRules().isEmpty() ? "Running" : "Completed");
+            return getReportResp;
         } catch (Exception e) {
             throw new Error(e);
         }

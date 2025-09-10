@@ -8,5 +8,5 @@ import java.util.Map;
 
 @FunctionalInterface
 public interface InferenceFunction {
-    EvaTaskResultTargetContentPair execute(List<Map<String, Cell>> Case) throws Error;
+    List<EvaTaskResultTargetContentPair> execute(List<Map<String, Cell>> Case) throws Error;
 }

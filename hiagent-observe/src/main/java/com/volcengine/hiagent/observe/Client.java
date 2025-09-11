@@ -40,6 +40,7 @@ public class Client {
     private AuthSession authSession;
     private OpenTelemetrySdk openTelemetry;
     private SdkTracerProvider tracerProvider;
+    private volatile boolean shutdown = false;
 
     public Client(String traceEndpoint, String topEndpoint, String ak, String sk, String workspaceId, String appId) {
         this.traceEndpoint = traceEndpoint;
@@ -111,12 +112,30 @@ public class Client {
     }
 
     public void shutdown() {
-        if (tracerProvider != null) {
-            tracerProvider.close();
+        if (shutdown) {
+            logger.warning("Calling shutdown() multiple times.");
+            return;
         }
-        if (openTelemetry != null) {
-            openTelemetry.close();
+
+        shutdown = true;
+        logger.info("Shutting down OpenTelemetry client...");
+
+        try {
+            if (tracerProvider != null) {
+                tracerProvider.close();
+            }
+            if (openTelemetry != null) {
+                openTelemetry.close();
+            }
+
+            // 重置全局 OpenTelemetry 实例以避免重复关闭
+            GlobalOpenTelemetry.resetForTest();
+
+        } catch (Exception e) {
+            logger.warning("Error during shutdown: " + e.getMessage());
         }
+
+        logger.info("OpenTelemetry client shutdown completed.");
     }
 
     public AuthSession getAuthSession() {

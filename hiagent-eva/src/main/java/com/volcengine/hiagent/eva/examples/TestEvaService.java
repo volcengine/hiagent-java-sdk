@@ -41,7 +41,7 @@ public class TestEvaService {
             String datasetVersionID = System.getenv("DATASET_VERSION_ID");
             String rulesetID = System.getenv("RULESET_ID");
             String taskName = System.getenv("TASK_NAME");
-            long maxConversations = Long.parseLong(System.getenv("MAX_CONVERSATIONS"));
+            int maxConversations = Integer.parseInt(System.getenv("MAX_CONVERSATIONS"));
 
             // 验证必要的环境变量
             validateEnvVars(ak, sk, workspaceID, appID, datasetID, rulesetID);

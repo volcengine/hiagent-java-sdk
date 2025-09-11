@@ -34,7 +34,7 @@ public class TestListEvaDatasetColumns {
         // 列出数据集列所需的参数
         String workspaceID = System.getenv("WORKSPACE_ID");
         String datasetID = System.getenv("DATASET_ID");
-        String versionID = System.getenv("VERSION_ID");
+        String versionID = System.getenv("DATASET_VERSION_ID");
         // 设置是否使用最新发布的版本
         boolean useLatestPublishedVersion = false;
 

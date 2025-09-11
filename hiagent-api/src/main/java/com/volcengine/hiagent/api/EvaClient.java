@@ -67,7 +67,7 @@ public class EvaClient {
                 localVarAuthNames, null);
 
         ApiResponse<CreateEvaTaskResponse> apiResponse = apiClient.execute(call,
-                CreateApiTokenResponse.class);
+                CreateEvaTaskResponse.class);
         return apiResponse.getData();
     }
 

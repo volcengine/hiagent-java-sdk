@@ -56,6 +56,7 @@ public class EvaService {
             String rulesetID,
             @Nullable String description,
             @Nullable ModelAgentConfig modelAgentConfig,
+            int maxConversations,
             boolean runImmediately
     ){
         try {
@@ -68,6 +69,11 @@ public class EvaService {
             request.setRulesetID(rulesetID);
             request.setDescription(description);
             request.setRunImmediately(runImmediately);
+            request.setDatasetConfig(new DatasetTaskConfig(
+                    0,
+                    maxConversations,
+                    false
+            ));
 
             // 创建目标列表
             ArrayList<EvaTaskTarget> targets = new ArrayList<>();
@@ -106,12 +112,12 @@ public class EvaService {
         }
     }
 
-    public GetEvaTaskReportResponse run(String datasetID, String datasetVersionID, String taskName, String rulesetID, long maxConversations, ModelAgentConfig targetConfig, InferenceFunction inferenceFunction) throws ApiException {
+    public GetEvaTaskReportResponse run(String datasetID, String datasetVersionID, String taskName, String rulesetID, int maxConversations, ModelAgentConfig targetConfig, InferenceFunction inferenceFunction) throws ApiException {
         System.out.println("EVA service running...");
         try {
             // 1. Create evaluation task
             System.out.printf("Creating evaluation task: %s\n", taskName);
-            var taskID = createTask(this.evaClient, this.workspaceID, datasetID, datasetVersionID, taskName, rulesetID, null, targetConfig, true).getTaskID();
+            var taskID = createTask(this.evaClient, this.workspaceID, datasetID, datasetVersionID, taskName, rulesetID, null, targetConfig, maxConversations, true).getTaskID();
             System.out.printf("Task created successfully: %s\n", taskID);
             // 2. Get dataset column information
             System.out.println("Fetching dataset columns...");

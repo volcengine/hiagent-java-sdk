@@ -215,7 +215,7 @@ public class EvaClient {
         Object localVarPostBody = req;
 
         // create path and map variables
-        String localVarPath = "/ListEvaDatasetColumns/2025-02-01/eva/post/application_json/";
+        String localVarPath = "/ListColumns/2025-02-01/eva/post/application_json/";
 
         List<Pair> localVarQueryParams = new ArrayList<Pair>();
         List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
@@ -259,7 +259,7 @@ public class EvaClient {
         Object localVarPostBody = req;
 
         // create path and map variables
-        String localVarPath = "/ListEvaDatasetConversations/2025-02-01/eva/post/application_json/";
+        String localVarPath = "/ListDatasetCases/2025-02-01/eva/post/application_json/";
 
         List<Pair> localVarQueryParams = new ArrayList<Pair>();
         List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();

@@ -36,7 +36,7 @@ public class TestListEvaDatasetColumns {
         String datasetID = System.getenv("DATASET_ID");
         String versionID = System.getenv("VERSION_ID");
         // 设置是否使用最新发布的版本
-        boolean useLatestPublishedVersion = Boolean.parseBoolean(System.getenv("USE_LATEST_VERSION"));
+        boolean useLatestPublishedVersion = false;
 
         // 创建API客户端
         ApiClient apiClient = new ApiClient()
@@ -71,16 +71,15 @@ public class TestListEvaDatasetColumns {
             if (columns != null && !columns.isEmpty()) {
                 System.out.println("\n列详细信息:");
                 System.out.println("--------------------------------------------------");
-                System.out.printf("%-15s %-20s %-40s %-10s\n", "列ID", "列名称", "描述", "数据结构");
+                System.out.printf("%-15s %-20s %-40s\n", "列ID", "列名称", "描述");
                 System.out.println("--------------------------------------------------");
 
                 for (EvaDatasetColumn column : columns) {
                     String description = column.getDescription() != null ? column.getDescription() : "无";
-                    System.out.printf("%-15s %-20s %-40s %-10s\n",
+                    System.out.printf("%-15s %-20s %-40s\n",
                             column.getID(),
                             column.getName(),
-                            truncate(description, 38),
-                            column.getSchema());
+                            truncate(description, 38));
                 }
 
                 System.out.println("--------------------------------------------------");

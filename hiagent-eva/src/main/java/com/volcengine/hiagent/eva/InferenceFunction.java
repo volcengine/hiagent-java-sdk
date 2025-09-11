@@ -1,7 +1,7 @@
 package com.volcengine.hiagent.eva;
 
-import com.volcengine.hiagent.api.model.eva.base.Cell;
-import com.volcengine.hiagent.api.model.eva.base.EvaTaskResultTargetContentPair;
+import com.volcengine.hiagent.api.model.base.Cell;
+import com.volcengine.hiagent.api.model.base.EvaTaskResultTargetContentPair;
 
 import java.util.List;
 import java.util.Map;

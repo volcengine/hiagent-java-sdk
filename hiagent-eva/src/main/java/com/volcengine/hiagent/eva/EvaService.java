@@ -17,9 +17,7 @@ import com.volcengine.ApiClient;
 import com.volcengine.ApiException;
 import com.volcengine.hiagent.api.EvaClient;
 import com.volcengine.hiagent.api.model.*;
-import com.volcengine.hiagent.api.model.base.Cell;
-import com.volcengine.hiagent.api.model.base.EvaTaskResultUpdateTargetContent;
-import com.volcengine.hiagent.api.model.base.ModelAgentConfig;
+import com.volcengine.hiagent.api.model.base.*;
 import com.volcengine.sign.Credentials;
 import org.jetbrains.annotations.Nullable;
 
@@ -60,7 +58,52 @@ public class EvaService {
             @Nullable ModelAgentConfig modelAgentConfig,
             boolean runImmediately
     ){
-        return new CreateEvaTaskResponse();
+        try {
+            // 创建评估任务请求对象
+            CreateEvaTaskRequest request = new CreateEvaTaskRequest();
+            request.setWorkspaceID(workspaceID);
+            request.setDatasetID(datasetID);
+            request.setDatasetVersionID(datasetVersionID);
+            request.setName(taskName);
+            request.setRulesetID(rulesetID);
+            request.setDescription(description);
+            request.setRunImmediately(runImmediately);
+
+            // 创建目标列表
+            ArrayList<EvaTaskTarget> targets = new ArrayList<>();
+
+            // 创建评估目标
+            EvaTaskTarget target = new EvaTaskTarget();
+            target.setType("CustomAPP");
+            target.setTargetID(appID);
+            target.setTargetName("Custom Application");
+            target.setQPS(10); // 设置每秒查询率
+
+            // 创建目标配置
+            EvaTargetConfig targetConfig = new EvaTargetConfig();
+
+            // 如果提供了模型代理配置，则创建内置模型配置
+            if (modelAgentConfig != null) {
+                EvaTargetBuiltinModelConfig builtinModelConfig = new EvaTargetBuiltinModelConfig();
+                builtinModelConfig.setModelAgentConfig(modelAgentConfig);
+                targetConfig.setBuiltinModelConfig(builtinModelConfig);
+            }
+
+            // 设置目标配置
+            target.setTargetConfig(targetConfig);
+
+            // 添加目标到列表
+            targets.add(target);
+            request.setTargets(targets);
+
+            // 调用API创建任务
+            CreateEvaTaskResponse response = client.createEvaTask(request);
+            logger.info("Created evaluation task: " + response.getTaskID());
+            return response;
+        } catch (ApiException e) {
+            logger.severe("Failed to create evaluation task: " + e.getMessage());
+            throw new RuntimeException("Failed to create evaluation task", e);
+        }
     }
 
     public GetEvaTaskReportResponse run(String datasetID, String datasetVersionID, String taskName, String rulesetID, long maxConversations, ModelAgentConfig targetConfig, InferenceFunction inferenceFunction) throws ApiException {

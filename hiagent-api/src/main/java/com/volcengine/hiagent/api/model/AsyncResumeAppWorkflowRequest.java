@@ -14,27 +14,25 @@
 package com.volcengine.hiagent.api.model;
 
 import com.google.gson.annotations.SerializedName;
+
 import java.util.Map;
 
-public class CreateConversationRequest {
+public class AsyncResumeAppWorkflowRequest {
 
     @SerializedName("UserID")
     private String userID;
 
-    @SerializedName("Inputs")
-    private Map<String, String> inputs;
+    @SerializedName("UserType")
+    private String userType;
 
-    public CreateConversationRequest() {
-    }
+    @SerializedName("RunID")
+    private String runID;
 
-    public CreateConversationRequest(String userID) {
-        this.userID = userID;
-    }
+    @SerializedName("Input")
+    private String input;
 
-    public CreateConversationRequest(String userID, Map<String, String> inputs) {
-        this.userID = userID;
-        this.inputs = inputs;
-    }
+    @SerializedName("Debug")
+    private Boolean debug;
 
     public String getUserID() {
         return userID;
@@ -44,11 +42,35 @@ public class CreateConversationRequest {
         this.userID = userID;
     }
 
-    public Map<String, String> getInputs() {
-        return inputs;
+    public String getUserType() {
+        return userType;
     }
 
-    public void setInputs(Map<String, String> inputs) {
-        this.inputs = inputs;
+    public void setUserType(String userType) {
+        this.userType = userType;
+    }
+
+    public String getRunID() {
+        return runID;
+    }
+
+    public void setRunID(String runID) {
+        this.runID = runID;
+    }
+
+    public String getInput() {
+        return input;
+    }
+
+    public void setInput(String input) {
+        this.input = input;
+    }
+
+    public Boolean getDebug() {
+        return debug;
+    }
+
+    public void setDebug(Boolean debug) {
+        this.debug = debug;
     }
 }

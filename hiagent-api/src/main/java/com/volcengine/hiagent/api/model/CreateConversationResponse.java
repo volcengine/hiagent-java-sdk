@@ -17,8 +17,9 @@ import com.google.gson.annotations.SerializedName;
 import com.volcengine.model.AbstractResponse;
 
 public class CreateConversationResponse extends AbstractResponse {
+
     @SerializedName("Conversation")
-    private Conversation conversation = null;
+    private Conversation conversation;
 
     public Conversation getConversation() {
         return conversation;
@@ -29,11 +30,21 @@ public class CreateConversationResponse extends AbstractResponse {
     }
 
     public static class Conversation {
+
         @SerializedName("AppConversationID")
-        private String appConversationID = null;
+        private String appConversationID;
 
         @SerializedName("ConversationName")
-        private String conversationName = null;
+        private String conversationName;
+
+        @SerializedName("CreateTime")
+        private String createTime;
+
+        @SerializedName("LastChatTime")
+        private String lastChatTime;
+
+        @SerializedName("EmptyConversation")
+        private Boolean emptyConversation;
 
         public String getAppConversationID() {
             return appConversationID;
@@ -49,6 +60,30 @@ public class CreateConversationResponse extends AbstractResponse {
 
         public void setConversationName(String conversationName) {
             this.conversationName = conversationName;
+        }
+
+        public String getCreateTime() {
+            return createTime;
+        }
+
+        public void setCreateTime(String createTime) {
+            this.createTime = createTime;
+        }
+
+        public String getLastChatTime() {
+            return lastChatTime;
+        }
+
+        public void setLastChatTime(String lastChatTime) {
+            this.lastChatTime = lastChatTime;
+        }
+
+        public Boolean getEmptyConversation() {
+            return emptyConversation;
+        }
+
+        public void setEmptyConversation(Boolean emptyConversation) {
+            this.emptyConversation = emptyConversation;
         }
     }
 }

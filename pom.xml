@@ -15,6 +15,7 @@
         <module>hiagent-components</module>
         <module>hiagent-eva</module>
         <module>hiagent-observe</module>
+        <module>hiagent-chat</module>
     </modules>
 
     <properties>

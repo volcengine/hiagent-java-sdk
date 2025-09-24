@@ -14,27 +14,19 @@
 package com.volcengine.hiagent.api.model;
 
 import com.google.gson.annotations.SerializedName;
+
 import java.util.Map;
 
-public class CreateConversationRequest {
+public class ChatContinueRequest {
 
     @SerializedName("UserID")
     private String userID;
 
-    @SerializedName("Inputs")
-    private Map<String, String> inputs;
+    @SerializedName("MessageID")
+    private String messageID;
 
-    public CreateConversationRequest() {
-    }
-
-    public CreateConversationRequest(String userID) {
-        this.userID = userID;
-    }
-
-    public CreateConversationRequest(String userID, Map<String, String> inputs) {
-        this.userID = userID;
-        this.inputs = inputs;
-    }
+    @SerializedName("RespDataStandard")
+    private Boolean respDataStandard;
 
     public String getUserID() {
         return userID;
@@ -44,11 +36,19 @@ public class CreateConversationRequest {
         this.userID = userID;
     }
 
-    public Map<String, String> getInputs() {
-        return inputs;
+    public String getMessageID() {
+        return messageID;
     }
 
-    public void setInputs(Map<String, String> inputs) {
-        this.inputs = inputs;
+    public void setMessageID(String messageID) {
+        this.messageID = messageID;
+    }
+
+    public Boolean getRespDataStandard() {
+        return respDataStandard;
+    }
+
+    public void setRespDataStandard(Boolean respDataStandard) {
+        this.respDataStandard = respDataStandard;
     }
 }

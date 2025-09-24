@@ -14,35 +14,14 @@
 package com.volcengine.hiagent.api.model;
 
 import com.google.gson.annotations.SerializedName;
+import com.volcengine.model.AbstractResponse;
+
 import java.util.Map;
 
-public class CreateConversationRequest {
-
-    @SerializedName("UserID")
-    private String userID;
+public class GetConversationInputsResponse extends AbstractResponse {
 
     @SerializedName("Inputs")
     private Map<String, String> inputs;
-
-    public CreateConversationRequest() {
-    }
-
-    public CreateConversationRequest(String userID) {
-        this.userID = userID;
-    }
-
-    public CreateConversationRequest(String userID, Map<String, String> inputs) {
-        this.userID = userID;
-        this.inputs = inputs;
-    }
-
-    public String getUserID() {
-        return userID;
-    }
-
-    public void setUserID(String userID) {
-        this.userID = userID;
-    }
 
     public Map<String, String> getInputs() {
         return inputs;

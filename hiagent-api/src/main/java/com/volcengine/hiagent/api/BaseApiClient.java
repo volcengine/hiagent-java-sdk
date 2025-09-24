@@ -16,7 +16,9 @@ package com.volcengine.hiagent.api;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
@@ -26,7 +28,10 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Map;
 import java.util.StringJoiner;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * API请求的基类，提供通用的API调用方法
@@ -37,6 +42,7 @@ public abstract class BaseApiClient {
     private String baseUrl;
     private String apiKey;
     private static final String BASE_PATH = "/api/proxy/api/v1/";
+    private static final  String END_MARKER = "[done]";
     private static final Gson GSON = new Gson();
 
     /**
@@ -107,7 +113,7 @@ public abstract class BaseApiClient {
      * @throws InterruptedException 线程中断异常
      * @throws ApiException API调用异常
      */
-    protected <T> T post(String endpoint, Object requestBody, Class<T> responseClass) 
+    protected <T> T post(String endpoint, Object requestBody, Class<T> responseClass)
             throws IOException, InterruptedException, ApiException {
         // 修复：直接调用带自定义请求头的版本，传入null作为自定义请求头
         return post(endpoint, requestBody, responseClass, null);
@@ -156,24 +162,65 @@ public abstract class BaseApiClient {
 
     /**
      * 执行流式POST请求
-     * @param endpoint 接口名
-     * @param requestBody 请求体
-     * @param responseConsumer 响应消费者，用于处理流式响应
-     * @throws IOException IO异常
+     *
+     * @param endpoint         接口名
+     * @param requestBody      请求体
+     * @param dataProcessor    数据处理器，用于处理流式响应
+     * @return
+     * @throws IOException          IO异常
      * @throws InterruptedException 线程中断异常
-     * @throws ApiException API调用异常
+     * @throws ApiException         API调用异常
      */
-    protected void postStream(String endpoint, Object requestBody, 
-                              Consumer<String> responseConsumer) 
+    protected <R> Iterable<R> postStream(String endpoint, Object requestBody,
+                                          Function<String, R> dataProcessor)
             throws IOException, InterruptedException, ApiException {
+        // 构建完整URL
+        String url = buildUrl(endpoint);
 
-        // TODO
+        // 构建请求体JSON
+        String requestBodyJson = GSON.toJson(requestBody);
+
+        // 构建请求
+        HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Apikey", apiKey)
+                .header("Content-Type", "application/json")
+                .header("Accept", "text/event-stream")
+                .POST(HttpRequest.BodyPublishers.ofString(requestBodyJson));
+
+        HttpRequest request = requestBuilder.build();
+
+        BlockingQueue<String> queue = new LinkedBlockingQueue<>();
+        // 异步发送请求并处理响应
+        httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofInputStream())
+                .thenAccept(response -> {
+                    try (BufferedReader reader = new BufferedReader(new InputStreamReader(response.body()))) {
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                            if (!line.isBlank() && line.startsWith("data:")) {
+                                // 提取 SSE 数据并放入队列
+                                queue.put(line.substring(5).trim());
+                            }
+                        }
+                        // SSE 流结束，放入结束标志
+                        queue.put(END_MARKER);
+                    } catch (Exception e) {
+                        try {
+                            queue.put(END_MARKER); // 异常时也结束
+                        } catch (InterruptedException ex) {
+                            Thread.currentThread().interrupt();
+                        }
+                        throw new RuntimeException(e);
+                    }
+                });
+
+        // 返回一个 Iterable，支持 for 循环消费
+        return () -> new SSEIterator<>(queue, END_MARKER, dataProcessor);
     }
 
     /**
      * 执行GET请求
      * @param endpoint 接口名
-     * @param apikey API密钥
      * @param queryParams 查询参数
      * @param responseClass 响应类型
      * @param <T> 响应类型泛型
@@ -191,7 +238,6 @@ public abstract class BaseApiClient {
     /**
      * 执行带自定义请求头的GET请求
      * @param endpoint 接口名
-     * @param apikey API密钥
      * @param queryParams 查询参数
      * @param responseClass 响应类型
      * @param customHeaders 自定义请求头
@@ -230,7 +276,6 @@ public abstract class BaseApiClient {
     /**
      * 执行PUT请求
      * @param endpoint 接口名
-     * @param apikey API密钥
      * @param requestBody 请求体
      * @param responseClass 响应类型
      * @param <T> 响应类型泛型
@@ -248,7 +293,6 @@ public abstract class BaseApiClient {
     /**
      * 执行带自定义请求头的PUT请求
      * @param endpoint 接口名
-     * @param apikey API密钥
      * @param requestBody 请求体
      * @param responseClass 响应类型
      * @param customHeaders 自定义请求头
@@ -290,7 +334,6 @@ public abstract class BaseApiClient {
     /**
      * 执行DELETE请求
      * @param endpoint 接口名
-     * @param apikey API密钥
      * @param responseClass 响应类型
      * @param <T> 响应类型泛型
      * @return 响应对象
@@ -306,7 +349,6 @@ public abstract class BaseApiClient {
     /**
      * 执行带查询参数的DELETE请求
      * @param endpoint 接口名
-     * @param apikey API密钥
      * @param queryParams 查询参数
      * @param responseClass 响应类型
      * @param <T> 响应类型泛型
@@ -323,7 +365,6 @@ public abstract class BaseApiClient {
     /**
      * 执行带查询参数和自定义请求头的DELETE请求
      * @param endpoint 接口名
-     * @param apikey API密钥
      * @param queryParams 查询参数
      * @param responseClass 响应类型
      * @param customHeaders 自定义请求头
@@ -441,6 +482,46 @@ public abstract class BaseApiClient {
         
         public ApiException(String message, Throwable cause) {
             super(message, cause);
+        }
+    }
+
+    /**
+     * 自定义SSE迭代器类
+     */
+
+    private static class SSEIterator<R> implements java.util.Iterator<R> {
+        private final BlockingQueue<String> queue;
+        private final String END_MARKER;
+        private final Function<String, R> dataProcessor;
+        private String nextItem;
+
+        public SSEIterator(BlockingQueue<String> queue, String endMarker, Function<String, R> dataProcessor) {
+            this.queue = queue;
+            this.END_MARKER = endMarker;
+            this.dataProcessor = dataProcessor;
+        }
+
+        @Override
+        public boolean hasNext() {
+            if (nextItem == null) {
+                try {
+                    nextItem = queue.take(); // 阻塞等待下一个事件
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return false;
+                }
+            }
+            return !END_MARKER.equals(nextItem); // 判断是否结束
+        }
+
+        @Override
+        public R next() {
+            if (!hasNext()) {
+                throw new java.util.NoSuchElementException();
+            }
+            String rawData = nextItem;
+            nextItem = null; // 清空当前项，准备读取下一项
+            return dataProcessor.apply(rawData); // 使用处理函数转换数据
         }
     }
 }

@@ -14,41 +14,42 @@
 package com.volcengine.hiagent.api.model;
 
 import com.google.gson.annotations.SerializedName;
+
+import java.util.List;
 import java.util.Map;
 
-public class CreateConversationRequest {
+public class WorkflowLoopBlock {
 
-    @SerializedName("UserID")
-    private String userID;
+    @SerializedName("nodes")
+    private Map<String, WorkflowNode> nodes;
 
-    @SerializedName("Inputs")
-    private Map<String, String> inputs;
+    @SerializedName("steps")
+    private List<String> steps;
 
-    public CreateConversationRequest() {
+    @SerializedName("status")
+    private String status;
+
+    public Map<String, WorkflowNode> getNodes() {
+        return nodes;
     }
 
-    public CreateConversationRequest(String userID) {
-        this.userID = userID;
+    public void setNodes(Map<String, WorkflowNode> nodes) {
+        this.nodes = nodes;
     }
 
-    public CreateConversationRequest(String userID, Map<String, String> inputs) {
-        this.userID = userID;
-        this.inputs = inputs;
+    public List<String> getSteps() {
+        return steps;
     }
 
-    public String getUserID() {
-        return userID;
+    public void setSteps(List<String> steps) {
+        this.steps = steps;
     }
 
-    public void setUserID(String userID) {
-        this.userID = userID;
+    public String getStatus() {
+        return status;
     }
 
-    public Map<String, String> getInputs() {
-        return inputs;
-    }
-
-    public void setInputs(Map<String, String> inputs) {
-        this.inputs = inputs;
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

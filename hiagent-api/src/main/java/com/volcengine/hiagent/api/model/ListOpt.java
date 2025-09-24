@@ -14,41 +14,42 @@
 package com.volcengine.hiagent.api.model;
 
 import com.google.gson.annotations.SerializedName;
+
+import java.util.List;
 import java.util.Map;
 
-public class CreateConversationRequest {
+public class ListOpt {
 
-    @SerializedName("UserID")
-    private String userID;
+    @SerializedName("Sort")
+    private List<Sorter> sort;
 
-    @SerializedName("Inputs")
-    private Map<String, String> inputs;
+    @SerializedName("PageNumber")
+    private Integer pageNumber;
 
-    public CreateConversationRequest() {
+    @SerializedName("PageSize")
+    private Integer pageSize;
+
+    public List<Sorter> getSort() {
+        return sort;
     }
 
-    public CreateConversationRequest(String userID) {
-        this.userID = userID;
+    public void setSort(List<Sorter> sort) {
+        this.sort = sort;
     }
 
-    public CreateConversationRequest(String userID, Map<String, String> inputs) {
-        this.userID = userID;
-        this.inputs = inputs;
+    public Integer getPageNumber() {
+        return pageNumber;
     }
 
-    public String getUserID() {
-        return userID;
+    public void setPageNumber(Integer pageNumber) {
+        this.pageNumber = pageNumber;
     }
 
-    public void setUserID(String userID) {
-        this.userID = userID;
+    public Integer getPageSize() {
+        return pageSize;
     }
 
-    public Map<String, String> getInputs() {
-        return inputs;
-    }
-
-    public void setInputs(Map<String, String> inputs) {
-        this.inputs = inputs;
+    public void setPageSize(Integer pageSize) {
+        this.pageSize = pageSize;
     }
 }

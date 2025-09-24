@@ -21,10 +21,7 @@ import com.volcengine.hiagent.api.model.base.WorkflowEvent;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
 
 /**
  * ChatClient类，用于与Chat API进行交互
@@ -33,16 +30,17 @@ public class ChatClient extends BaseApiClient {
     public ChatClient(String baseUrl, String apiKey) {
         super(baseUrl, apiKey);
     }
-    
+
     /**
      * 创建会话
+     *
      * @param request 请求体
      * @return 响应体
-     * @throws IOException IO异常
+     * @throws IOException          IO异常
      * @throws InterruptedException 线程中断异常
-     * @throws ApiException API调用异常
+     * @throws ApiException         API调用异常
      */
-    public CreateConversationResponse createConversation(CreateConversationRequest request) 
+    public CreateConversationResponse createConversation(CreateConversationRequest request)
             throws IOException, InterruptedException, ApiException {
         return post("create_conversation", request, CreateConversationResponse.class);
     }
@@ -235,7 +233,7 @@ public class ChatClient extends BaseApiClient {
 
 
     public ChatEvent parseChatEvent(String eventData) {
-        Gson gson=new Gson();
+        Gson gson = new Gson();
         ChatEvent chatEvent = gson.fromJson(eventData, ChatEvent.class);
         StreamingChatEventType eventType = StreamingChatEventType.fromValue(chatEvent.getEvent());
         if (eventType == null) {
@@ -302,13 +300,13 @@ public class ChatClient extends BaseApiClient {
                 return gson.fromJson(eventData, ThinkMessageChatEvent.class);
             case ThinkMessageOutputEnd:
                 return gson.fromJson(eventData, ThinkMessageOutputEndChatEvent.class);
+            default:
+                return null;
         }
-
-        return null;
     }
 
     public WorkflowEvent parseWorkflowEvent(String eventData) {
-        Gson gson=new Gson();
+        Gson gson = new Gson();
         WorkflowEvent workflowEvent = gson.fromJson(eventData, WorkflowEvent.class);
         if (workflowEvent == null) {
             return null;
@@ -340,10 +338,9 @@ public class ChatClient extends BaseApiClient {
                 return gson.fromJson(eventData, MessageOutputEndWorkflowEvent.class);
             case Message:
                 return gson.fromJson(eventData, MessageWorkflowEvent.class);
+            default:
+                return null;
         }
-
-        return null;
     }
-
 
 }

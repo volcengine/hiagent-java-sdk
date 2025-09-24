@@ -16,6 +16,7 @@
         <module>hiagent-eva</module>
         <module>hiagent-observe</module>
         <module>hiagent-chat</module>
+        <module>hiagent-tool</module>
     </modules>
 
     <properties>

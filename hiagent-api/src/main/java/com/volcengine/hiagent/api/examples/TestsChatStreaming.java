@@ -28,8 +28,8 @@ import java.util.concurrent.CompletableFuture;
 
 public class TestsChatStreaming {
     public static void main(String[] args) {
-        String baseUrl = System.getenv("HIAGENT_BASE_URL");
-        String apiKey = System.getenv("HIAGENT_API_KEY");
+        String baseUrl = System.getenv("HIAGENT_APP_BASE_URL");
+        String apiKey = System.getenv("HIAGENT_AGENT_APP_KEY");
         ChatClient client = new ChatClient(baseUrl, apiKey);
         try {
             String conversationID = createConversation(client);
@@ -41,7 +41,6 @@ public class TestsChatStreaming {
             for (ChatEvent chatEvent : client.chatStreaming(chatRequest)) {
                 gson.toJson(chatEvent);
                 System.out.println("收到事件：" + gson.toJson(chatEvent));
-
             }
         } catch (Exception e) {
             e.printStackTrace();

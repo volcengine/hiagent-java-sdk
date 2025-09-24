@@ -13,23 +13,14 @@
 // limitations under the License.
 package com.volcengine.hiagent.chat;
 
-import com.volcengine.ApiClient;
-import com.volcengine.ApiException;
 import com.volcengine.hiagent.api.BaseApiClient;
 import com.volcengine.hiagent.api.ChatClient;
-import com.volcengine.hiagent.api.EvaClient;
 import com.volcengine.hiagent.api.model.*;
-import com.volcengine.hiagent.api.model.base.*;
-import com.volcengine.sign.Credentials;
-import org.jetbrains.annotations.Nullable;
+import com.volcengine.hiagent.api.model.base.ChatEvent;
+import com.volcengine.hiagent.api.model.base.WorkflowEvent;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.Logger;
-
-import static java.lang.Thread.sleep;
 
 public class ChatService {
     private static final Logger logger = Logger.getLogger(ChatService.class.getName());
@@ -41,13 +32,13 @@ public class ChatService {
     }
 
 
-
     /**
      * 创建会话
+     *
      * @param request 请求体
      * @return 响应体
-     * @throws IOException IO异常
-     * @throws InterruptedException 线程中断异常
+     * @throws IOException                IO异常
+     * @throws InterruptedException       线程中断异常
      * @throws BaseApiClient.ApiException API调用异常
      */
     public CreateConversationResponse createConversation(CreateConversationRequest request)

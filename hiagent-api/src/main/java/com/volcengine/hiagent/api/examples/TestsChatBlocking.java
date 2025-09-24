@@ -25,8 +25,8 @@ import java.io.IOException;
 
 public class TestsChatBlocking {
     public static void main(String[] args) {
-        String baseUrl = System.getenv("HIAGENT_BASE_URL");
-        String apiKey = System.getenv("HIAGENT_API_KEY");
+        String baseUrl = System.getenv("HIAGENT_APP_BASE_URL");
+        String apiKey = System.getenv("HIAGENT_AGENT_APP_KEY");
         ChatClient client = new ChatClient(baseUrl, apiKey);
         try {
             String conversationID = createConversation(client);

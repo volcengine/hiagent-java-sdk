@@ -13,6 +13,7 @@
 // limitations under the License.
 package com.volcengine.hiagent.chat.examples;
 
+import com.google.gson.Gson;
 import com.volcengine.hiagent.api.model.BlockingChatResponse;
 import com.volcengine.hiagent.api.model.ChatRequest;
 import com.volcengine.hiagent.api.model.CreateConversationRequest;
@@ -27,8 +28,8 @@ public class TestChatService {
     public static void main(String[] args) {
         try {
             // 从环境变量获取配置信息
-            String baseUrl = System.getenv("HIAGENT_BASE_URL");
-            String apiKey = System.getenv("HIAGENT_API_KEY");
+            String baseUrl = System.getenv("HIAGENT_APP_BASE_URL");
+            String apiKey = System.getenv("HIAGENT_AGENT_APP_KEY");
             String userID = "user123";
 
             // ChatService
@@ -46,13 +47,21 @@ public class TestChatService {
             chatRequest.setUserID(userID);
             chatRequest.setQuery("你好");
             BlockingChatResponse blockingChatResponse = chatService.chatBlocking(chatRequest);
-
             // 对话结果
             logger.info("对话结果: " + blockingChatResponse.getAnswer());
 
+            // 流式对话
+            logger.info("开始流式对话...");
+            Gson gson = new Gson();
+            chatService.chatStreaming(chatRequest).forEach((chatEvent) -> {
+                gson.toJson(chatEvent);
+                logger.info("收到事件：" + gson.toJson(chatEvent));
+            });
+            // 流式对话结果
+            logger.info("流式对话结束");
+
         } catch (Exception e) {
             logger.log(Level.SEVERE, "测试会话异常: " + e.getMessage(), e);
-            e.printStackTrace();
         }
     }
 }

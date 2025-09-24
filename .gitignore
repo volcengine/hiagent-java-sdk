@@ -54,5 +54,6 @@ gradle-app.setting
 target/
 **/target/
 
+.DS_Store
 .vscode/
 .env

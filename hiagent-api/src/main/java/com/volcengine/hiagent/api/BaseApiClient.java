@@ -42,7 +42,7 @@ public abstract class BaseApiClient {
     private String baseUrl;
     private String apiKey;
     private static final String BASE_PATH = "/api/proxy/api/v1/";
-    private static final  String END_MARKER = "[done]";
+    private static final  String END_MARKER = "[DONE]";
     private static final Gson GSON = new Gson();
 
     /**

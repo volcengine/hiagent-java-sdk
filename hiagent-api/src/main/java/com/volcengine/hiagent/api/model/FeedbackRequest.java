@@ -1,0 +1,92 @@
+// Copyright (c) 2024 Bytedance Ltd. and/or its affiliates
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+package com.volcengine.hiagent.api.model;
+
+import com.google.gson.annotations.SerializedName;
+
+import java.util.List;
+import java.util.Map;
+
+public class FeedbackRequest {
+
+    @SerializedName("UserID")
+    private String userID;
+
+    @SerializedName("MessageID")
+    private String messageID;
+
+    @SerializedName("LikeType")
+    private int likeType;
+
+    @SerializedName("FeedbackInfo")
+    private FeedbackInfo feedbackInfo;
+
+    public String getUserID() {
+        return userID;
+    }
+
+    public void setUserID(String userID) {
+        this.userID = userID;
+    }
+
+    public String getMessageID() {
+        return messageID;
+    }
+
+    public void setMessageID(String messageID) {
+        this.messageID = messageID;
+    }
+
+    public int getLikeType() {
+        return likeType;
+    }
+
+    public void setLikeType(int likeType) {
+        this.likeType = likeType;
+    }
+
+    public FeedbackInfo getFeedbackInfo() {
+        return feedbackInfo;
+    }
+
+    public void setFeedbackInfo(FeedbackInfo feedbackInfo) {
+        this.feedbackInfo = feedbackInfo;
+    }
+
+    public static class FeedbackInfo {
+
+        @SerializedName("ProblemCategories")
+        private List<String> ProblemCategories;
+
+        @SerializedName("ProblemDetail")
+        private String problemDetail;
+
+        public List<String> getProblemCategories() {
+            return ProblemCategories;
+        }
+
+        public void setProblemCategories(List<String> problemCategories) {
+            ProblemCategories = problemCategories;
+        }
+
+        public String getProblemDetail() {
+            return problemDetail;
+        }
+
+        public void setProblemDetail(String problemDetail) {
+            this.problemDetail = problemDetail;
+        }
+    }
+
+}

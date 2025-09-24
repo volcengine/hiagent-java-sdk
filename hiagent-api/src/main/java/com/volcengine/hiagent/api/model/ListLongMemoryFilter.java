@@ -14,41 +14,41 @@
 package com.volcengine.hiagent.api.model;
 
 import com.google.gson.annotations.SerializedName;
+
 import java.util.Map;
 
-public class CreateConversationRequest {
+public class ListLongMemoryFilter {
 
-    @SerializedName("UserID")
-    private String userID;
+    @SerializedName("StartTime")
+    private String startTime;
 
-    @SerializedName("Inputs")
-    private Map<String, String> inputs;
+    @SerializedName("EndTime")
+    private String endTime;
 
-    public CreateConversationRequest() {
+    @SerializedName("Keyword")
+    private String keyword;
+
+    public String getStartTime() {
+        return startTime;
     }
 
-    public CreateConversationRequest(String userID) {
-        this.userID = userID;
+    public void setStartTime(String startTime) {
+        this.startTime = startTime;
     }
 
-    public CreateConversationRequest(String userID, Map<String, String> inputs) {
-        this.userID = userID;
-        this.inputs = inputs;
+    public String getEndTime() {
+        return endTime;
     }
 
-    public String getUserID() {
-        return userID;
+    public void setEndTime(String endTime) {
+        this.endTime = endTime;
     }
 
-    public void setUserID(String userID) {
-        this.userID = userID;
+    public String getKeyword() {
+        return keyword;
     }
 
-    public Map<String, String> getInputs() {
-        return inputs;
-    }
-
-    public void setInputs(Map<String, String> inputs) {
-        this.inputs = inputs;
+    public void setKeyword(String keyword) {
+        this.keyword = keyword;
     }
 }

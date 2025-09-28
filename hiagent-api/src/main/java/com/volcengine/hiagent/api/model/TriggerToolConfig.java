@@ -14,31 +14,41 @@
 package com.volcengine.hiagent.api.model;
 
 import com.google.gson.annotations.SerializedName;
-import com.volcengine.model.AbstractResponse;
 
-import java.util.List;
+import java.util.Map;
 
-public class QueryTriggerRunRecordsResponse extends AbstractResponse {
+public class TriggerToolConfig {
 
-    @SerializedName("total")
-    private Integer total;
+    @SerializedName("ToolID")
+    private String toolID;
 
-    @SerializedName("records")
-    private List<TriggerRunRecord> records;
+    @SerializedName("InputData")
+    private String inputData;
 
-    public Integer getTotal() {
-        return total;
+    @SerializedName("InputDataSchema")
+    private String inputDataSchema;
+
+    public String getToolID() {
+        return toolID;
     }
 
-    public void setTotal(Integer total) {
-        this.total = total;
+    public void setToolID(String toolID) {
+        this.toolID = toolID;
     }
 
-    public List<TriggerRunRecord> getRecords() {
-        return records;
+    public String getInputData() {
+        return inputData;
     }
 
-    public void setRecords(List<TriggerRunRecord> records) {
-        this.records = records;
+    public void setInputData(String inputData) {
+        this.inputData = inputData;
+    }
+
+    public String getInputDataSchema() {
+        return inputDataSchema;
+    }
+
+    public void setInputDataSchema(String inputDataSchema) {
+        this.inputDataSchema = inputDataSchema;
     }
 }

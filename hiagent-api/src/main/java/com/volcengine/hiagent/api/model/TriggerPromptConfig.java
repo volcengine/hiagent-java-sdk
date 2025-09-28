@@ -14,31 +14,30 @@
 package com.volcengine.hiagent.api.model;
 
 import com.google.gson.annotations.SerializedName;
-import com.volcengine.model.AbstractResponse;
 
-import java.util.List;
+import java.util.Map;
 
-public class QueryTriggerRunRecordsResponse extends AbstractResponse {
+public class TriggerPromptConfig {
 
-    @SerializedName("total")
-    private Integer total;
+    @SerializedName("Content")
+    private String content;
 
-    @SerializedName("records")
-    private List<TriggerRunRecord> records;
+    @SerializedName("Inputs")
+    private Map<String, String> inputs;
 
-    public Integer getTotal() {
-        return total;
+    public String getContent() {
+        return content;
     }
 
-    public void setTotal(Integer total) {
-        this.total = total;
+    public void setContent(String content) {
+        this.content = content;
     }
 
-    public List<TriggerRunRecord> getRecords() {
-        return records;
+    public Map<String, String> getInputs() {
+        return inputs;
     }
 
-    public void setRecords(List<TriggerRunRecord> records) {
-        this.records = records;
+    public void setInputs(Map<String, String> inputs) {
+        this.inputs = inputs;
     }
 }

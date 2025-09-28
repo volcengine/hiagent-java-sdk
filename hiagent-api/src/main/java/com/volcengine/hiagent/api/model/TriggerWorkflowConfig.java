@@ -14,31 +14,39 @@
 package com.volcengine.hiagent.api.model;
 
 import com.google.gson.annotations.SerializedName;
-import com.volcengine.model.AbstractResponse;
 
-import java.util.List;
+public class TriggerWorkflowConfig {
 
-public class QueryTriggerRunRecordsResponse extends AbstractResponse {
+    @SerializedName("WorkflowID")
+    private String workflowID;
 
-    @SerializedName("total")
-    private Integer total;
+    @SerializedName("InputData")
+    private String inputData;
 
-    @SerializedName("records")
-    private List<TriggerRunRecord> records;
+    @SerializedName("InputDataSchema")
+    private String inputDataSchema;
 
-    public Integer getTotal() {
-        return total;
+    public String getWorkflowID() {
+        return workflowID;
     }
 
-    public void setTotal(Integer total) {
-        this.total = total;
+    public void setWorkflowID(String workflowID) {
+        this.workflowID = workflowID;
     }
 
-    public List<TriggerRunRecord> getRecords() {
-        return records;
+    public String getInputData() {
+        return inputData;
     }
 
-    public void setRecords(List<TriggerRunRecord> records) {
-        this.records = records;
+    public void setInputData(String inputData) {
+        this.inputData = inputData;
+    }
+
+    public String getInputDataSchema() {
+        return inputDataSchema;
+    }
+
+    public void setInputDataSchema(String inputDataSchema) {
+        this.inputDataSchema = inputDataSchema;
     }
 }

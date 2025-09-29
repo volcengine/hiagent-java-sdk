@@ -204,18 +204,6 @@ public class ChatClient extends BaseApiClient {
         return post("query_skill_async_task", request, QueryAppSkillAsyncTaskResponse.class);
     }
 
-    public SyncRunAppWorkflowResponse syncResumeAppWorkflowBlocking(SyncResumeAppWorkflowRequest request)
-            throws IOException, InterruptedException, ApiException {
-        request.setStream(false);
-        return post("sync_resume_app_workflow_blocking", request, SyncRunAppWorkflowResponse.class);
-    }
-
-    public Iterable<WorkflowEvent> syncResumeAppWorkflowStreaming(SyncResumeAppWorkflowRequest request)
-            throws IOException, InterruptedException, ApiException {
-        request.setStream(true);
-        return postStream("sync_resume_app_workflow_streaming", request, this::parseWorkflowEvent);
-    }
-
     public GetAppUserVariablesResponse getAppUserVariables(GetAppUserVariablesRequest request)
             throws IOException, InterruptedException, ApiException {
         return post("get_app_user_variables", request, GetAppUserVariablesResponse.class);

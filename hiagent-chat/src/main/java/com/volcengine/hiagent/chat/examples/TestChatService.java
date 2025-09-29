@@ -14,11 +14,12 @@
 package com.volcengine.hiagent.chat.examples;
 
 import com.google.gson.Gson;
-import com.volcengine.hiagent.api.model.BlockingChatResponse;
-import com.volcengine.hiagent.api.model.ChatRequest;
-import com.volcengine.hiagent.api.model.CreateConversationRequest;
+import com.volcengine.hiagent.api.BaseApiClient;
+import com.volcengine.hiagent.api.model.*;
+import com.volcengine.hiagent.api.model.base.ChatEvent;
 import com.volcengine.hiagent.chat.ChatService;
 
+import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -59,6 +60,14 @@ public class TestChatService {
             });
             // 流式对话结果
             logger.info("流式对话结束");
+
+            // 获取对话信息
+            GetConversationMessageRequest getConversationMessageRequest = new GetConversationMessageRequest();
+            getConversationMessageRequest.setAppConversationID(conversationID);
+            getConversationMessageRequest.setUserID(userID);
+            getConversationMessageRequest.setLimit(1L);
+            // 获取对话信息结果
+            logger.info("获取对话信息结果: " + gson.toJson(chatService.getConversationMessages(getConversationMessageRequest)));
 
         } catch (Exception e) {
             logger.log(Level.SEVERE, "测试会话异常: " + e.getMessage(), e);

@@ -21,13 +21,13 @@ import java.util.List;
 public class GetConversationMessageResponse extends AbstractResponse {
 
     @SerializedName("Messages")
-    private ChatMessageInfo messages;
+    private List<ChatMessageInfo> messages;
 
-    public ChatMessageInfo getMessages() {
+    public List<ChatMessageInfo> getMessages() {
         return messages;
     }
 
-    public void setMessages(ChatMessageInfo messages) {
+    public void setMessages(List<ChatMessageInfo> messages) {
         this.messages = messages;
     }
 }

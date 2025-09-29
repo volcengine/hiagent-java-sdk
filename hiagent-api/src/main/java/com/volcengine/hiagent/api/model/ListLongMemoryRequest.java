@@ -28,5 +28,27 @@ public class ListLongMemoryRequest {
     @SerializedName("Filter")
     private ListLongMemoryFilter filter;
 
+    public String getUserID() {
+        return userID;
+    }
 
+    public void setUserID(String userID) {
+        this.userID = userID;
+    }
+
+    public ListOpt getListOpt() {
+        return listOpt;
+    }
+
+    public void setListOpt(ListOpt listOpt) {
+        this.listOpt = listOpt;
+    }
+
+    public ListLongMemoryFilter getFilter() {
+        return filter;
+    }
+
+    public void setFilter(ListLongMemoryFilter filter) {
+        this.filter = filter;
+    }
 }

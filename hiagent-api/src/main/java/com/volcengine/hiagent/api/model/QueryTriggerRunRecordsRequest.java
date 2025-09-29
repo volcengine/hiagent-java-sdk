@@ -31,4 +31,36 @@ public class QueryTriggerRunRecordsRequest {
 
     @SerializedName("Size")
     private Integer size;
+
+    public String getUserID() {
+        return userID;
+    }
+
+    public void setUserID(String userID) {
+        this.userID = userID;
+    }
+
+    public List<String> getRunIDs() {
+        return runIDs;
+    }
+
+    public void setRunIDs(List<String> runIDs) {
+        this.runIDs = runIDs;
+    }
+
+    public Integer getPage() {
+        return page;
+    }
+
+    public void setPage(Integer page) {
+        this.page = page;
+    }
+
+    public Integer getSize() {
+        return size;
+    }
+
+    public void setSize(Integer size) {
+        this.size = size;
+    }
 }

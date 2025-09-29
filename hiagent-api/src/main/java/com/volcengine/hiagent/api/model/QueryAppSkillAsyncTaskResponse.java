@@ -16,16 +16,18 @@ package com.volcengine.hiagent.api.model;
 import com.google.gson.annotations.SerializedName;
 import com.volcengine.model.AbstractResponse;
 
+import java.util.List;
+
 public class QueryAppSkillAsyncTaskResponse extends AbstractResponse {
 
     @SerializedName("Infos")
-    private AppSkillAsyncTaskInfo infos;
+    private List<AppSkillAsyncTaskInfo> infos;
 
-    public AppSkillAsyncTaskInfo getInfos() {
+    public List<AppSkillAsyncTaskInfo> getInfos() {
         return infos;
     }
 
-    public void setInfos(AppSkillAsyncTaskInfo infos) {
+    public void setInfos(List<AppSkillAsyncTaskInfo> infos) {
         this.infos = infos;
     }
 

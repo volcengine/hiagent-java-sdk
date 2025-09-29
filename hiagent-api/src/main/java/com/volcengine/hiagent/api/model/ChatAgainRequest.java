@@ -43,4 +43,12 @@ public class ChatAgainRequest {
     public void setAppConversationID(String appConversationID) {
         this.appConversationID = appConversationID;
     }
+
+    public String getMessageID() {
+        return messageID;
+    }
+
+    public void setMessageID(String messageID) {
+        this.messageID = messageID;
+    }
 }

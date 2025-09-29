@@ -30,7 +30,6 @@ import java.util.Map;
 import java.util.StringJoiner;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -42,13 +41,15 @@ public abstract class BaseApiClient {
     private String baseUrl;
     private String apiKey;
     private static final String BASE_PATH = "/api/proxy/api/v1/";
-    private static final  String END_MARKER = "[DONE]";
+    public static final String DATA_MARKER = "data:";
+    private static final String END_MARKER = "[DONE]";
     private static final Gson GSON = new Gson();
 
     /**
      * 构造函数
+     *
      * @param baseUrl API基础URL
-     * @param apiKey API密钥
+     * @param apiKey  API密钥
      */
     public BaseApiClient(String baseUrl, String apiKey) {
         this.baseUrl = baseUrl;
@@ -61,7 +62,8 @@ public abstract class BaseApiClient {
 
     /**
      * 构造函数，支持自定义HttpClient
-     * @param baseUrl API基础URL
+     *
+     * @param baseUrl    API基础URL
      * @param httpClient 自定义HttpClient实例
      */
     public BaseApiClient(String baseUrl, String apiKey, HttpClient httpClient) {
@@ -72,6 +74,7 @@ public abstract class BaseApiClient {
 
     /**
      * 获取HttpClient实例
+     *
      * @return HttpClient实例
      */
     public HttpClient getHttpClient() {
@@ -80,6 +83,7 @@ public abstract class BaseApiClient {
 
     /**
      * 设置HttpClient实例
+     *
      * @param httpClient HttpClient实例
      */
     public void setHttpClient(HttpClient httpClient) {
@@ -88,6 +92,7 @@ public abstract class BaseApiClient {
 
     /**
      * 获取基础URL
+     *
      * @return 基础URL
      */
     public String getBaseUrl() {
@@ -96,6 +101,7 @@ public abstract class BaseApiClient {
 
     /**
      * 设置基础URL
+     *
      * @param baseUrl 基础URL
      */
     public void setBaseUrl(String baseUrl) {
@@ -104,14 +110,15 @@ public abstract class BaseApiClient {
 
     /**
      * 执行POST请求
-     * @param endpoint 接口名
-     * @param requestBody 请求体
+     *
+     * @param endpoint      接口名
+     * @param requestBody   请求体
      * @param responseClass 响应类型
-     * @param <T> 响应类型泛型
+     * @param <T>           响应类型泛型
      * @return 响应对象
-     * @throws IOException IO异常
+     * @throws IOException          IO异常
      * @throws InterruptedException 线程中断异常
-     * @throws ApiException API调用异常
+     * @throws ApiException         API调用异常
      */
     protected <T> T post(String endpoint, Object requestBody, Class<T> responseClass)
             throws IOException, InterruptedException, ApiException {
@@ -121,25 +128,26 @@ public abstract class BaseApiClient {
 
     /**
      * 执行带自定义请求头的POST请求
-     * @param endpoint 接口名
-     * @param requestBody 请求体
+     *
+     * @param endpoint      接口名
+     * @param requestBody   请求体
      * @param responseClass 响应类型
      * @param customHeaders 自定义请求头
-     * @param <T> 响应类型泛型
+     * @param <T>           响应类型泛型
      * @return 响应对象
-     * @throws IOException IO异常
+     * @throws IOException          IO异常
      * @throws InterruptedException 线程中断异常
-     * @throws ApiException API调用异常
+     * @throws ApiException         API调用异常
      */
-    protected <T> T post(String endpoint, Object requestBody, Class<T> responseClass, 
-                         Map<String, String> customHeaders) 
+    protected <T> T post(String endpoint, Object requestBody, Class<T> responseClass,
+                         Map<String, String> customHeaders)
             throws IOException, InterruptedException, ApiException {
         // 构建完整URL
         String url = buildUrl(endpoint);
-        
+
         // 构建请求体JSON
         String requestBodyJson = GSON.toJson(requestBody);
-        
+
         // 构建请求
         HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                 .uri(URI.create(url))
@@ -147,15 +155,15 @@ public abstract class BaseApiClient {
                 .header("Content-Type", "application/json")
                 .header("Accept", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(requestBodyJson));
-        
+
         // 添加自定义请求头
         addCustomHeaders(requestBuilder, customHeaders);
-        
+
         HttpRequest request = requestBuilder.build();
-        
+
         // 发送请求并获取响应
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        
+
         // 处理响应
         return handleResponse(response, responseClass);
     }
@@ -163,16 +171,16 @@ public abstract class BaseApiClient {
     /**
      * 执行流式POST请求
      *
-     * @param endpoint         接口名
-     * @param requestBody      请求体
-     * @param dataProcessor    数据处理器，用于处理流式响应
+     * @param endpoint      接口名
+     * @param requestBody   请求体
+     * @param dataProcessor 数据处理器，用于处理流式响应
      * @return
      * @throws IOException          IO异常
      * @throws InterruptedException 线程中断异常
      * @throws ApiException         API调用异常
      */
     protected <R> Iterable<R> postStream(String endpoint, Object requestBody,
-                                          Function<String, R> dataProcessor)
+                                         Function<String, R> dataProcessor)
             throws IOException, InterruptedException, ApiException {
         // 构建完整URL
         String url = buildUrl(endpoint);
@@ -197,9 +205,14 @@ public abstract class BaseApiClient {
                     try (BufferedReader reader = new BufferedReader(new InputStreamReader(response.body()))) {
                         String line;
                         while ((line = reader.readLine()) != null) {
-                            if (!line.isBlank() && line.startsWith("data:")) {
+                            if (!line.isBlank() && line.startsWith(DATA_MARKER)) {
+                                line = line.substring(DATA_MARKER.length()).trim();
+                                // 兼容v1版本api，格式：data:data: {}
+                                if (line.startsWith(DATA_MARKER)) {
+                                    line = line.substring(DATA_MARKER.length()).trim();
+                                }
                                 // 提取 SSE 数据并放入队列
-                                queue.put(line.substring(5).trim());
+                                queue.put(line);
                             }
                         }
                         // SSE 流结束，放入结束标志
@@ -220,16 +233,17 @@ public abstract class BaseApiClient {
 
     /**
      * 执行GET请求
-     * @param endpoint 接口名
-     * @param queryParams 查询参数
+     *
+     * @param endpoint      接口名
+     * @param queryParams   查询参数
      * @param responseClass 响应类型
-     * @param <T> 响应类型泛型
+     * @param <T>           响应类型泛型
      * @return 响应对象
-     * @throws IOException IO异常
+     * @throws IOException          IO异常
      * @throws InterruptedException 线程中断异常
-     * @throws ApiException API调用异常
+     * @throws ApiException         API调用异常
      */
-    protected <T> T get(String endpoint, Map<String, String> queryParams, Class<T> responseClass) 
+    protected <T> T get(String endpoint, Map<String, String> queryParams, Class<T> responseClass)
             throws IOException, InterruptedException, ApiException {
         // 修复：直接调用带自定义请求头的版本，传入null作为自定义请求头
         return get(endpoint, queryParams, responseClass, null);
@@ -237,22 +251,23 @@ public abstract class BaseApiClient {
 
     /**
      * 执行带自定义请求头的GET请求
-     * @param endpoint 接口名
-     * @param queryParams 查询参数
+     *
+     * @param endpoint      接口名
+     * @param queryParams   查询参数
      * @param responseClass 响应类型
      * @param customHeaders 自定义请求头
-     * @param <T> 响应类型泛型
+     * @param <T>           响应类型泛型
      * @return 响应对象
-     * @throws IOException IO异常
+     * @throws IOException          IO异常
      * @throws InterruptedException 线程中断异常
-     * @throws ApiException API调用异常
+     * @throws ApiException         API调用异常
      */
-    protected <T> T get(String endpoint, Map<String, String> queryParams, Class<T> responseClass, 
-                       Map<String, String> customHeaders) 
+    protected <T> T get(String endpoint, Map<String, String> queryParams, Class<T> responseClass,
+                        Map<String, String> customHeaders)
             throws IOException, InterruptedException, ApiException {
         // 构建完整URL，包含查询参数
         String url = buildUrlWithQueryParams(endpoint, queryParams);
-        
+
         // 构建请求
         HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                 .uri(URI.create(url))
@@ -260,31 +275,32 @@ public abstract class BaseApiClient {
                 .header("Content-Type", "application/json")
                 .header("Accept", "application/json")
                 .GET();
-        
+
         // 添加自定义请求头
         addCustomHeaders(requestBuilder, customHeaders);
-        
+
         HttpRequest request = requestBuilder.build();
-        
+
         // 发送请求并获取响应
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        
+
         // 处理响应
         return handleResponse(response, responseClass);
     }
 
     /**
      * 执行PUT请求
-     * @param endpoint 接口名
-     * @param requestBody 请求体
+     *
+     * @param endpoint      接口名
+     * @param requestBody   请求体
      * @param responseClass 响应类型
-     * @param <T> 响应类型泛型
+     * @param <T>           响应类型泛型
      * @return 响应对象
-     * @throws IOException IO异常
+     * @throws IOException          IO异常
      * @throws InterruptedException 线程中断异常
-     * @throws ApiException API调用异常
+     * @throws ApiException         API调用异常
      */
-    protected <T> T put(String endpoint, Object requestBody, Class<T> responseClass) 
+    protected <T> T put(String endpoint, Object requestBody, Class<T> responseClass)
             throws IOException, InterruptedException, ApiException {
         // 修复：直接调用带自定义请求头的版本，传入null作为自定义请求头
         return put(endpoint, requestBody, responseClass, null);
@@ -292,25 +308,26 @@ public abstract class BaseApiClient {
 
     /**
      * 执行带自定义请求头的PUT请求
-     * @param endpoint 接口名
-     * @param requestBody 请求体
+     *
+     * @param endpoint      接口名
+     * @param requestBody   请求体
      * @param responseClass 响应类型
      * @param customHeaders 自定义请求头
-     * @param <T> 响应类型泛型
+     * @param <T>           响应类型泛型
      * @return 响应对象
-     * @throws IOException IO异常
+     * @throws IOException          IO异常
      * @throws InterruptedException 线程中断异常
-     * @throws ApiException API调用异常
+     * @throws ApiException         API调用异常
      */
-    protected <T> T put(String endpoint, Object requestBody, Class<T> responseClass, 
-                       Map<String, String> customHeaders) 
+    protected <T> T put(String endpoint, Object requestBody, Class<T> responseClass,
+                        Map<String, String> customHeaders)
             throws IOException, InterruptedException, ApiException {
         // 构建完整URL
         String url = buildUrl(endpoint);
-        
+
         // 构建请求体JSON
         String requestBodyJson = GSON.toJson(requestBody);
-        
+
         // 构建请求
         HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                 .uri(URI.create(url))
@@ -318,68 +335,71 @@ public abstract class BaseApiClient {
                 .header("Content-Type", "application/json")
                 .header("Accept", "application/json")
                 .PUT(HttpRequest.BodyPublishers.ofString(requestBodyJson));
-        
+
         // 添加自定义请求头
         addCustomHeaders(requestBuilder, customHeaders);
-        
+
         HttpRequest request = requestBuilder.build();
-        
+
         // 发送请求并获取响应
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        
+
         // 处理响应
         return handleResponse(response, responseClass);
     }
 
     /**
      * 执行DELETE请求
-     * @param endpoint 接口名
+     *
+     * @param endpoint      接口名
      * @param responseClass 响应类型
-     * @param <T> 响应类型泛型
+     * @param <T>           响应类型泛型
      * @return 响应对象
-     * @throws IOException IO异常
+     * @throws IOException          IO异常
      * @throws InterruptedException 线程中断异常
-     * @throws ApiException API调用异常
+     * @throws ApiException         API调用异常
      */
-    protected <T> T delete(String endpoint, Class<T> responseClass) 
+    protected <T> T delete(String endpoint, Class<T> responseClass)
             throws IOException, InterruptedException, ApiException {
         return delete(endpoint, null, responseClass);
     }
 
     /**
      * 执行带查询参数的DELETE请求
-     * @param endpoint 接口名
-     * @param queryParams 查询参数
+     *
+     * @param endpoint      接口名
+     * @param queryParams   查询参数
      * @param responseClass 响应类型
-     * @param <T> 响应类型泛型
+     * @param <T>           响应类型泛型
      * @return 响应对象
-     * @throws IOException IO异常
+     * @throws IOException          IO异常
      * @throws InterruptedException 线程中断异常
-     * @throws ApiException API调用异常
+     * @throws ApiException         API调用异常
      */
-    protected <T> T delete(String endpoint, Map<String, String> queryParams, Class<T> responseClass) 
+    protected <T> T delete(String endpoint, Map<String, String> queryParams, Class<T> responseClass)
             throws IOException, InterruptedException, ApiException {
         return delete(endpoint, queryParams, responseClass, null);
     }
 
     /**
      * 执行带查询参数和自定义请求头的DELETE请求
-     * @param endpoint 接口名
-     * @param queryParams 查询参数
+     *
+     * @param endpoint      接口名
+     * @param queryParams   查询参数
      * @param responseClass 响应类型
      * @param customHeaders 自定义请求头
-     * @param <T> 响应类型泛型
+     * @param <T>           响应类型泛型
      * @return 响应对象
-     * @throws IOException IO异常
+     * @throws IOException          IO异常
      * @throws InterruptedException 线程中断异常
-     * @throws ApiException API调用异常
+     * @throws ApiException         API调用异常
      */
-    protected <T> T delete(String endpoint, Map<String, String> queryParams, Class<T> responseClass, 
-                          Map<String, String> customHeaders) 
+    protected <T> T delete(String endpoint, Map<String, String> queryParams, Class<T> responseClass,
+                           Map<String, String> customHeaders)
             throws IOException, InterruptedException, ApiException {
         // 构建完整URL，包含查询参数
         String url = buildUrlWithQueryParams(endpoint, queryParams);
-        
+
         // 构建请求
         HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                 .uri(URI.create(url))
@@ -387,21 +407,22 @@ public abstract class BaseApiClient {
                 .header("Content-Type", "application/json")
                 .header("Accept", "application/json")
                 .DELETE();
-        
+
         // 添加自定义请求头
         addCustomHeaders(requestBuilder, customHeaders);
-        
+
         HttpRequest request = requestBuilder.build();
-        
+
         // 发送请求并获取响应
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        
+
         // 处理响应
         return handleResponse(response, responseClass);
     }
 
     /**
      * 构建完整URL
+     *
      * @param endpoint 接口名
      * @return 完整URL
      */
@@ -409,48 +430,50 @@ public abstract class BaseApiClient {
         // 确保baseUrl末尾没有斜杠，endpoint开头没有斜杠
         String normalizedBaseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
         String normalizedEndpoint = endpoint.startsWith("/") ? endpoint.substring(1) : endpoint;
-        
+
         return normalizedBaseUrl + BASE_PATH + normalizedEndpoint;
     }
 
     /**
      * 构建带查询参数的完整URL
-     * @param endpoint 接口名
+     *
+     * @param endpoint    接口名
      * @param queryParams 查询参数
      * @return 带查询参数的完整URL
      */
     private String buildUrlWithQueryParams(String endpoint, Map<String, String> queryParams) {
         String url = buildUrl(endpoint);
-        
+
         if (queryParams != null && !queryParams.isEmpty()) {
             StringJoiner joiner = new StringJoiner("&", "?", "");
             for (Map.Entry<String, String> entry : queryParams.entrySet()) {
-                joiner.add(URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8) + "=" + 
-                           URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8));
+                joiner.add(URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8) + "=" +
+                        URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8));
             }
             url += joiner.toString();
         }
-        
+
         return url;
     }
 
     /**
      * 处理HTTP响应
-     * @param response HTTP响应
+     *
+     * @param response      HTTP响应
      * @param responseClass 响应类型
-     * @param <T> 响应类型泛型
+     * @param <T>           响应类型泛型
      * @return 响应对象
      * @throws ApiException API调用异常
      */
     private <T> T handleResponse(HttpResponse<String> response, Class<T> responseClass) throws ApiException {
         int statusCode = response.statusCode();
         String responseBody = response.body();
-        
+
         // 检查响应状态码
         if (statusCode < 200 || statusCode >= 300) {
             throw new ApiException("API调用失败: " + statusCode + " - " + responseBody);
         }
-        
+
         try {
             // 解析JSON响应
             return GSON.fromJson(responseBody, responseClass);
@@ -461,8 +484,9 @@ public abstract class BaseApiClient {
 
     /**
      * 添加自定义请求头
+     *
      * @param requestBuilder 请求构建器
-     * @param customHeaders 自定义请求头
+     * @param customHeaders  自定义请求头
      */
     private void addCustomHeaders(HttpRequest.Builder requestBuilder, Map<String, String> customHeaders) {
         if (customHeaders != null && !customHeaders.isEmpty()) {
@@ -479,7 +503,7 @@ public abstract class BaseApiClient {
         public ApiException(String message) {
             super(message);
         }
-        
+
         public ApiException(String message, Throwable cause) {
             super(message, cause);
         }

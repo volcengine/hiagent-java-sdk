@@ -28,4 +28,28 @@ public class SetAppUserVariablesRequest {
 
     @SerializedName("UserVariables")
     private List<UserVariables> userVariables;
+
+    public String getUserID() {
+        return userID;
+    }
+
+    public void setUserID(String userID) {
+        this.userID = userID;
+    }
+
+    public String getConversationID() {
+        return conversationID;
+    }
+
+    public void setConversationID(String conversationID) {
+        this.conversationID = conversationID;
+    }
+
+    public List<UserVariables> getUserVariables() {
+        return userVariables;
+    }
+
+    public void setUserVariables(List<UserVariables> userVariables) {
+        this.userVariables = userVariables;
+    }
 }

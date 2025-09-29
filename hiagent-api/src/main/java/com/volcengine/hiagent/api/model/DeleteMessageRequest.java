@@ -25,4 +25,28 @@ public class DeleteMessageRequest {
 
     @SerializedName("QueryID")
     private String queryID;
+
+    public String getUserID() {
+        return userID;
+    }
+
+    public void setUserID(String userID) {
+        this.userID = userID;
+    }
+
+    public String getMessageID() {
+        return messageID;
+    }
+
+    public void setMessageID(String messageID) {
+        this.messageID = messageID;
+    }
+
+    public String getQueryID() {
+        return queryID;
+    }
+
+    public void setQueryID(String queryID) {
+        this.queryID = queryID;
+    }
 }

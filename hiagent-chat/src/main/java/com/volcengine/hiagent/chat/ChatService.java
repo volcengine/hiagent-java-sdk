@@ -196,16 +196,6 @@ public class ChatService {
         return this.chatClient.querySkillAsyncTask(request);
     }
 
-    public SyncRunAppWorkflowResponse syncResumeAppWorkflowBlocking(SyncResumeAppWorkflowRequest request)
-            throws IOException, InterruptedException, BaseApiClient.ApiException {
-        return this.chatClient.syncResumeAppWorkflowBlocking(request);
-    }
-
-    public Iterable<WorkflowEvent> syncResumeAppWorkflowStreaming(SyncResumeAppWorkflowRequest request)
-            throws IOException, InterruptedException, BaseApiClient.ApiException {
-        return this.chatClient.syncResumeAppWorkflowStreaming(request);
-    }
-
     public GetAppUserVariablesResponse getAppUserVariables(GetAppUserVariablesRequest request)
             throws IOException, InterruptedException, BaseApiClient.ApiException {
         return this.chatClient.getAppUserVariables(request);

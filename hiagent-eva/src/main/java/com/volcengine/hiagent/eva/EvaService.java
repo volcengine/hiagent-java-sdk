@@ -38,11 +38,23 @@ public class EvaService {
     public EvaService(String endpoint, String ak, String sk, String workspaceID, String appID) {
         this.workspaceID = workspaceID;
         this.appID = appID;
+        // 处理endpoint前缀
+        String processedEndpoint = endpoint;
+        boolean disableSSL = true;
+        
+        if (processedEndpoint.startsWith("http://")) {
+            processedEndpoint = processedEndpoint.substring(7);
+            disableSSL = true;
+        } else if (processedEndpoint.startsWith("https://")) {
+            processedEndpoint = processedEndpoint.substring(8);
+            disableSSL = false;
+        }
+        
         ApiClient apiClient = new ApiClient()
                 .setCredentials(Credentials.getCredentials(ak, sk))
                 .setRegion("cn-north-1")
-                .setEndpoint(endpoint)
-                .setDisableSSL(true);
+                .setEndpoint(processedEndpoint)
+                .setDisableSSL(disableSSL);
 
         this.evaClient = new EvaClient(apiClient);
     }

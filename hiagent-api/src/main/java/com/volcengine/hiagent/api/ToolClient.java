@@ -13,7 +13,6 @@
 // limitations under the License.
 package com.volcengine.hiagent.api;
 
-import com.volcengine.ApiClient;
 import com.volcengine.ApiException;
 import com.volcengine.ApiResponse;
 import com.volcengine.Pair;

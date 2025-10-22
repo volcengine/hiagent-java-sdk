@@ -13,8 +13,8 @@
 // limitations under the License.
 package com.volcengine.hiagent.eva;
 
-import com.volcengine.ApiClient;
 import com.volcengine.ApiException;
+import com.volcengine.hiagent.api.ApiClient;
 import com.volcengine.hiagent.api.EvaClient;
 import com.volcengine.hiagent.api.model.*;
 import com.volcengine.hiagent.api.model.base.*;
@@ -38,23 +38,8 @@ public class EvaService {
     public EvaService(String endpoint, String ak, String sk, String workspaceID, String appID) {
         this.workspaceID = workspaceID;
         this.appID = appID;
-        // 处理endpoint前缀
-        String processedEndpoint = endpoint;
-        boolean disableSSL = true;
         
-        if (processedEndpoint.startsWith("http://")) {
-            processedEndpoint = processedEndpoint.substring(7);
-            disableSSL = true;
-        } else if (processedEndpoint.startsWith("https://")) {
-            processedEndpoint = processedEndpoint.substring(8);
-            disableSSL = false;
-        }
-        
-        ApiClient apiClient = new ApiClient()
-                .setCredentials(Credentials.getCredentials(ak, sk))
-                .setRegion("cn-north-1")
-                .setEndpoint(processedEndpoint)
-                .setDisableSSL(disableSSL);
+        ApiClient apiClient = new ApiClient(endpoint, ak, sk, "cn-north-1");
 
         this.evaClient = new EvaClient(apiClient);
     }

@@ -17,7 +17,6 @@ import com.volcengine.hiagent.api.BaseApiClient;
 import com.volcengine.hiagent.api.ChatClient;
 import com.volcengine.hiagent.api.model.*;
 import com.volcengine.hiagent.api.model.base.ChatEvent;
-import com.volcengine.hiagent.api.model.base.WorkflowEvent;
 
 import java.io.IOException;
 import java.util.logging.Logger;

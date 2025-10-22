@@ -13,24 +13,15 @@
 // limitations under the License.
 package com.volcengine.hiagent.tool;
 
-import com.volcengine.ApiClient;
 import com.volcengine.ApiException;
-import com.volcengine.ApiResponse;
-import com.volcengine.Pair;
-import com.volcengine.hiagent.api.EvaClient;
+import com.volcengine.hiagent.api.ApiClient;
 import com.volcengine.hiagent.api.ToolClient;
-import com.volcengine.hiagent.api.model.*;
-import com.volcengine.hiagent.api.model.base.*;
-import com.volcengine.sign.Credentials;
-import org.jetbrains.annotations.Nullable;
+import com.volcengine.hiagent.api.model.ExecArchivedToolRequest;
+import com.volcengine.hiagent.api.model.ExecArchivedToolResponse;
+import com.volcengine.hiagent.api.model.GetArchivedToolRequest;
+import com.volcengine.hiagent.api.model.GetArchivedToolResponse;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.logging.Logger;
-
-import static java.lang.Thread.sleep;
 
 public class ToolService {
     private static final Logger logger = Logger.getLogger(ToolService.class.getName());
@@ -38,11 +29,7 @@ public class ToolService {
     private final ToolClient toolClient;
 
     public ToolService(String endpoint, String ak, String sk) {
-        ApiClient apiClient = new ApiClient()
-                .setCredentials(Credentials.getCredentials(ak, sk))
-                .setRegion("cn-north-1")
-                .setEndpoint(endpoint)
-                .setDisableSSL(true);
+        ApiClient apiClient = new ApiClient(endpoint, ak, sk, "cn-north-1");
 
         this.toolClient = new ToolClient(apiClient);
     }

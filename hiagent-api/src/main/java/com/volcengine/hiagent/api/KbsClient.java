@@ -77,7 +77,7 @@ public class KbsClient {
         final String localVarContentType = apiClient.selectHeaderContentType(localVarContentTypes);
         localVarHeaderParams.put("Content-Type", localVarContentType);
 
-        String[] localVarAuthNames = new String[] { "volcengineSign" };
+        String[] localVarAuthNames = new String[]{"volcengineSign"};
         com.squareup.okhttp.Call call = apiClient.buildCall(localVarPath, "POST", localVarQueryParams,
                 localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarFormParams,
                 localVarAuthNames, null);

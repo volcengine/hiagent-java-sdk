@@ -13,56 +13,53 @@
 // limitations under the License.
 package com.volcengine.hiagent.api.examples;
 
-import com.volcengine.ApiClient;
 import com.volcengine.ApiException;
+import com.volcengine.hiagent.api.ApiClient;
 import com.volcengine.hiagent.api.ToolClient;
 import com.volcengine.hiagent.api.model.ExecArchivedToolRequest;
 import com.volcengine.hiagent.api.model.ExecArchivedToolResponse;
 import com.volcengine.hiagent.api.model.GetArchivedToolRequest;
 import com.volcengine.hiagent.api.model.GetArchivedToolResponse;
-import com.volcengine.sign.Credentials;
 
 public class TestExecArchivedTool {
-  public static void main(String[] args) {
-    String ak = System.getenv("VOLC_ACCESSKEY");
-    String sk = System.getenv("VOLC_SECRETKEY");
-    String region = System.getenv("HIAGENT_TOP_REGION");
-    String endpoint = System.getenv("HIAGENT_TOP_ENDPOINT");
+    public static void main(String[] args) {
+        String ak = System.getenv("VOLC_ACCESSKEY");
+        String sk = System.getenv("VOLC_SECRETKEY");
+        String region = System.getenv("HIAGENT_TOP_REGION");
+        String endpoint = System.getenv("HIAGENT_TOP_ENDPOINT");
 
-    String workspaceID = System.getenv("WORKSPACE_ID");
-    String toolID = System.getenv("TOOL_ID");
+        String workspaceID = System.getenv("WORKSPACE_ID");
+        String toolID = System.getenv("TOOL_ID");
 
-    ApiClient apiClient = new ApiClient()
-        .setCredentials(Credentials.getCredentials(ak, sk))
-        .setRegion(region).setEndpoint(endpoint).setDisableSSL(true);
+        ApiClient apiClient = new ApiClient(endpoint, ak, sk, region);
 
-    ToolClient api = new ToolClient(apiClient);
+        ToolClient api = new ToolClient(apiClient);
 
-    try {
-      ExecArchivedToolRequest request = new ExecArchivedToolRequest();
-      request.setWorkspaceID(workspaceID);
-      request.setPluginID(getArchivedTool(api, workspaceID, toolID).getPluginID());
-      request.setToolID(toolID);
-      request.setInputData("{\"timezone\": \"Asia/Shanghai\"}");
-      ExecArchivedToolResponse response = api.execArchivedTool(request);
-      System.out.println("Output: " + response.getOutput());
-      System.out.println("Success: " + response.getSuccess());
-      System.out.println("Reason: " + response.getReason());
-    } catch (ApiException e) {
-      System.err.println("API调用发生异常:");
-      System.err.println("错误码: " + e.getCode());
-      System.err.println("错误信息: " + e.getMessage());
-      System.err.println("响应体: " + e.getResponseBody());
-      System.err.println("完整堆栈跟踪:");
-      e.printStackTrace(); // 这会打印完整的堆栈跟踪
+        try {
+            ExecArchivedToolRequest request = new ExecArchivedToolRequest();
+            request.setWorkspaceID(workspaceID);
+            request.setPluginID(getArchivedTool(api, workspaceID, toolID).getPluginID());
+            request.setToolID(toolID);
+            request.setInputData("{\"timezone\": \"Asia/Shanghai\"}");
+            ExecArchivedToolResponse response = api.execArchivedTool(request);
+            System.out.println("Output: " + response.getOutput());
+            System.out.println("Success: " + response.getSuccess());
+            System.out.println("Reason: " + response.getReason());
+        } catch (ApiException e) {
+            System.err.println("API调用发生异常:");
+            System.err.println("错误码: " + e.getCode());
+            System.err.println("错误信息: " + e.getMessage());
+            System.err.println("响应体: " + e.getResponseBody());
+            System.err.println("完整堆栈跟踪:");
+            e.printStackTrace(); // 这会打印完整的堆栈跟踪
+        }
     }
-  }
 
 
-  private static GetArchivedToolResponse getArchivedTool(ToolClient api, String workspaceID, String toolID) throws ApiException {
-    GetArchivedToolRequest request = new GetArchivedToolRequest();
-    request.setId(toolID);
-    request.setWorkspaceID(workspaceID);
-    return api.getArchivedTool(request);
-  }
+    private static GetArchivedToolResponse getArchivedTool(ToolClient api, String workspaceID, String toolID) throws ApiException {
+        GetArchivedToolRequest request = new GetArchivedToolRequest();
+        request.setId(toolID);
+        request.setWorkspaceID(workspaceID);
+        return api.getArchivedTool(request);
+    }
 }

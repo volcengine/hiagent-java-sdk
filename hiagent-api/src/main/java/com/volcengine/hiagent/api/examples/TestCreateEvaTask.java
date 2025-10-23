@@ -18,15 +18,13 @@ import com.volcengine.ApiException;
 import com.volcengine.hiagent.api.EvaClient;
 import com.volcengine.hiagent.api.model.CreateEvaTaskRequest;
 import com.volcengine.hiagent.api.model.CreateEvaTaskResponse;
-import com.volcengine.hiagent.api.model.base.DatasetTaskConfig;
-import com.volcengine.hiagent.api.model.base.EvaTargetBuiltinModelConfig;
-import com.volcengine.hiagent.api.model.base.EvaTargetConfig;
-import com.volcengine.hiagent.api.model.base.EvaTaskTarget;
-import com.volcengine.hiagent.api.model.base.ModelAgentConfig;
+import com.volcengine.hiagent.api.model.base.*;
 import com.volcengine.sign.Credentials;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.volcengine.hiagent.api.model.base.EvaTargetType.TargetTypeBuiltinModel;
 
 public class TestCreateEvaTask {
     public static void main(String[] args) {
@@ -72,7 +70,7 @@ public class TestCreateEvaTask {
 
         // 创建一个内置模型目标
         EvaTaskTarget target = new EvaTaskTarget();
-        target.setType("builtin_model"); // 设置目标类型
+        target.setType(TargetTypeBuiltinModel); // 设置目标类型
         target.setTargetID("model123");  // 设置目标ID
         target.setTargetName("测试模型"); // 设置目标名称
         target.setQPS(10);              // 设置每秒查询率

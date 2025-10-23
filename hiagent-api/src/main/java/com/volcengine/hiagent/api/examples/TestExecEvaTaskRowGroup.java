@@ -25,6 +25,9 @@ import com.volcengine.sign.Credentials;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.volcengine.hiagent.api.model.base.EvaConversationStatus.EvaConversationStatusSucceed;
+import static com.volcengine.hiagent.api.model.base.EvaTargetType.TargetTypeBuiltinModel;
+
 public class TestExecEvaTaskRowGroup {
     public static void main(String[] args) {
         // 从环境变量获取配置信息
@@ -57,7 +60,7 @@ public class TestExecEvaTaskRowGroup {
 
         // 创建一个目标结果
         EvaTaskResultUpdateTargetContent targetResult = new EvaTaskResultUpdateTargetContent();
-        targetResult.setTargetType("builtin_model");
+        targetResult.setTargetType(TargetTypeBuiltinModel);
         targetResult.setTargetID("model123");
 
         // 创建结果对列表
@@ -68,7 +71,7 @@ public class TestExecEvaTaskRowGroup {
         resultPair.setContent("这是模型生成的响应内容");
         resultPair.setContentThought("这是模型生成内容的思考过程");
         resultPair.setRound(1);
-        resultPair.setStatus("success");
+        resultPair.setStatus(EvaConversationStatusSucceed);
 
         // 将结果对添加到结果列表
         results.add(resultPair);

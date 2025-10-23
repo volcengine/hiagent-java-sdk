@@ -16,7 +16,7 @@ package com.volcengine.hiagent.api.model.base;
 import org.jetbrains.annotations.Nullable;
 
 public class EvaTaskTarget {
-    private String Type;
+    private EvaTargetType Type;
     private String TargetID;
     private String TargetName;
     @Nullable
@@ -29,7 +29,7 @@ public class EvaTaskTarget {
     public EvaTaskTarget() {
     }
 
-    public EvaTaskTarget(String type, String targetID, String targetName, @Nullable String targetIcon, EvaTargetConfig targetConfig, long QPS, @Nullable EvaTaskTargetParams params) {
+    public EvaTaskTarget(EvaTargetType type, String targetID, String targetName, @Nullable String targetIcon, EvaTargetConfig targetConfig, long QPS, @Nullable EvaTaskTargetParams params) {
         Type = type;
         TargetID = targetID;
         TargetName = targetName;
@@ -39,11 +39,11 @@ public class EvaTaskTarget {
         Params = params;
     }
 
-    public String getType() {
+    public EvaTargetType getType() {
         return Type;
     }
 
-    public void setType(String type) {
+    public void setType(EvaTargetType type) {
         Type = type;
     }
 

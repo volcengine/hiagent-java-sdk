@@ -16,24 +16,24 @@ package com.volcengine.hiagent.api.model.base;
 import java.util.List;
 
 public class EvaTaskResultUpdateTargetContent {
-    private String TargetType;
+    private EvaTargetType TargetType;
     private String TargetID;
     private List<EvaTaskResultTargetContentPair> Results;
 
     public EvaTaskResultUpdateTargetContent() {
     }
 
-    public EvaTaskResultUpdateTargetContent(String targetType, String targetID, List<EvaTaskResultTargetContentPair> results) {
+    public EvaTaskResultUpdateTargetContent(EvaTargetType targetType, String targetID, List<EvaTaskResultTargetContentPair> results) {
         TargetType = targetType;
         TargetID = targetID;
         Results = results;
     }
 
-    public String getTargetType() {
+    public EvaTargetType getTargetType() {
         return TargetType;
     }
 
-    public void setTargetType(String targetType) {
+    public void setTargetType(EvaTargetType targetType) {
         TargetType = targetType;
     }
 

@@ -39,7 +39,7 @@ public class EvaTaskItem {
     private long CostTokens;
     @Nullable
     private EvaTaskItemProgress Progress;
-    private String Status;
+    private EvaTaskStatus Status;
     @Nullable
     private String StatusMessage;
     private String CreatedAt;
@@ -50,7 +50,7 @@ public class EvaTaskItem {
     public EvaTaskItem() {
     }
 
-    public EvaTaskItem(String tenantID, String workspaceID, String taskID, String name, @Nullable String description, @Nullable EvaTaskItemTaskTemplate taskTemplate, String targetType, EvaTaskItemRuleset ruleset, EvaTaskItemDataset dataset, @Nullable List<EvaTaskItemTarget> targets, @Nullable String startedAt, @Nullable String completedAt, long duration, long costTokens, @Nullable EvaTaskItemProgress progress, String status, @Nullable String statusMessage, String createdAt, String updatedAt, String createdBy, String updatedBy) {
+    public EvaTaskItem(String tenantID, String workspaceID, String taskID, String name, @Nullable String description, @Nullable EvaTaskItemTaskTemplate taskTemplate, String targetType, EvaTaskItemRuleset ruleset, EvaTaskItemDataset dataset, @Nullable List<EvaTaskItemTarget> targets, @Nullable String startedAt, @Nullable String completedAt, long duration, long costTokens, @Nullable EvaTaskItemProgress progress, EvaTaskStatus status, @Nullable String statusMessage, String createdAt, String updatedAt, String createdBy, String updatedBy) {
         TenantID = tenantID;
         WorkspaceID = workspaceID;
         TaskID = taskID;
@@ -200,11 +200,11 @@ public class EvaTaskItem {
         Progress = progress;
     }
 
-    public String getStatus() {
+    public EvaTaskStatus getStatus() {
         return Status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(EvaTaskStatus status) {
         Status = status;
     }
 

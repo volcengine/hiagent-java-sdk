@@ -26,6 +26,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import static com.volcengine.hiagent.api.model.base.EvaTargetType.TargetTypeCustomAPP;
+import static com.volcengine.hiagent.api.model.base.EvaTaskStatus.*;
 import static java.lang.Thread.sleep;
 
 public class EvaService {
@@ -52,7 +54,7 @@ public class EvaService {
             String taskName,
             String rulesetID,
             @Nullable String description,
-            @Nullable ModelAgentConfig modelAgentConfig,
+            @Nullable EvaTargetCustomAPPConfig customAPPConfig,
             int maxConversations,
             boolean runImmediately
     ){
@@ -77,7 +79,7 @@ public class EvaService {
 
             // 创建评估目标
             EvaTaskTarget target = new EvaTaskTarget();
-            target.setType("CustomAPP");
+            target.setType(TargetTypeCustomAPP);
             target.setTargetID(appID);
             target.setTargetName("Custom Application");
             target.setQPS(10); // 设置每秒查询率
@@ -86,10 +88,8 @@ public class EvaService {
             EvaTargetConfig targetConfig = new EvaTargetConfig();
 
             // 如果提供了模型代理配置，则创建内置模型配置
-            if (modelAgentConfig != null) {
-                EvaTargetBuiltinModelConfig builtinModelConfig = new EvaTargetBuiltinModelConfig();
-                builtinModelConfig.setModelAgentConfig(modelAgentConfig);
-                targetConfig.setBuiltinModelConfig(builtinModelConfig);
+            if (customAPPConfig != null) {
+                targetConfig.setCustomAPPConfig(customAPPConfig);
             }
 
             // 设置目标配置
@@ -109,7 +109,7 @@ public class EvaService {
         }
     }
 
-    public GetEvaTaskReportResponse run(String datasetID, String datasetVersionID, String taskName, String rulesetID, int maxConversations, ModelAgentConfig targetConfig, InferenceFunction inferenceFunction) throws ApiException {
+    public GetEvaTaskReportResponse run(String datasetID, String datasetVersionID, String taskName, String rulesetID, int maxConversations, EvaTargetCustomAPPConfig targetConfig, InferenceFunction inferenceFunction) throws ApiException {
         System.out.println("EVA service running...");
         try {
             // 1. Create evaluation task
@@ -158,7 +158,7 @@ public class EvaService {
                             caseItem.getDatasetCaseID(),
                             new ArrayList<EvaTaskResultUpdateTargetContent>() {{
                                 add(new EvaTaskResultUpdateTargetContent(
-                                        "CustomAPP",
+                                        TargetTypeCustomAPP,
                                         appID,
                                         inferenceFunction.execute(caseData)
                                 ));
@@ -171,12 +171,12 @@ public class EvaService {
             });
             // 5. Wait for processing to complete
             System.out.println("Waiting for evaluation to complete...");
-            var terminalEvaTaskStatus = new ArrayList<String>() {{
-                add("Succeed");
-                add("PartialSucceed");
-                add("Failed");
-                add("Cancelled");
-                add("Paused");
+            var terminalEvaTaskStatus = new ArrayList<EvaTaskStatus>() {{
+                add(EvaTaskStatusSucceed);
+                add(EvaTaskStatusPartialSucceed);
+                add(EvaTaskStatusFailed);
+                add(EvaTaskStatusCancelled);
+                add(EvaTaskStatusPaused);
             }};
             var retryCount = 0;
             do {

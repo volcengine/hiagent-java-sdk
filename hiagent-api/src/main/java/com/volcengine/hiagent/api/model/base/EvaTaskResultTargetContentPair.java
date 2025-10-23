@@ -25,7 +25,7 @@ public class EvaTaskResultTargetContentPair {
     private String MessageID;
     @Nullable
     private String ConversationID;
-    private String Status;
+    private EvaConversationStatus Status;
     @Nullable
     private String StatusMessage;
     private long CostTokens;
@@ -36,7 +36,7 @@ public class EvaTaskResultTargetContentPair {
     public EvaTaskResultTargetContentPair() {
     }
 
-    public EvaTaskResultTargetContentPair(@Nullable String content, @Nullable String contentThought, long round, @Nullable String messageID, @Nullable String conversationID, String status, @Nullable String statusMessage, long costTokens, long inferenceDuration, long ruleDuration, long TTFT) {
+    public EvaTaskResultTargetContentPair(@Nullable String content, @Nullable String contentThought, long round, @Nullable String messageID, @Nullable String conversationID, EvaConversationStatus status, @Nullable String statusMessage, long costTokens, long inferenceDuration, long ruleDuration, long TTFT) {
         Content = content;
         ContentThought = contentThought;
         Round = round;
@@ -94,11 +94,11 @@ public class EvaTaskResultTargetContentPair {
         ConversationID = conversationID;
     }
 
-    public String getStatus() {
+    public EvaConversationStatus getStatus() {
         return Status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(EvaConversationStatus status) {
         Status = status;
     }
 

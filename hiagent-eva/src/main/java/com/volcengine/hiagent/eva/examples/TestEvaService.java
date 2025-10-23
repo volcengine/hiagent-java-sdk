@@ -16,6 +16,7 @@ package com.volcengine.hiagent.eva.examples;
 import com.volcengine.ApiException;
 import com.volcengine.hiagent.api.model.GetEvaTaskReportResponse;
 import com.volcengine.hiagent.api.model.base.Cell;
+import com.volcengine.hiagent.api.model.base.EvaTargetCustomAPPConfig;
 import com.volcengine.hiagent.api.model.base.EvaTaskResultTargetContentPair;
 import com.volcengine.hiagent.api.model.base.ModelAgentConfig;
 import com.volcengine.hiagent.eva.EvaService;
@@ -25,6 +26,8 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static com.volcengine.hiagent.api.model.base.EvaConversationStatus.EvaConversationStatusSucceed;
+
 public class TestEvaService {
     private static final Logger logger = Logger.getLogger(TestEvaService.class.getName());
 
@@ -33,7 +36,6 @@ public class TestEvaService {
             // 从环境变量获取配置信息
             String ak = System.getenv("VOLC_ACCESSKEY");
             String sk = System.getenv("VOLC_SECRETKEY");
-            String region = System.getenv("HIAGENT_TOP_REGION");
             String endpoint = System.getenv("HIAGENT_TOP_ENDPOINT");
             String workspaceID = System.getenv("WORKSPACE_ID");
             String appID = System.getenv("CUSTOM_APP_ID");
@@ -56,6 +58,8 @@ public class TestEvaService {
             modelConfig.setMaxTokens(2048);
             modelConfig.setRoundsReserved(5);
             modelConfig.setRagEnabled(false);
+            EvaTargetCustomAPPConfig customAPPConfig = new EvaTargetCustomAPPConfig(appID,modelConfig);
+
 
             // 实现InferenceFunction接口
             InferenceFunction inferenceFunction = new ExampleInferenceFunction();
@@ -68,7 +72,7 @@ public class TestEvaService {
                     taskName,
                     rulesetID,
                     maxConversations,
-                    modelConfig,
+                    customAPPConfig,
                     inferenceFunction
             );
 
@@ -163,7 +167,7 @@ public class TestEvaService {
             // 创建第一个回合的响应
             EvaTaskResultTargetContentPair response = new EvaTaskResultTargetContentPair();
             response.setRound(round);
-            response.setStatus("success");
+            response.setStatus(EvaConversationStatusSucceed);
             response.setContent(generateMockResponse(inputText));
             response.setContentThought("这是一个模拟的思考过程，基于输入生成了回答。");
             response.setCostTokens(random.nextInt(200) + 100); // 模拟消耗的token数

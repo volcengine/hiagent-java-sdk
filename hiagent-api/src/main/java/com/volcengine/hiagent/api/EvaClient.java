@@ -290,4 +290,39 @@ public class EvaClient {
                 ListEvaDatasetConversationsResponse.class);
         return apiResponse.getData();
     }
+
+    public EmptyResponse updateEvaTask(UpdateEvaTaskRequest body) throws ApiException {
+        Object localVarPostBody = body;
+
+        String localVarPath = "/UpdateEvaTask/2025-02-01/eva/post/application_json/";
+
+        List<Pair> localVarQueryParams = new ArrayList<Pair>();
+        List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
+
+        Map<String, String> localVarHeaderParams = new HashMap<String, String>();
+
+        Map<String, Object> localVarFormParams = new HashMap<String, Object>();
+
+        final String[] localVarAccepts = {
+                "application/json"
+        };
+        final String localVarAccept = apiClient.selectHeaderAccept(localVarAccepts);
+        if (localVarAccept != null)
+            localVarHeaderParams.put("Accept", localVarAccept);
+
+        final String[] localVarContentTypes = {
+                "application/json"
+        };
+        final String localVarContentType = apiClient.selectHeaderContentType(localVarContentTypes);
+        localVarHeaderParams.put("Content-Type", localVarContentType);
+
+        String[] localVarAuthNames = new String[]{"volcengineSign"};
+        com.squareup.okhttp.Call call = apiClient.buildCall(localVarPath, "POST", localVarQueryParams,
+                localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarFormParams,
+                localVarAuthNames, null);
+
+        ApiResponse<EmptyResponse> apiResponse = apiClient.execute(call,
+                EmptyResponse.class);
+        return apiResponse.getData();
+    }
 }

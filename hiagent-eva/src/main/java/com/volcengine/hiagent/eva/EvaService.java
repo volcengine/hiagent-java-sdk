@@ -111,11 +111,40 @@ public class EvaService {
 
     public GetEvaTaskReportResponse run(String datasetID, String datasetVersionID, String taskName, String rulesetID, int maxConversations, EvaTargetCustomAPPConfig targetConfig, InferenceFunction inferenceFunction) throws ApiException {
         System.out.println("EVA service running...");
+        String taskID = "";
         try {
-            // 1. Create evaluation task
-            System.out.printf("Creating evaluation task: %s\n", taskName);
-            var taskID = createTask(this.evaClient, this.workspaceID, datasetID, datasetVersionID, taskName, rulesetID, null, targetConfig, maxConversations, true).getTaskID();
-            System.out.printf("Task created successfully: %s\n", taskID);
+            // 1. Create or Get evaluation task
+            try {
+                System.out.printf("Check evaluation task status: %s\n", taskName);
+                var getTaskResp = this.evaClient.getEvaTask(new GetEvaTaskRequest(
+                        workspaceID,
+                        null,
+                        taskName
+                ));
+                taskID = getTaskResp.getTaskID();
+                if (new ArrayList<EvaTaskStatus>() {{
+                    add(EvaTaskStatusPartialSucceed);
+                    add(EvaTaskStatusFailed);
+                    add(EvaTaskStatusCancelled);
+                    add(EvaTaskStatusPaused);
+                }}.contains(getTaskResp.getResultTaskStatus().getStatus())) {
+                    this.evaClient.updateEvaTask(new UpdateEvaTaskRequest(
+                            workspaceID,
+                            taskID,
+                            null,
+                            EvaTaskStatusRunning
+                    ));
+                }
+            }  catch (ApiException e) {
+                if (e.getCode() != 404) {
+                    throw new RuntimeException(e);
+                } else {
+                    System.out.printf("Creating evaluation task: %s\n", taskName);
+                    taskID = createTask(this.evaClient, this.workspaceID, datasetID, datasetVersionID, taskName, rulesetID, null, targetConfig, maxConversations, true).getTaskID();
+                }
+            }
+            String finalTaskID = taskID;
+            System.out.printf("Task Collect Successfully: %s\n", finalTaskID);
             // 2. Get dataset column information
             System.out.println("Fetching dataset columns...");
             var columns = this.evaClient.listEvaDatasetColumns(new ListEvaDatasetColumnsRequest(workspaceID, datasetID, datasetVersionID, false)).getColumns();
@@ -154,7 +183,7 @@ public class EvaService {
                 try {
                     this.evaClient.execEvaTaskRowGroup(new ExecEvaTaskRowGroupRequest(
                             workspaceID,
-                            taskID,
+                            finalTaskID,
                             caseItem.getDatasetCaseID(),
                             new ArrayList<EvaTaskResultUpdateTargetContent>() {{
                                 add(new EvaTaskResultUpdateTargetContent(
@@ -165,7 +194,9 @@ public class EvaService {
                             }}
                     ));
                 } catch (ApiException e) {
-                    throw new RuntimeException(e);
+                    if (!e.getResponseBody().contains("task result is already succeed") && !e.getResponseBody().contains("task result is already running")) {
+                        throw new RuntimeException(e);
+                    }
                 }
                 System.out.printf("Results submitted for row [%s]\n", caseItem.getDatasetCaseID());
             });
@@ -179,17 +210,24 @@ public class EvaService {
                 add(EvaTaskStatusPaused);
             }};
             var retryCount = 0;
+            EvaTaskStatus taskStatus = null;
             do {
                 sleep(1000);
                 retryCount++;
                 if (retryCount > 100) {
                     break;
                 }
-            } while (!terminalEvaTaskStatus.contains(this.evaClient.getEvaTask(new GetEvaTaskRequest(
-                    workspaceID,
-                    taskID,
-                    null
-            )).getStatus()));
+                taskStatus = this.evaClient.getEvaTask(new GetEvaTaskRequest(
+                        workspaceID,
+                        taskID,
+                        null
+                )).getResultTaskStatus().getStatus();
+
+            } while (!terminalEvaTaskStatus.contains(taskStatus));
+            if (taskStatus == EvaTaskStatusPaused) {
+                System.out.println("Evaluation Paused");
+                return null;
+            }
             // 6. Get evaluation report
             var getReportResp = this.evaClient.getEvaTaskReport(new GetEvaTaskReportRequest(
                     workspaceID,

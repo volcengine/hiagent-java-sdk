@@ -28,8 +28,8 @@ import java.util.logging.Logger;
 
 import static com.volcengine.hiagent.api.model.base.EvaConversationStatus.EvaConversationStatusSucceed;
 
-public class TestEvaService {
-    private static final Logger logger = Logger.getLogger(TestEvaService.class.getName());
+public class TestCreateEvaTaskService {
+    private static final Logger logger = Logger.getLogger(TestCreateEvaTaskService.class.getName());
 
     public static void main(String[] args) {
         try {

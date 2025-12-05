@@ -18,7 +18,6 @@ import com.volcengine.hiagent.api.ApiClient;
 import com.volcengine.hiagent.api.EvaClient;
 import com.volcengine.hiagent.api.model.*;
 import com.volcengine.hiagent.api.model.base.*;
-import com.volcengine.sign.Credentials;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -229,6 +228,110 @@ public class EvaService {
                 return null;
             }
             // 6. Get evaluation report
+            var getReportResp = this.evaClient.getEvaTaskReport(new GetEvaTaskReportRequest(
+                    workspaceID,
+                    taskID
+            ));
+            assert getReportResp.getRules() != null;
+            System.out.printf("Evaluation completed with status: [%s]\n", getReportResp.getRules().isEmpty() ? "Running" : "Completed");
+            return getReportResp;
+        } catch (InterruptedException e) {
+            throw new ApiException(e);
+        }
+    }
+
+    public void pause(String taskName) throws ApiException {
+        try {
+            var taskID = this.evaClient.getEvaTask(new GetEvaTaskRequest(
+                    workspaceID,
+                    null,
+                    taskName
+            )).getTaskID();
+            this.evaClient.pauseEvaTask(new PauseEvaTaskRequest(
+                    workspaceID,
+                    taskID
+            ));
+            var terminalEvaTaskStatus = new ArrayList<EvaTaskStatus>() {{
+                add(EvaTaskStatusPaused);
+            }};
+            var retryCount = 0;
+            EvaTaskStatus taskStatus = null;
+            do {
+                sleep(1000);
+                retryCount++;
+                if (retryCount > 100) {
+                    break;
+                }
+                taskStatus = this.evaClient.getEvaTask(new GetEvaTaskRequest(
+                        workspaceID,
+                        taskID,
+                        null
+                )).getResultTaskStatus().getStatus();
+
+            } while (!terminalEvaTaskStatus.contains(taskStatus));
+            if (taskStatus != EvaTaskStatusPaused) {
+                throw new ApiException("Pause operation timeout");
+            }
+            logger.info("Paused evaluation task: " + taskName);
+        } catch (InterruptedException e) {
+            throw new ApiException(e);
+        }
+    }
+
+    public void delete(String taskName) throws ApiException {
+        try {
+            this.evaClient.deleteEvaTask(new DeleteEvaTaskRequest(
+                    workspaceID,
+                    this.evaClient.getEvaTask(new GetEvaTaskRequest(
+                            workspaceID,
+                            null,
+                            taskName
+                    )).getTaskID()
+            ));
+            logger.info("Deleted evaluation task: " + taskName);
+        } catch (ApiException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public GetEvaTaskReportResponse retry(String taskName) throws ApiException {
+        try {
+            var taskID = this.evaClient.getEvaTask(new GetEvaTaskRequest(
+                    workspaceID,
+                    null,
+                    taskName
+            )).getTaskID();
+            this.evaClient.retryEvaTask(new RetryEvaTaskRequest(
+                    workspaceID,
+                    taskID,
+                    new EvaTaskRetryOption(true)
+            ));
+            var terminalEvaTaskStatus = new ArrayList<EvaTaskStatus>() {{
+                add(EvaTaskStatusSucceed);
+                add(EvaTaskStatusPartialSucceed);
+                add(EvaTaskStatusFailed);
+                add(EvaTaskStatusCancelled);
+                add(EvaTaskStatusPaused);
+            }};
+            var retryCount = 0;
+            EvaTaskStatus taskStatus = null;
+            do {
+                sleep(1000);
+                retryCount++;
+                if (retryCount > 100) {
+                    break;
+                }
+                taskStatus = this.evaClient.getEvaTask(new GetEvaTaskRequest(
+                        workspaceID,
+                        taskID,
+                        null
+                )).getResultTaskStatus().getStatus();
+
+            } while (!terminalEvaTaskStatus.contains(taskStatus));
+            if (taskStatus == EvaTaskStatusPaused) {
+                System.out.println("Evaluation Paused");
+                return null;
+            }
             var getReportResp = this.evaClient.getEvaTaskReport(new GetEvaTaskReportRequest(
                     workspaceID,
                     taskID

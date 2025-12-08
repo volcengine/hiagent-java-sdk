@@ -31,17 +31,7 @@ public class EvaTaskItem {
     private EvaTaskItemDataset Dataset;
     @Nullable
     private java.util.List<EvaTaskItemTarget> Targets;
-    @Nullable
-    private String StartedAt;
-    @Nullable
-    private String CompletedAt;
-    private long Duration;
-    private long CostTokens;
-    @Nullable
-    private EvaTaskItemProgress Progress;
-    private EvaTaskStatus Status;
-    @Nullable
-    private String StatusMessage;
+    private EvaTaskStatusItem ResultTaskStatus;
     private String CreatedAt;
     private String UpdatedAt;
     private String CreatedBy;
@@ -50,7 +40,7 @@ public class EvaTaskItem {
     public EvaTaskItem() {
     }
 
-    public EvaTaskItem(String tenantID, String workspaceID, String taskID, String name, @Nullable String description, @Nullable EvaTaskItemTaskTemplate taskTemplate, String targetType, EvaTaskItemRuleset ruleset, EvaTaskItemDataset dataset, @Nullable List<EvaTaskItemTarget> targets, @Nullable String startedAt, @Nullable String completedAt, long duration, long costTokens, @Nullable EvaTaskItemProgress progress, EvaTaskStatus status, @Nullable String statusMessage, String createdAt, String updatedAt, String createdBy, String updatedBy) {
+    public EvaTaskItem(String tenantID, String workspaceID, String taskID, String name, @Nullable String description, @Nullable EvaTaskItemTaskTemplate taskTemplate, String targetType, EvaTaskItemRuleset ruleset, EvaTaskItemDataset dataset, @Nullable List<EvaTaskItemTarget> targets, EvaTaskStatusItem resultTaskStatus, String createdAt, String updatedAt, String createdBy, String updatedBy) {
         TenantID = tenantID;
         WorkspaceID = workspaceID;
         TaskID = taskID;
@@ -61,13 +51,7 @@ public class EvaTaskItem {
         Ruleset = ruleset;
         Dataset = dataset;
         Targets = targets;
-        StartedAt = startedAt;
-        CompletedAt = completedAt;
-        Duration = duration;
-        CostTokens = costTokens;
-        Progress = progress;
-        Status = status;
-        StatusMessage = statusMessage;
+        ResultTaskStatus = resultTaskStatus;
         CreatedAt = createdAt;
         UpdatedAt = updatedAt;
         CreatedBy = createdBy;
@@ -157,64 +141,12 @@ public class EvaTaskItem {
         Targets = targets;
     }
 
-    @Nullable
-    public String getStartedAt() {
-        return StartedAt;
+    public EvaTaskStatusItem getResultTaskStatus() {
+        return ResultTaskStatus;
     }
 
-    public void setStartedAt(@Nullable String startedAt) {
-        StartedAt = startedAt;
-    }
-
-    @Nullable
-    public String getCompletedAt() {
-        return CompletedAt;
-    }
-
-    public void setCompletedAt(@Nullable String completedAt) {
-        CompletedAt = completedAt;
-    }
-
-    public long getDuration() {
-        return Duration;
-    }
-
-    public void setDuration(long duration) {
-        Duration = duration;
-    }
-
-    public long getCostTokens() {
-        return CostTokens;
-    }
-
-    public void setCostTokens(long costTokens) {
-        CostTokens = costTokens;
-    }
-
-    @Nullable
-    public EvaTaskItemProgress getProgress() {
-        return Progress;
-    }
-
-    public void setProgress(@Nullable EvaTaskItemProgress progress) {
-        Progress = progress;
-    }
-
-    public EvaTaskStatus getStatus() {
-        return Status;
-    }
-
-    public void setStatus(EvaTaskStatus status) {
-        Status = status;
-    }
-
-    @Nullable
-    public String getStatusMessage() {
-        return StatusMessage;
-    }
-
-    public void setStatusMessage(@Nullable String statusMessage) {
-        StatusMessage = statusMessage;
+    public void setResultTaskStatus(EvaTaskStatusItem resultTaskStatus) {
+        ResultTaskStatus = resultTaskStatus;
     }
 
     public String getCreatedAt() {

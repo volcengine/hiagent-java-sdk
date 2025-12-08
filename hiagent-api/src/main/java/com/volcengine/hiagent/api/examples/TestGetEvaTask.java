@@ -70,9 +70,9 @@ public class TestGetEvaTask {
             System.out.println("租户ID: " + taskItem.getTenantID());
             System.out.println("工作区ID: " + taskItem.getWorkspaceID());
             System.out.println("目标类型: " + taskItem.getTargetType());
-            System.out.println("状态: " + taskItem.getStatus());
-            if (taskItem.getStatusMessage() != null) {
-                System.out.println("状态消息: " + taskItem.getStatusMessage());
+            System.out.println("状态: " + taskItem.getResultTaskStatus().getStatus());
+            if (taskItem.getResultTaskStatus().getStatusMessage() != null) {
+                System.out.println("状态消息: " + taskItem.getResultTaskStatus().getStatusMessage());
             }
 
             // 打印时间信息
@@ -82,20 +82,20 @@ public class TestGetEvaTask {
             System.out.println("更新人: " + taskItem.getUpdatedBy());
 
             // 打印执行信息
-            if (taskItem.getStartedAt() != null) {
-                System.out.println("开始时间: " + taskItem.getStartedAt());
+            if (taskItem.getResultTaskStatus().getStartedAt() != null) {
+                System.out.println("开始时间: " + taskItem.getResultTaskStatus().getStartedAt());
             }
-            if (taskItem.getCompletedAt() != null) {
-                System.out.println("完成时间: " + taskItem.getCompletedAt());
+            if (taskItem.getResultTaskStatus().getCompletedAt() != null) {
+                System.out.println("完成时间: " + taskItem.getResultTaskStatus().getCompletedAt());
             }
-            System.out.println("总耗时: " + taskItem.getDuration() + "ms");
-            System.out.println("消耗Token数: " + taskItem.getCostTokens());
+            System.out.println("总耗时: " + taskItem.getResultTaskStatus().getDuration() + "ms");
+            System.out.println("消耗Token数: " + taskItem.getResultTaskStatus().getCostTokens());
 
             // 打印进度信息（如果有）
-            if (taskItem.getProgress() != null) {
+            if (taskItem.getResultTaskStatus().getProgress() != null) {
                 System.out.println("\n进度信息:");
-                System.out.println("  总任务数: " + taskItem.getProgress().getTotal());
-                System.out.println("  已完成数: " + taskItem.getProgress().getCompleted());
+                System.out.println("  总任务数: " + taskItem.getResultTaskStatus().getProgress().getTotal());
+                System.out.println("  已完成数: " + taskItem.getResultTaskStatus().getProgress().getCompleted());
             }
 
             // 打印规则集信息（如果有）

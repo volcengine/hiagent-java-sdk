@@ -19,8 +19,26 @@ import java.util.Map;
 
 public class RunAppWorkflowResponse {
 
+    /**
+     * 运行id
+     */
     @SerializedName("runId")
     private String runId;
+
+    /**
+     * 运行状态: success, stopped, failed, interrupted, processing
+     */
+    @SerializedName("status")
+    private String status;
+
+    /**
+     * end 节点的输出，是一个 json 字符串
+     */
+    @SerializedName("output")
+    private String output;
+
+    @SerializedName("costMs")
+    private Integer costMs;
 
     public String getRunId() {
         return runId;
@@ -28,5 +46,29 @@ public class RunAppWorkflowResponse {
 
     public void setRunId(String runId) {
         this.runId = runId;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getOutput() {
+        return output;
+    }
+
+    public void setOutput(String output) {
+        this.output = output;
+    }
+
+    public Integer getCostMs() {
+        return costMs;
+    }
+
+    public void setCostMs(Integer costMs) {
+        this.costMs = costMs;
     }
 }

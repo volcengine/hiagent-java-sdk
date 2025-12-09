@@ -219,6 +219,15 @@ public class ChatClient extends BaseApiClient {
         return post("query_trigger_run_records", request, QueryTriggerRunRecordsResponse.class);
     }
 
+    public QueryAppMessageOauthStatusResponse queryMessageOauthStatus(QueryAppMessageOauthStatusOpenRequest request)
+            throws IOException, InterruptedException, ApiException {
+        return post("query_message_oauth_status", request, QueryAppMessageOauthStatusResponse.class);
+    }
+
+    public GetOpeningConfigOpenResponse getOpeningConfig(GetOpeningConfigOpenRequest request)
+            throws IOException, InterruptedException, ApiException {
+        return post("get_opening_config", request, GetOpeningConfigOpenResponse.class);
+    }
 
     public ChatEvent parseChatEvent(String eventData) {
         Gson gson = new Gson();

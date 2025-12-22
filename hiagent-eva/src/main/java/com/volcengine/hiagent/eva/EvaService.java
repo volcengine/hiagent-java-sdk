@@ -108,7 +108,7 @@ public class EvaService {
         }
     }
 
-    public GetEvaTaskReportResponse run(String datasetID, String datasetVersionID, String taskName, String rulesetID, int maxConversations, EvaTargetCustomAPPConfig targetConfig, InferenceFunction inferenceFunction) throws ApiException {
+    public GetEvaTaskReportResponse inferenceAndEvaluate(String datasetID, String datasetVersionID, String taskName, String rulesetID, int maxConversations, EvaTargetCustomAPPConfig targetConfig, InferenceFunction inferenceFunction) throws ApiException {
         System.out.println("EVA service running...");
         String taskID = "";
         try {
@@ -294,7 +294,7 @@ public class EvaService {
         }
     }
 
-    public GetEvaTaskReportResponse retry(String taskName) throws ApiException {
+    public GetEvaTaskReportResponse evaluate(String taskName) throws ApiException {
         try {
             var taskID = this.evaClient.getEvaTask(new GetEvaTaskRequest(
                     workspaceID,

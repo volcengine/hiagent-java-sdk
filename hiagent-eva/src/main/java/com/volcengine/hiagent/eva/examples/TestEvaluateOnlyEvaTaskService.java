@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class TestRetryEvaTaskService {
-    private static final Logger logger = Logger.getLogger(TestRetryEvaTaskService.class.getName());
+public class TestEvaluateOnlyEvaTaskService {
+    private static final Logger logger = Logger.getLogger(TestEvaluateOnlyEvaTaskService.class.getName());
 
     public static void main(String[] args) {
         try {
@@ -32,7 +32,7 @@ public class TestRetryEvaTaskService {
 
             // 运行评估任务
             logger.info("开始重试评估任务...");
-            GetEvaTaskReportResponse report = evaService.retry(
+            GetEvaTaskReportResponse report = evaService.evaluate(
                     taskName
             );
             // 打印评估报告结果

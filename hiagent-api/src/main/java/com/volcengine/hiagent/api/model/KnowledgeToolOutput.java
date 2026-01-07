@@ -16,38 +16,40 @@ package com.volcengine.hiagent.api.model;
 import com.google.gson.annotations.SerializedName;
 import com.volcengine.hiagent.api.model.base.ChatEvent;
 
-public class KnowledgeRetrieveEndChatEvent extends ChatEvent {
+import java.util.List;
 
-    @SerializedName("message_id")
-    private String messageId;
+public class KnowledgeToolOutput extends ChatEvent {
 
-    @SerializedName("docs")
-    private KnowledgeToolOutput docs;
+    @SerializedName("outputList")
+    private List<KnowledgeDocument> outputList;
 
-    @SerializedName("latency")
-    private Double latency;
+    @SerializedName("response_for_model")
+    private String responseForModel;
 
-    public String getMessageId() {
-        return messageId;
+    @SerializedName("filter")
+    private String filter;
+
+    public List<KnowledgeDocument> getOutputList() {
+        return outputList;
     }
 
-    public void setMessageId(String messageId) {
-        this.messageId = messageId;
+    public void setOutputList(List<KnowledgeDocument> outputList) {
+        this.outputList = outputList;
     }
 
-    public KnowledgeToolOutput getDocs() {
-        return docs;
+    public String getResponseForModel() {
+        return responseForModel;
     }
 
-    public void setDocs(KnowledgeToolOutput docs) {
-        this.docs = docs;
+    public void setResponseForModel(String responseForModel) {
+        this.responseForModel = responseForModel;
     }
 
-    public Double getLatency() {
-        return latency;
+    public String getFilter() {
+        return filter;
     }
 
-    public void setLatency(Double latency) {
-        this.latency = latency;
+    public void setFilter(String filter) {
+        this.filter = filter;
     }
 }

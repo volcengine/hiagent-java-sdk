@@ -16,16 +16,13 @@ package com.volcengine.hiagent.api.model;
 import com.google.gson.annotations.SerializedName;
 import com.volcengine.hiagent.api.model.base.ChatEvent;
 
-import java.util.List;
-import java.util.Map;
-
 public class QARetrieveEndChatEvent extends ChatEvent {
 
     @SerializedName("latency")
     private Double latency;
 
     @SerializedName("docs")
-    private Map<String, String> docs;
+    private KnowledgeToolOutput docs;
 
     @SerializedName("query")
     private String query;
@@ -41,11 +38,11 @@ public class QARetrieveEndChatEvent extends ChatEvent {
         this.latency = latency;
     }
 
-    public Map<String, String> getDocs() {
+    public KnowledgeToolOutput getDocs() {
         return docs;
     }
 
-    public void setDocs(Map<String, String> docs) {
+    public void setDocs(KnowledgeToolOutput docs) {
         this.docs = docs;
     }
 

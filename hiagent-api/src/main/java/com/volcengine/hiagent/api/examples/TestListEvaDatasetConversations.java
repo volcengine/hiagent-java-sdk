@@ -43,7 +43,7 @@ public class TestListEvaDatasetConversations {
 
         // 分页参数
         long pageNumber = 1;
-        long pageSize =10;
+        long pageSize = 10;
         long offset = 0;
 
         // 创建API客户端
@@ -82,7 +82,8 @@ public class TestListEvaDatasetConversations {
 
         try {
             // 调用API列出数据集对话
-            ListEvaDatasetConversationsResponse response = api.listEvaDatasetConversations(listEvaDatasetConversationsReq);
+            ListEvaDatasetConversationsResponse response = api
+                    .listEvaDatasetConversations(listEvaDatasetConversationsReq);
 
             // 获取对话列表
             List<DatasetCaseItem> items = response.getItems();

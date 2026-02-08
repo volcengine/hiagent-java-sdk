@@ -26,7 +26,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
 public class KbsClient {
     private ApiClient apiClient;
 
@@ -42,11 +41,10 @@ public class KbsClient {
         this.apiClient = apiClient;
     }
 
-
     /**
      * Query
      *
-     * @param body QeuryRequest (required)
+     * @param body QueryRequest (required)
      * @return QueryResponse
      * @throws ApiException If fail to call the API, e.g. server error or cannot
      *                      deserialize the response body
@@ -77,7 +75,7 @@ public class KbsClient {
         final String localVarContentType = apiClient.selectHeaderContentType(localVarContentTypes);
         localVarHeaderParams.put("Content-Type", localVarContentType);
 
-        String[] localVarAuthNames = new String[]{"volcengineSign"};
+        String[] localVarAuthNames = new String[] { "volcengineSign" };
         com.squareup.okhttp.Call call = apiClient.buildCall(localVarPath, "POST", localVarQueryParams,
                 localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarFormParams,
                 localVarAuthNames, null);

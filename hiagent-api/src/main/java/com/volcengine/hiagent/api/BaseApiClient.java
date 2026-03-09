@@ -54,7 +54,7 @@ public abstract class BaseApiClient {
     public BaseApiClient(String baseUrl, String apiKey) {
         this.baseUrl = baseUrl;
         this.httpClient = HttpClient.newBuilder()
-                .version(HttpClient.Version.HTTP_2)
+                .version(HttpClient.Version.HTTP_1_1)
                 .connectTimeout(Duration.ofSeconds(30))
                 .build();
         this.apiKey = apiKey;

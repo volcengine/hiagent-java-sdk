@@ -13,6 +13,31 @@
     <artifactId>hiagent-api</artifactId>
     <packaging>jar</packaging>
     <name>HiAgent API Module</name>
+    <!-- 添加仓库配置 -->
+    <repositories>
+        <!-- 私有仓库 -->
+        <repository>
+            <id>hiagent-sdk</id>
+            <url>https://artifacts-cn-beijing.volces.com/repository/hiagent-sdk/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+        <!-- Maven Central 仓库 -->
+        <repository>
+            <id>central</id>
+            <url>https://repo1.maven.org/maven2/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
 
     <dependencies>
         <dependency>
@@ -32,6 +57,12 @@
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <scope>test</scope>
+        </dependency>
+        <!-- 添加dotenv依赖 -->
+        <dependency>
+            <groupId>io.github.cdimascio</groupId>
+            <artifactId>java-dotenv</artifactId>
+            <version>5.2.2</version>
         </dependency>
     </dependencies>
 

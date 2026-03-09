@@ -16,12 +16,14 @@ package com.volcengine.hiagent.api.examples;
 import com.volcengine.hiagent.api.ChatClient;
 import com.volcengine.hiagent.api.model.CreateConversationRequest;
 import com.volcengine.hiagent.api.model.CreateConversationResponse;
+import io.github.cdimascio.dotenv.Dotenv;
 
 
 public class TestCreateConversation {
     public static void main(String[] args) {
-        String baseUrl = System.getenv("HIAGENT_APP_BASE_URL");
-        String apiKey = System.getenv("HIAGENT_AGENT_APP_KEY");
+        Dotenv dotenv = Dotenv.configure().load();
+        String baseUrl = dotenv.get("HIAGENT_APP_BASE_URL");
+        String apiKey = dotenv.get("HIAGENT_AGENT_APP_KEY");
         ChatClient client = new ChatClient(baseUrl, apiKey);
         CreateConversationRequest request = new CreateConversationRequest();
         request.setUserID("user123");

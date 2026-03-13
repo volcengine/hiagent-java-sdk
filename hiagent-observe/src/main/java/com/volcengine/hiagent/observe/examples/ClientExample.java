@@ -105,6 +105,21 @@ public class ClientExample {
               .setAttribute(SemanticConvention.PRICE_UNIT.getValue(), 0.1)
               .setAttribute(SemanticConvention.INPUT_PRICE.getValue(), 34.5)
               .setAttribute(SemanticConvention.CURRENCY.getValue(), "USD")
+              .setAttribute("gen_ai.metrics.latency.first_token", 150.0)
+              .setAttribute("gen_ai.metrics.latency.model_total", 2500.0)
+              .setAttribute("gen_ai.metrics.latency.span", 2500.0)
+              .setAttribute("gen_ai.metrics.request.model_request_count", 1)
+              .setAttribute("gen_ai.metrics.usage.currency", "USD")
+              .setAttribute("gen_ai.metrics.usage.input_cost", 6.576)
+              .setAttribute("gen_ai.metrics.usage.input_tokens", 822)
+              .setAttribute("gen_ai.metrics.usage.output_cost", 2.48)
+              .setAttribute("gen_ai.metrics.usage.output_token_tps", 27.80269058295964)
+              .setAttribute("gen_ai.metrics.latency.agent_total", 2500.0)
+              .setAttribute("gen_ai.metrics.usage.output_tokens", 124)
+              .setAttribute("gen_ai.metrics.usage.total_cost", 6.2)
+              .setAttribute("gen_ai.metrics.usage.total_tokens", 946)
+              .setAttribute("gen_ai.span_type", "core_llm")
+              .setAttribute("gen_ai.metrics.request.agent_request_count", 1)
               .startSpan();
 
           try (Scope llmEndScope = llmEndSpan.makeCurrent()) {

@@ -17,14 +17,16 @@ import org.jetbrains.annotations.Nullable;
 
 public class EvaTaskRuleParams {
     private String RuleID;
+    private String RuleVersionID;
     @Nullable
     private EvaExecParam Param;
 
     public EvaTaskRuleParams() {
     }
 
-    public EvaTaskRuleParams(String ruleID, @Nullable EvaExecParam param) {
+    public EvaTaskRuleParams(String ruleID,String ruleVersionID, @Nullable EvaExecParam param) {
         RuleID = ruleID;
+        RuleVersionID = ruleVersionID;
         Param = param;
     }
 
@@ -34,6 +36,14 @@ public class EvaTaskRuleParams {
 
     public void setRuleID(String ruleID) {
         RuleID = ruleID;
+    }
+
+    public String getRuleVersionID() {
+        return RuleVersionID;
+    }
+
+    public void setRuleVersionID(String ruleVersionID) {
+        RuleVersionID = ruleVersionID;
     }
 
     @Nullable

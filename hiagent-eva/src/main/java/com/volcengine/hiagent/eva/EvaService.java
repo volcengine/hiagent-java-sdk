@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import static com.volcengine.hiagent.api.model.base.EvaTargetType.TargetTypeCustomAPP;
+import static com.volcengine.hiagent.api.model.base.EvaTaskRuleSource.EvaTaskRuleSourceRules;
 import static com.volcengine.hiagent.api.model.base.EvaTaskRuleSource.EvaTaskRuleSourceRuleset;
 import static com.volcengine.hiagent.api.model.base.EvaTaskStatus.*;
 import static java.lang.Thread.sleep;
@@ -65,7 +66,17 @@ public class EvaService {
             request.setWorkspaceID(workspaceID);
             request.setDatasetConfig(new DatasetTaskConfigForModify(datasetID,datasetVersionID,0, maxConversations, false));
             request.setName(taskName);
-            request.setRulesConfig(new EvaTaskRulesConfig(EvaTaskRuleSourceRuleset,null,new EvaTaskRulesetItemConfig(rulesetID)));
+            if (rulesetID.isEmpty()) {
+                List<EvaTaskRuleItemConfig> rules = new ArrayList<>();
+                if (ruleParams != null) {
+                    for (EvaTaskRuleParams p : ruleParams) {
+                        rules.add(new EvaTaskRuleItemConfig(p.getRuleID(), p.getRuleVersionID()));
+                    }
+                }
+                request.setRulesConfig(new EvaTaskRulesConfig(EvaTaskRuleSourceRules, rules, null));
+            } else {
+                request.setRulesConfig(new EvaTaskRulesConfig(EvaTaskRuleSourceRuleset,null,new EvaTaskRulesetItemConfig(rulesetID)));
+            }
             request.setDescription(description);
             request.setRunImmediately(true);
 

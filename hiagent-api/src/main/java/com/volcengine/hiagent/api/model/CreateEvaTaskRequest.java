@@ -112,4 +112,11 @@ public class CreateEvaTaskRequest {
         DatasetConfig = datasetConfig;
     }
 
+    public EvaTaskSource getSource() {
+        return Source;
+    }
+
+    public void setSource(EvaTaskSource source) {
+        Source = source;
+    }
 }

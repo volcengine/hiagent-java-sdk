@@ -29,6 +29,7 @@ import java.util.logging.Logger;
 import static com.volcengine.hiagent.api.model.base.EvaTargetType.TargetTypeCustomAPP;
 import static com.volcengine.hiagent.api.model.base.EvaTaskRuleSource.EvaTaskRuleSourceRules;
 import static com.volcengine.hiagent.api.model.base.EvaTaskRuleSource.EvaTaskRuleSourceRuleset;
+import static com.volcengine.hiagent.api.model.base.EvaTaskSource.EvaTaskSourceDataset;
 import static com.volcengine.hiagent.api.model.base.EvaTaskStatus.*;
 import static java.lang.Thread.sleep;
 
@@ -79,6 +80,8 @@ public class EvaService {
             }
             request.setDescription(description);
             request.setRunImmediately(true);
+            request.setSource(EvaTaskSourceDataset);
+
 
             // 创建目标列表
             ArrayList<EvaTaskTarget> targets = new ArrayList<>();

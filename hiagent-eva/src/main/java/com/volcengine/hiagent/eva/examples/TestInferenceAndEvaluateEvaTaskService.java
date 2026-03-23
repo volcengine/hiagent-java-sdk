@@ -16,15 +16,21 @@ package com.volcengine.hiagent.eva.examples;
 import com.volcengine.ApiException;
 import com.volcengine.hiagent.api.model.GetEvaTaskReportResponse;
 import com.volcengine.hiagent.api.model.base.Cell;
+import com.volcengine.hiagent.api.model.base.EvaTaskRuleParams;
 import com.volcengine.hiagent.api.model.base.EvaTargetCustomAPPConfig;
 import com.volcengine.hiagent.api.model.base.EvaTaskResultTargetContentPair;
 import com.volcengine.hiagent.api.model.base.ModelAgentConfig;
 import com.volcengine.hiagent.eva.EvaService;
 import com.volcengine.hiagent.eva.InferenceFunction;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import static com.volcengine.hiagent.api.model.base.EvaConversationStatus.EvaConversationStatusSucceed;
 
@@ -43,7 +49,10 @@ public class TestInferenceAndEvaluateEvaTaskService {
             String datasetVersionID = System.getenv("DATASET_VERSION_ID");
             String rulesetID = System.getenv("RULESET_ID");
             String taskName = System.getenv("TASK_NAME");
+            String ruleParamFiles = System.getenv("RULE_PARAM_FILE");
             int maxConversations = Integer.parseInt(System.getenv("MAX_CONVERSATIONS"));
+            // 读取规则参数文件（如果存在），反序列化为 List<EvaTaskRuleParams>，否则传入 null
+            List<EvaTaskRuleParams> ruleParams = loadRuleParamsFromEnv(ruleParamFiles);
 
             // 验证必要的环境变量
             validateEnvVars(ak, sk, workspaceID, appID, datasetID, rulesetID);
@@ -73,6 +82,7 @@ public class TestInferenceAndEvaluateEvaTaskService {
                     rulesetID,
                     maxConversations,
                     customAPPConfig,
+                    ruleParams,
                     inferenceFunction
             );
 
@@ -104,6 +114,33 @@ public class TestInferenceAndEvaluateEvaTaskService {
 
         if (!missingVars.isEmpty()) {
             throw new IllegalStateException("缺少必要的环境变量: " + String.join(", ", missingVars));
+        }
+    }
+
+    /**
+     * 从环境变量指定的文件路径加载规则参数
+     * RULE_PARAM_FILE 为一个 JSON 文件路径；如果为空或文件不存在，则返回 null
+     */
+    private static List<EvaTaskRuleParams> loadRuleParamsFromEnv(String ruleParamFilePath) {
+        try {
+            if (ruleParamFilePath == null || ruleParamFilePath.isEmpty()) {
+                Logger.getLogger(TestInferenceAndEvaluateEvaTaskService.class.getName())
+                        .info("环境变量 RULE_PARAM_FILE 未设置或为空，ruleParams 将传入 null");
+                return null;
+            }
+            Path path = Paths.get(ruleParamFilePath);
+            if (!Files.exists(path)) {
+                Logger.getLogger(TestInferenceAndEvaluateEvaTaskService.class.getName())
+                        .warning("规则参数文件不存在: " + ruleParamFilePath + "，ruleParams 将传入 null");
+                return null;
+            }
+            String json = Files.readString(path);
+            ObjectMapper mapper = new ObjectMapper();
+            return mapper.readValue(json, new TypeReference<List<EvaTaskRuleParams>>() {});
+        } catch (Exception e) {
+            Logger.getLogger(TestInferenceAndEvaluateEvaTaskService.class.getName())
+                    .log(Level.WARNING, "读取/解析规则参数文件失败: " + e.getMessage(), e);
+            return null;
         }
     }
 

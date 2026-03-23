@@ -13,8 +13,7 @@
 // limitations under the License.
 package com.volcengine.hiagent.api.model;
 
-import com.volcengine.hiagent.api.model.base.DatasetTaskConfig;
-import com.volcengine.hiagent.api.model.base.EvaTaskTarget;
+import com.volcengine.hiagent.api.model.base.*;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -27,28 +26,24 @@ public class CreateEvaTaskRequest {
     @Nullable
     private String Description;
     private List<EvaTaskTarget> Targets;
-    private String DatasetID;
-    private String RulesetID;
     private boolean RunImmediately;
-    @Nullable
-    private DatasetTaskConfig DatasetConfig;
-    @Nullable
-    private String DatasetVersionID;
+    private DatasetTaskConfigForModify DatasetConfig;
+    public EvaTaskRulesConfig RulesConfig;
+    private EvaTaskSource Source;
+
 
     public CreateEvaTaskRequest() {
     }
 
-    public CreateEvaTaskRequest(String workspaceID, @Nullable String taskTemplateID, String name, @Nullable String description, List<EvaTaskTarget> targets, String datasetID, String rulesetID, boolean runImmediately, @Nullable DatasetTaskConfig datasetConfig, @Nullable String datasetVersionID) {
+    public CreateEvaTaskRequest(String workspaceID, @Nullable String taskTemplateID, String name, @Nullable String description, List<EvaTaskTarget> targets, String datasetID, EvaTaskRulesConfig rulesConfig, boolean runImmediately,DatasetTaskConfigForModify datasetConfig, @Nullable String datasetVersionID) {
         WorkspaceID = workspaceID;
         TaskTemplateID = taskTemplateID;
         Name = name;
         Description = description;
         Targets = targets;
-        DatasetID = datasetID;
-        RulesetID = rulesetID;
+        RulesConfig = rulesConfig;
         RunImmediately = runImmediately;
         DatasetConfig = datasetConfig;
-        DatasetVersionID = datasetVersionID;
     }
 
     public String getWorkspaceID() {
@@ -93,20 +88,12 @@ public class CreateEvaTaskRequest {
         Targets = targets;
     }
 
-    public String getDatasetID() {
-        return DatasetID;
+    public EvaTaskRulesConfig getRulesConfig() {
+        return RulesConfig;
     }
 
-    public void setDatasetID(String datasetID) {
-        DatasetID = datasetID;
-    }
-
-    public String getRulesetID() {
-        return RulesetID;
-    }
-
-    public void setRulesetID(String rulesetID) {
-        RulesetID = rulesetID;
+    public void setRulesConfig(EvaTaskRulesConfig rulesConfig) {
+        RulesConfig = rulesConfig;
     }
 
     public boolean isRunImmediately() {
@@ -117,21 +104,12 @@ public class CreateEvaTaskRequest {
         RunImmediately = runImmediately;
     }
 
-    @Nullable
-    public DatasetTaskConfig getDatasetConfig() {
+    public DatasetTaskConfigForModify getDatasetConfig() {
         return DatasetConfig;
     }
 
-    public void setDatasetConfig(@Nullable DatasetTaskConfig datasetConfig) {
+    public void setDatasetConfig(DatasetTaskConfigForModify datasetConfig) {
         DatasetConfig = datasetConfig;
     }
 
-    @Nullable
-    public String getDatasetVersionID() {
-        return DatasetVersionID;
-    }
-
-    public void setDatasetVersionID(@Nullable String datasetVersionID) {
-        DatasetVersionID = datasetVersionID;
-    }
 }

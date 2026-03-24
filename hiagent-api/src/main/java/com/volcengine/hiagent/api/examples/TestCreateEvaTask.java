@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.volcengine.hiagent.api.model.base.EvaTargetType.TargetTypeBuiltinModel;
+import static com.volcengine.hiagent.api.model.base.EvaTaskRuleSource.EvaTaskRuleSourceRuleset;
 
 public class TestCreateEvaTask {
     public static void main(String[] args) {
@@ -37,6 +38,7 @@ public class TestCreateEvaTask {
         // 任务所需的基本参数
         String workspaceID = System.getenv("WORKSPACE_ID");
         String datasetID = System.getenv("DATASET_ID");
+        String datasetVersionID = System.getenv("DATASET_VERSION_ID");
         String rulesetID = System.getenv("RULESET_ID");
         String taskName = "测试评估任务";
         String taskDescription = "这是一个通过API创建的测试评估任务";
@@ -54,16 +56,9 @@ public class TestCreateEvaTask {
         createEvaTaskReq.setWorkspaceID(workspaceID);
         createEvaTaskReq.setName(taskName);
         createEvaTaskReq.setDescription(taskDescription);
-        createEvaTaskReq.setDatasetID(datasetID);
-        createEvaTaskReq.setRulesetID(rulesetID);
+        createEvaTaskReq.setDatasetConfig(new DatasetTaskConfigForModify(datasetID,datasetVersionID,0, 100, false));
+        createEvaTaskReq.setRulesConfig(new EvaTaskRulesConfig(EvaTaskRuleSourceRuleset,null,new EvaTaskRulesetItemConfig(rulesetID)));
         createEvaTaskReq.setRunImmediately(true);
-
-        // 可选的数据集配置
-        DatasetTaskConfig datasetConfig = new DatasetTaskConfig();
-        datasetConfig.setDataStartIndex(0);
-        datasetConfig.setDataEndIndex(100);
-        datasetConfig.setUseLatestVersion(true);
-        createEvaTaskReq.setDatasetConfig(datasetConfig);
 
         // 创建评估目标列表
         List<EvaTaskTarget> targets = new ArrayList<>();

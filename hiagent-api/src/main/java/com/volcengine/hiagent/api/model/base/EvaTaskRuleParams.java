@@ -13,12 +13,16 @@
 // limitations under the License.
 package com.volcengine.hiagent.api.model.base;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.jetbrains.annotations.Nullable;
 
 public class EvaTaskRuleParams {
+    @JsonProperty("RuleID")
     private String RuleID;
+    @JsonProperty("RuleVersionID")
     private String RuleVersionID;
     @Nullable
+    @JsonProperty("Param")
     private EvaExecParam Param;
 
     public EvaTaskRuleParams() {

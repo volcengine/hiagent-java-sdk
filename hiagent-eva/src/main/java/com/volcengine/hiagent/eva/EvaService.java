@@ -67,7 +67,7 @@ public class EvaService {
             request.setWorkspaceID(workspaceID);
             request.setDatasetConfig(new DatasetTaskConfigForModify(datasetID,datasetVersionID,0, maxConversations, false));
             request.setName(taskName);
-            if (rulesetID.isEmpty()) {
+            if (rulesetID == null || rulesetID.isEmpty()) {
                 List<EvaTaskRuleItemConfig> rules = new ArrayList<>();
                 if (ruleParams != null) {
                     for (EvaTaskRuleParams p : ruleParams) {
@@ -128,6 +128,7 @@ public class EvaService {
                 System.out.printf("Check evaluation task status: %s\n", taskName);
                 var getTaskResp = this.evaClient.getEvaTask(new GetEvaTaskRequest(
                         workspaceID,
+                        EvaTaskSourceDataset,
                         null,
                         taskName
                 ));
@@ -229,6 +230,7 @@ public class EvaService {
                 }
                 taskStatus = this.evaClient.getEvaTask(new GetEvaTaskRequest(
                         workspaceID,
+                        EvaTaskSourceDataset,
                         taskID,
                         null
                 )).getResultTaskStatus().getStatus();
@@ -255,6 +257,7 @@ public class EvaService {
         try {
             var taskID = this.evaClient.getEvaTask(new GetEvaTaskRequest(
                     workspaceID,
+                    EvaTaskSourceDataset,
                     null,
                     taskName
             )).getTaskID();
@@ -275,6 +278,7 @@ public class EvaService {
                 }
                 taskStatus = this.evaClient.getEvaTask(new GetEvaTaskRequest(
                         workspaceID,
+                        EvaTaskSourceDataset,
                         taskID,
                         null
                 )).getResultTaskStatus().getStatus();
@@ -295,6 +299,7 @@ public class EvaService {
                     workspaceID,
                     this.evaClient.getEvaTask(new GetEvaTaskRequest(
                             workspaceID,
+                            EvaTaskSourceDataset,
                             null,
                             taskName
                     )).getTaskID()
@@ -309,6 +314,7 @@ public class EvaService {
         try {
             var taskID = this.evaClient.getEvaTask(new GetEvaTaskRequest(
                     workspaceID,
+                    EvaTaskSourceDataset,
                     null,
                     taskName
             )).getTaskID();
@@ -334,6 +340,7 @@ public class EvaService {
                 }
                 taskStatus = this.evaClient.getEvaTask(new GetEvaTaskRequest(
                         workspaceID,
+                        EvaTaskSourceDataset,
                         taskID,
                         null
                 )).getResultTaskStatus().getStatus();

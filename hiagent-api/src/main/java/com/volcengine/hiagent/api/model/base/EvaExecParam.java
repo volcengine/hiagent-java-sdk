@@ -13,30 +13,41 @@
 // limitations under the License.
 package com.volcengine.hiagent.api.model.base;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.jetbrains.annotations.Nullable;
 
 public class EvaExecParam{
     @Nullable
-    private String Name; 
-    private boolean Required; 
-    private boolean Builtin; 
+    @JsonProperty("Name")
+    private String Name;
+    @JsonProperty("Required")
+    private boolean Required;
+    @JsonProperty("Builtin")
+    private boolean Builtin;
     @Nullable
-    private String Source; 
+    @JsonProperty("Source")
+    private String Source;
     @Nullable
+    @JsonProperty("Field")
     private String Field; 
     @Nullable
+    @JsonProperty("JsonPath")
     private String JsonPath;
+    @Nullable
+    @JsonProperty("Type")
+    private String Type;
 
     public EvaExecParam() {
     }
 
-    public EvaExecParam(@Nullable String name, boolean required, boolean builtin, @Nullable String source, @Nullable String field, @Nullable String jsonPath) {
+    public EvaExecParam(@Nullable String name, boolean required, boolean builtin, @Nullable String source, @Nullable String field, @Nullable String jsonPath, @Nullable String type) {
         Name = name;
         Required = required;
         Builtin = builtin;
         Source = source;
         Field = field;
         JsonPath = jsonPath;
+        Type = type;
     }
 
     @Nullable
@@ -89,5 +100,14 @@ public class EvaExecParam{
 
     public void setJsonPath(@Nullable String jsonPath) {
         JsonPath = jsonPath;
+    }
+
+    @Nullable
+    public String getType() {
+        return Type;
+    }
+
+    public void setType(@Nullable String type) {
+        Type = type;
     }
 }

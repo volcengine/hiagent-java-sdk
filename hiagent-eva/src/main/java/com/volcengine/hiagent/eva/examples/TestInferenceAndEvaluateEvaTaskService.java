@@ -55,7 +55,7 @@ public class TestInferenceAndEvaluateEvaTaskService {
             List<EvaTaskRuleParams> ruleParams = loadRuleParamsFromEnv(ruleParamFiles);
 
             // 验证必要的环境变量
-            validateEnvVars(ak, sk, workspaceID, appID, datasetID, rulesetID);
+            validateEnvVars(ak, sk, workspaceID, appID, datasetID, rulesetID,ruleParams);
 
             // 创建EvaService实例
             EvaService evaService = new EvaService(endpoint, ak, sk, workspaceID, appID);
@@ -103,14 +103,17 @@ public class TestInferenceAndEvaluateEvaTaskService {
     /**
      * 验证必要的环境变量
      */
-    private static void validateEnvVars(String ak, String sk, String workspaceID, String appID, String datasetID, String rulesetID) {
+    private static void validateEnvVars(String ak, String sk, String workspaceID, String appID, String datasetID, String rulesetID, List<EvaTaskRuleParams> ruleParams) {
         List<String> missingVars = new ArrayList<>();
         if (ak == null || ak.isEmpty()) missingVars.add("VOLC_ACCESSKEY");
         if (sk == null || sk.isEmpty()) missingVars.add("VOLC_SECRETKEY");
         if (workspaceID == null || workspaceID.isEmpty()) missingVars.add("WORKSPACE_ID");
         if (appID == null || appID.isEmpty()) missingVars.add("CUSTOM_APP_ID");
         if (datasetID == null || datasetID.isEmpty()) missingVars.add("DATASET_ID");
-        if (rulesetID == null || rulesetID.isEmpty()) missingVars.add("RULESET_ID");
+        if ((rulesetID == null || rulesetID.isEmpty()) && (ruleParams == null || ruleParams.isEmpty())) {
+            missingVars.add("RULESET_ID");
+            missingVars.add("RULE_PARAM_FILE");
+        }
 
         if (!missingVars.isEmpty()) {
             throw new IllegalStateException("缺少必要的环境变量: " + String.join(", ", missingVars));

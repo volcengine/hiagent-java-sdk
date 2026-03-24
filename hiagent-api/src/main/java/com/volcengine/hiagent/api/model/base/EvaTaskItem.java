@@ -28,7 +28,7 @@ public class EvaTaskItem {
     @Nullable
     private EvaTaskItemTaskTemplate TaskTemplate;
     private String TargetType;
-    private EvaTaskRule Ruleset;
+    private EvaTaskRule Rules;
     private EvaTaskItemDataset Dataset;
     @Nullable
     private List<EvaTaskItemTarget> Targets;
@@ -41,7 +41,7 @@ public class EvaTaskItem {
     public EvaTaskItem() {
     }
 
-    public EvaTaskItem(String tenantID, String workspaceID, String taskID, String name, @Nullable String description, @Nullable EvaTaskItemTaskTemplate taskTemplate, String targetType, EvaTaskRule ruleset, EvaTaskItemDataset dataset, @Nullable List<EvaTaskItemTarget> targets, EvaTaskStatusItem resultTaskStatus, String createdAt, String updatedAt, String createdBy, String updatedBy) {
+    public EvaTaskItem(String tenantID, String workspaceID, String taskID, String name, @Nullable String description, @Nullable EvaTaskItemTaskTemplate taskTemplate, String targetType, EvaTaskRule rules, EvaTaskItemDataset dataset, @Nullable List<EvaTaskItemTarget> targets, EvaTaskStatusItem resultTaskStatus, String createdAt, String updatedAt, String createdBy, String updatedBy) {
         TenantID = tenantID;
         WorkspaceID = workspaceID;
         TaskID = taskID;
@@ -49,7 +49,7 @@ public class EvaTaskItem {
         Description = description;
         TaskTemplate = taskTemplate;
         TargetType = targetType;
-        Ruleset = ruleset;
+        Rules = rules;
         Dataset = dataset;
         Targets = targets;
         ResultTaskStatus = resultTaskStatus;
@@ -117,12 +117,12 @@ public class EvaTaskItem {
         TargetType = targetType;
     }
 
-    public EvaTaskRule getRuleset() {
-        return Ruleset;
+    public EvaTaskRule getRules() {
+        return Rules;
     }
 
-    public void setRuleset(EvaTaskRule ruleset) {
-        Ruleset = ruleset;
+    public void setRules(EvaTaskRule rules) {
+        Rules = rules;
     }
 
     public EvaTaskItemDataset getDataset() {

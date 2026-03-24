@@ -13,6 +13,7 @@
 // limitations under the License.
 package com.volcengine.hiagent.api.model;
 
+import com.volcengine.hiagent.api.model.base.EvaTaskSource;
 import org.jetbrains.annotations.Nullable;
 
 public class GetEvaTaskRequest {
@@ -21,12 +22,14 @@ public class GetEvaTaskRequest {
     private String TaskID;
     @Nullable
     private String TaskName;
+    private EvaTaskSource Source;
 
     public GetEvaTaskRequest() {
     }
 
-    public GetEvaTaskRequest(String workspaceID, @Nullable String taskID, @Nullable String taskName) {
+    public GetEvaTaskRequest(String workspaceID, EvaTaskSource source, @Nullable String taskID, @Nullable String taskName) {
         WorkspaceID = workspaceID;
+        Source = source;
         TaskID = taskID;
         TaskName = taskName;
     }
@@ -55,5 +58,13 @@ public class GetEvaTaskRequest {
 
     public void setTaskName(@Nullable String taskName) {
         TaskName = taskName;
+    }
+
+    public EvaTaskSource getSource() {
+        return Source;
+    }
+
+    public void setSource(EvaTaskSource source) {
+        Source = source;
     }
 }

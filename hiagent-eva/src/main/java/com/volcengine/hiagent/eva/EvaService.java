@@ -22,8 +22,10 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import static com.volcengine.hiagent.api.model.base.EvaTargetType.TargetTypeCustomAPP;
@@ -70,8 +72,15 @@ public class EvaService {
             if (rulesetID == null || rulesetID.isEmpty()) {
                 List<EvaTaskRuleItemConfig> rules = new ArrayList<>();
                 if (ruleParams != null) {
+                    Set<String> seen = new HashSet<>();
                     for (EvaTaskRuleParams p : ruleParams) {
-                        rules.add(new EvaTaskRuleItemConfig(p.getRuleID(), p.getRuleVersionID()));
+                        if (p == null) {
+                            continue;
+                        }
+                        String key = String.valueOf(p.getRuleID()) + "|" + String.valueOf(p.getRuleVersionID());
+                        if (seen.add(key)) {
+                            rules.add(new EvaTaskRuleItemConfig(p.getRuleID(), p.getRuleVersionID()));
+                        }
                     }
                 }
                 request.setRulesConfig(new EvaTaskRulesConfig(EvaTaskRuleSourceRules, rules, null));
@@ -154,6 +163,7 @@ public class EvaService {
                     taskID = createTask(this.evaClient, this.workspaceID, datasetID, datasetVersionID, taskName, rulesetID, null, targetConfig,ruleParams, maxConversations).getTaskID();
                 }
             }
+            Thread.sleep(1000); // 等待一小段时间
             String finalTaskID = taskID;
             System.out.printf("Task Collect Successfully: %s\n", finalTaskID);
             // 2. Get dataset column information

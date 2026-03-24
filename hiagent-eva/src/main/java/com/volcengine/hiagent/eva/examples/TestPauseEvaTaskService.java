@@ -1,11 +1,7 @@
 package com.volcengine.hiagent.eva.examples;
 
 import com.volcengine.ApiException;
-import com.volcengine.hiagent.api.model.GetEvaTaskReportResponse;
-import com.volcengine.hiagent.api.model.base.EvaTargetCustomAPPConfig;
-import com.volcengine.hiagent.api.model.base.ModelAgentConfig;
 import com.volcengine.hiagent.eva.EvaService;
-import com.volcengine.hiagent.eva.InferenceFunction;
 
 import java.util.ArrayList;
 import java.util.List;

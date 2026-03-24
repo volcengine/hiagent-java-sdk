@@ -13,24 +13,23 @@
 // limitations under the License.
 package com.volcengine.hiagent.eva.examples;
 
-import com.volcengine.ApiException;
-import com.volcengine.hiagent.api.model.GetEvaTaskReportResponse;
-import com.volcengine.hiagent.api.model.base.Cell;
-import com.volcengine.hiagent.api.model.base.EvaTaskRuleParams;
-import com.volcengine.hiagent.api.model.base.EvaTargetCustomAPPConfig;
-import com.volcengine.hiagent.api.model.base.EvaTaskResultTargetContentPair;
-import com.volcengine.hiagent.api.model.base.ModelAgentConfig;
-import com.volcengine.hiagent.eva.EvaService;
-import com.volcengine.hiagent.eva.InferenceFunction;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.volcengine.ApiException;
+import com.volcengine.hiagent.api.model.GetEvaTaskReportResponse;
+import com.volcengine.hiagent.api.model.base.*;
+import com.volcengine.hiagent.eva.EvaService;
+import com.volcengine.hiagent.eva.InferenceFunction;
 
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static com.volcengine.hiagent.api.model.base.EvaConversationStatus.EvaConversationStatusSucceed;
 
@@ -55,7 +54,7 @@ public class TestInferenceAndEvaluateEvaTaskService {
             List<EvaTaskRuleParams> ruleParams = loadRuleParamsFromEnv(ruleParamFiles);
 
             // 验证必要的环境变量
-            validateEnvVars(ak, sk, workspaceID, appID, datasetID, rulesetID,ruleParams);
+            validateEnvVars(ak, sk, workspaceID, appID, datasetID, rulesetID, ruleParams);
 
             // 创建EvaService实例
             EvaService evaService = new EvaService(endpoint, ak, sk, workspaceID, appID);
@@ -67,7 +66,7 @@ public class TestInferenceAndEvaluateEvaTaskService {
             modelConfig.setMaxTokens(2048);
             modelConfig.setRoundsReserved(5);
             modelConfig.setRagEnabled(false);
-            EvaTargetCustomAPPConfig customAPPConfig = new EvaTargetCustomAPPConfig(appID,modelConfig);
+            EvaTargetCustomAPPConfig customAPPConfig = new EvaTargetCustomAPPConfig(appID, modelConfig);
 
 
             // 实现InferenceFunction接口
@@ -139,7 +138,8 @@ public class TestInferenceAndEvaluateEvaTaskService {
             }
             String json = Files.readString(path);
             ObjectMapper mapper = new ObjectMapper();
-            return mapper.readValue(json, new TypeReference<List<EvaTaskRuleParams>>() {});
+            return mapper.readValue(json, new TypeReference<List<EvaTaskRuleParams>>() {
+            });
         } catch (Exception e) {
             Logger.getLogger(TestInferenceAndEvaluateEvaTaskService.class.getName())
                     .log(Level.WARNING, "读取/解析规则参数文件失败: " + e.getMessage(), e);

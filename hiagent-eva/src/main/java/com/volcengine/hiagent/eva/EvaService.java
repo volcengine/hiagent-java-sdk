@@ -20,12 +20,7 @@ import com.volcengine.hiagent.api.model.*;
 import com.volcengine.hiagent.api.model.base.*;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Logger;
 
 import static com.volcengine.hiagent.api.model.base.EvaTargetType.TargetTypeCustomAPP;
@@ -45,7 +40,7 @@ public class EvaService {
     public EvaService(String endpoint, String ak, String sk, String workspaceID, String appID) {
         this.workspaceID = workspaceID;
         this.appID = appID;
-        
+
         ApiClient apiClient = new ApiClient(endpoint, ak, sk, "cn-north-1");
 
         this.evaClient = new EvaClient(apiClient);
@@ -62,12 +57,12 @@ public class EvaService {
             @Nullable EvaTargetCustomAPPConfig customAPPConfig,
             @Nullable List<EvaTaskRuleParams> ruleParams,
             int maxConversations
-    ){
+    ) {
         try {
             // 创建评估任务请求对象
             CreateEvaTaskRequest request = new CreateEvaTaskRequest();
             request.setWorkspaceID(workspaceID);
-            request.setDatasetConfig(new DatasetTaskConfigForModify(datasetID,datasetVersionID,0, maxConversations, false));
+            request.setDatasetConfig(new DatasetTaskConfigForModify(datasetID, datasetVersionID, 0, maxConversations, false));
             request.setName(taskName);
             if (rulesetID == null || rulesetID.isEmpty()) {
                 List<EvaTaskRuleItemConfig> rules = new ArrayList<>();
@@ -77,7 +72,7 @@ public class EvaService {
                         if (p == null) {
                             continue;
                         }
-                        String key = String.valueOf(p.getRuleID()) + "|" + String.valueOf(p.getRuleVersionID());
+                        String key = p.getRuleID() + "|" + p.getRuleVersionID();
                         if (seen.add(key)) {
                             rules.add(new EvaTaskRuleItemConfig(p.getRuleID(), p.getRuleVersionID()));
                         }
@@ -85,7 +80,7 @@ public class EvaService {
                 }
                 request.setRulesConfig(new EvaTaskRulesConfig(EvaTaskRuleSourceRules, rules, null));
             } else {
-                request.setRulesConfig(new EvaTaskRulesConfig(EvaTaskRuleSourceRuleset,null,new EvaTaskRulesetItemConfig(rulesetID)));
+                request.setRulesConfig(new EvaTaskRulesConfig(EvaTaskRuleSourceRuleset, null, new EvaTaskRulesetItemConfig(rulesetID)));
             }
             request.setDescription(description);
             request.setRunImmediately(true);
@@ -112,7 +107,7 @@ public class EvaService {
 
             // 设置目标配置
             target.setTargetConfig(targetConfig);
-            target.setParams(new EvaTaskTargetParams(null,ruleParams));
+            target.setParams(new EvaTaskTargetParams(null, ruleParams));
 
             // 添加目标到列表
             targets.add(target);
@@ -128,7 +123,7 @@ public class EvaService {
         }
     }
 
-    public GetEvaTaskReportResponse inferenceAndEvaluate(String datasetID, String datasetVersionID, String taskName, String rulesetID, int maxConversations, EvaTargetCustomAPPConfig targetConfig,@Nullable List<EvaTaskRuleParams> ruleParams, InferenceFunction inferenceFunction) throws ApiException {
+    public GetEvaTaskReportResponse inferenceAndEvaluate(String datasetID, String datasetVersionID, String taskName, String rulesetID, int maxConversations, EvaTargetCustomAPPConfig targetConfig, @Nullable List<EvaTaskRuleParams> ruleParams, InferenceFunction inferenceFunction) throws ApiException {
         System.out.println("EVA service running...");
         String taskID = "";
         try {
@@ -155,12 +150,12 @@ public class EvaService {
                             EvaTaskStatusRunning
                     ));
                 }
-            }  catch (ApiException e) {
+            } catch (ApiException e) {
                 if (e.getCode() != 404) {
                     throw new RuntimeException(e);
                 } else {
                     System.out.printf("Creating evaluation task: %s\n", taskName);
-                    taskID = createTask(this.evaClient, this.workspaceID, datasetID, datasetVersionID, taskName, rulesetID, null, targetConfig,ruleParams, maxConversations).getTaskID();
+                    taskID = createTask(this.evaClient, this.workspaceID, datasetID, datasetVersionID, taskName, rulesetID, null, targetConfig, ruleParams, maxConversations).getTaskID();
                 }
             }
             Thread.sleep(1000); // 等待一小段时间
@@ -187,7 +182,7 @@ public class EvaService {
                     maxConversations,
                     0
             ));
-            System.out.printf("Fetched %d cases",listCases.getItems().size());
+            System.out.printf("Fetched %d cases", listCases.getItems().size());
             // 4. Execute inference and submit results
             System.out.println("Running inference and submitting results...");
             listCases.getItems().forEach(caseItem -> {

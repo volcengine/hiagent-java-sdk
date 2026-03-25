@@ -24,11 +24,16 @@ public class GetEvaTaskReportTarget {
     private double AvgCostTokens;
     private double AvgDuration;
     private double AvgTTFT;
+    private double MaxCostTokens;
+    private double MaxDuration;
+    private double MaxTTFT;
+    @Nullable
+    private String ShieldEvaReportURL;
 
     public GetEvaTaskReportTarget() {
     }
 
-    public GetEvaTaskReportTarget(String targetID, @Nullable EvaTaskTarget targetDetail, long duration, long costTokens, double avgCostTokens, double avgDuration, double avgTTFT) {
+    public GetEvaTaskReportTarget(String targetID, @Nullable EvaTaskTarget targetDetail, long duration, long costTokens, double avgCostTokens, double avgDuration, double avgTTFT, double maxCostTokens, double maxDuration, double maxTTFT, @Nullable String shieldEvaReportURL) {
         TargetID = targetID;
         TargetDetail = targetDetail;
         Duration = duration;
@@ -36,6 +41,10 @@ public class GetEvaTaskReportTarget {
         AvgCostTokens = avgCostTokens;
         AvgDuration = avgDuration;
         AvgTTFT = avgTTFT;
+        MaxCostTokens = maxCostTokens;
+        MaxDuration = maxDuration;
+        MaxTTFT = maxTTFT;
+        ShieldEvaReportURL = shieldEvaReportURL;
     }
 
     public String getTargetID() {
@@ -93,5 +102,38 @@ public class GetEvaTaskReportTarget {
 
     public void setAvgTTFT(double avgTTFT) {
         AvgTTFT = avgTTFT;
+    }
+
+    public double getMaxCostTokens() {
+        return MaxCostTokens;
+    }
+
+    public void setMaxCostTokens(double maxCostTokens) {
+        MaxCostTokens = maxCostTokens;
+    }
+
+    public double getMaxDuration() {
+        return MaxDuration;
+    }
+
+    public void setMaxDuration(double maxDuration) {
+        MaxDuration = maxDuration;
+    }
+
+    public double getMaxTTFT() {
+        return MaxTTFT;
+    }
+
+    public void setMaxTTFT(double maxTTFT) {
+        MaxTTFT = maxTTFT;
+    }
+
+    @Nullable
+    public String getShieldEvaReportURL() {
+        return ShieldEvaReportURL;
+    }
+
+    public void setShieldEvaReportURL(@Nullable String shieldEvaReportURL) {
+        ShieldEvaReportURL = shieldEvaReportURL;
     }
 }

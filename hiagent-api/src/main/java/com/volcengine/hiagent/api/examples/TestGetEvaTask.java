@@ -18,6 +18,7 @@ import com.volcengine.ApiException;
 import com.volcengine.hiagent.api.EvaClient;
 import com.volcengine.hiagent.api.model.GetEvaTaskRequest;
 import com.volcengine.hiagent.api.model.base.EvaTaskItem;
+import com.volcengine.hiagent.api.model.base.EvaTaskSource;
 import com.volcengine.sign.Credentials;
 
 import java.util.List;
@@ -47,6 +48,7 @@ public class TestGetEvaTask {
         // 创建获取任务请求对象
         GetEvaTaskRequest getEvaTaskReq = new GetEvaTaskRequest();
         getEvaTaskReq.setWorkspaceID(workspaceID);
+        getEvaTaskReq.setSource(EvaTaskSource.EvaTaskSourceDataset);
 
         // 设置任务ID或任务名称（至少设置一个）
         if (taskID != null && !taskID.isEmpty()) {
@@ -99,10 +101,10 @@ public class TestGetEvaTask {
             }
 
             // 打印规则集信息（如果有）
-            if (taskItem.getRuleset() != null) {
+            if (taskItem.getRules().getRuleset() != null) {
                 System.out.println("\n规则集信息:");
-                System.out.println("  规则集ID: " + taskItem.getRuleset().getRulesetID());
-                System.out.println("  规则集名称: " + taskItem.getRuleset().getRulesetName());
+                System.out.println("  规则集ID: " + taskItem.getRules().getRuleset().getRulesetID());
+                System.out.println("  规则集名称: " + taskItem.getRules().getRuleset().getName());
             }
 
             // 打印数据集信息（如果有）

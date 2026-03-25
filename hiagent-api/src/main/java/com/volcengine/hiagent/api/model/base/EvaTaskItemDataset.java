@@ -32,11 +32,13 @@ public class EvaTaskItemDataset {
     private  EvaTaskOfficialCollection OfficialCollection;
     @Nullable
     private  String DatasetVersionID;
+    @Nullable
+    private  String DatasetVersionName;
 
     public EvaTaskItemDataset() {
     }
 
-    public EvaTaskItemDataset(String datasetID, String datasetName, @Nullable List<EvaTaskItemDatasetColumn> columns, boolean isDeleted, @Nullable String datasetSource, @Nullable DatasetTaskConfig datasetConfig, long sourceDataTotal, @Nullable EvaTaskOfficialCollection officialCollection, @Nullable String datasetVersionID) {
+    public EvaTaskItemDataset(String datasetID, String datasetName, @Nullable List<EvaTaskItemDatasetColumn> columns, boolean isDeleted, @Nullable String datasetSource, @Nullable DatasetTaskConfig datasetConfig, long sourceDataTotal, @Nullable EvaTaskOfficialCollection officialCollection, @Nullable String datasetVersionID, @Nullable String datasetVersionName) {
         DatasetID = datasetID;
         DatasetName = datasetName;
         Columns = columns;
@@ -46,6 +48,7 @@ public class EvaTaskItemDataset {
         SourceDataTotal = sourceDataTotal;
         OfficialCollection = officialCollection;
         DatasetVersionID = datasetVersionID;
+        DatasetVersionName = datasetVersionName;
     }
 
     public String getDatasetID() {
@@ -123,5 +126,14 @@ public class EvaTaskItemDataset {
 
     public void setDatasetVersionID(@Nullable String datasetVersionID) {
         DatasetVersionID = datasetVersionID;
+    }
+
+    @Nullable
+    public String getDatasetVersionName() {
+        return DatasetVersionName;
+    }
+
+    public void setDatasetVersionName(@Nullable String datasetVersionName) {
+        DatasetVersionName = datasetVersionName;
     }
 }

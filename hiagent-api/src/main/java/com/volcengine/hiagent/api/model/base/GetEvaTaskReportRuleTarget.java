@@ -22,6 +22,11 @@ public class GetEvaTaskReportRuleTarget {
     @Nullable
     private  EvaTaskTarget TargetDetail;
     private double AvgScore;
+    private double MaxScore;
+    private double MinScore;
+    private double PCT50Score;
+    private double PCT90Score;
+    private double PCT99Score;
     private double Percent;
     @Nullable
     private Map<Long,Double> ScoreMap;
@@ -31,10 +36,15 @@ public class GetEvaTaskReportRuleTarget {
     public GetEvaTaskReportRuleTarget() {
     }
 
-    public GetEvaTaskReportRuleTarget(String targetID, @Nullable EvaTaskTarget targetDetail, double avgScore, double percent, @Nullable Map<Long, Double> scoreMap, long duration, long costTokens) {
+    public GetEvaTaskReportRuleTarget(String targetID, @Nullable EvaTaskTarget targetDetail, double avgScore, double maxScore, double minScore, double PCT50Score, double PCT90Score, double PCT99Score, double percent, @Nullable Map<Long, Double> scoreMap, long duration, long costTokens) {
         TargetID = targetID;
         TargetDetail = targetDetail;
         AvgScore = avgScore;
+        MaxScore = maxScore;
+        MinScore = minScore;
+        this.PCT50Score = PCT50Score;
+        this.PCT90Score = PCT90Score;
+        this.PCT99Score = PCT99Score;
         Percent = percent;
         ScoreMap = scoreMap;
         Duration = duration;
@@ -64,6 +74,46 @@ public class GetEvaTaskReportRuleTarget {
 
     public void setAvgScore(double avgScore) {
         AvgScore = avgScore;
+    }
+
+    public double getMaxScore() {
+        return MaxScore;
+    }
+
+    public void setMaxScore(double maxScore) {
+        MaxScore = maxScore;
+    }
+
+    public double getMinScore() {
+        return MinScore;
+    }
+
+    public void setMinScore(double minScore) {
+        MinScore = minScore;
+    }
+
+    public double getPCT50Score() {
+        return PCT50Score;
+    }
+
+    public void setPCT50Score(double PCT50Score) {
+        this.PCT50Score = PCT50Score;
+    }
+
+    public double getPCT90Score() {
+        return PCT90Score;
+    }
+
+    public void setPCT90Score(double PCT90Score) {
+        this.PCT90Score = PCT90Score;
+    }
+
+    public double getPCT99Score() {
+        return PCT99Score;
+    }
+
+    public void setPCT99Score(double PCT99Score) {
+        this.PCT99Score = PCT99Score;
     }
 
     public double getPercent() {

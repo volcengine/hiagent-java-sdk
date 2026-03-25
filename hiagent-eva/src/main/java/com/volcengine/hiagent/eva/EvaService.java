@@ -20,12 +20,13 @@ import com.volcengine.hiagent.api.model.*;
 import com.volcengine.hiagent.api.model.base.*;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Logger;
 
 import static com.volcengine.hiagent.api.model.base.EvaTargetType.TargetTypeCustomAPP;
+import static com.volcengine.hiagent.api.model.base.EvaTaskRuleSource.EvaTaskRuleSourceRules;
+import static com.volcengine.hiagent.api.model.base.EvaTaskRuleSource.EvaTaskRuleSourceRuleset;
+import static com.volcengine.hiagent.api.model.base.EvaTaskSource.EvaTaskSourceDataset;
 import static com.volcengine.hiagent.api.model.base.EvaTaskStatus.*;
 import static java.lang.Thread.sleep;
 
@@ -39,7 +40,7 @@ public class EvaService {
     public EvaService(String endpoint, String ak, String sk, String workspaceID, String appID) {
         this.workspaceID = workspaceID;
         this.appID = appID;
-        
+
         ApiClient apiClient = new ApiClient(endpoint, ak, sk, "cn-north-1");
 
         this.evaClient = new EvaClient(apiClient);
@@ -54,24 +55,37 @@ public class EvaService {
             String rulesetID,
             @Nullable String description,
             @Nullable EvaTargetCustomAPPConfig customAPPConfig,
-            int maxConversations,
-            boolean runImmediately
-    ){
+            @Nullable List<EvaTaskRuleParams> ruleParams,
+            int maxConversations
+    ) {
         try {
             // 创建评估任务请求对象
             CreateEvaTaskRequest request = new CreateEvaTaskRequest();
             request.setWorkspaceID(workspaceID);
-            request.setDatasetID(datasetID);
-            request.setDatasetVersionID(datasetVersionID);
+            request.setDatasetConfig(new DatasetTaskConfigForModify(datasetID, datasetVersionID, 0, maxConversations, false));
             request.setName(taskName);
-            request.setRulesetID(rulesetID);
+            if (rulesetID == null || rulesetID.isEmpty()) {
+                List<EvaTaskRuleItemConfig> rules = new ArrayList<>();
+                if (ruleParams != null) {
+                    Set<String> seen = new HashSet<>();
+                    for (EvaTaskRuleParams p : ruleParams) {
+                        if (p == null) {
+                            continue;
+                        }
+                        String key = p.getRuleID() + "|" + p.getRuleVersionID();
+                        if (seen.add(key)) {
+                            rules.add(new EvaTaskRuleItemConfig(p.getRuleID(), p.getRuleVersionID()));
+                        }
+                    }
+                }
+                request.setRulesConfig(new EvaTaskRulesConfig(EvaTaskRuleSourceRules, rules, null));
+            } else {
+                request.setRulesConfig(new EvaTaskRulesConfig(EvaTaskRuleSourceRuleset, null, new EvaTaskRulesetItemConfig(rulesetID)));
+            }
             request.setDescription(description);
-            request.setRunImmediately(runImmediately);
-            request.setDatasetConfig(new DatasetTaskConfig(
-                    0,
-                    maxConversations,
-                    false
-            ));
+            request.setRunImmediately(true);
+            request.setSource(EvaTaskSourceDataset);
+
 
             // 创建目标列表
             ArrayList<EvaTaskTarget> targets = new ArrayList<>();
@@ -93,6 +107,7 @@ public class EvaService {
 
             // 设置目标配置
             target.setTargetConfig(targetConfig);
+            target.setParams(new EvaTaskTargetParams(null, ruleParams));
 
             // 添加目标到列表
             targets.add(target);
@@ -108,7 +123,7 @@ public class EvaService {
         }
     }
 
-    public GetEvaTaskReportResponse inferenceAndEvaluate(String datasetID, String datasetVersionID, String taskName, String rulesetID, int maxConversations, EvaTargetCustomAPPConfig targetConfig, InferenceFunction inferenceFunction) throws ApiException {
+    public GetEvaTaskReportResponse inferenceAndEvaluate(String datasetID, String datasetVersionID, String taskName, String rulesetID, int maxConversations, EvaTargetCustomAPPConfig targetConfig, @Nullable List<EvaTaskRuleParams> ruleParams, InferenceFunction inferenceFunction) throws ApiException {
         System.out.println("EVA service running...");
         String taskID = "";
         try {
@@ -117,6 +132,7 @@ public class EvaService {
                 System.out.printf("Check evaluation task status: %s\n", taskName);
                 var getTaskResp = this.evaClient.getEvaTask(new GetEvaTaskRequest(
                         workspaceID,
+                        EvaTaskSourceDataset,
                         null,
                         taskName
                 ));
@@ -134,14 +150,15 @@ public class EvaService {
                             EvaTaskStatusRunning
                     ));
                 }
-            }  catch (ApiException e) {
+            } catch (ApiException e) {
                 if (e.getCode() != 404) {
                     throw new RuntimeException(e);
                 } else {
                     System.out.printf("Creating evaluation task: %s\n", taskName);
-                    taskID = createTask(this.evaClient, this.workspaceID, datasetID, datasetVersionID, taskName, rulesetID, null, targetConfig, maxConversations, true).getTaskID();
+                    taskID = createTask(this.evaClient, this.workspaceID, datasetID, datasetVersionID, taskName, rulesetID, null, targetConfig, ruleParams, maxConversations).getTaskID();
                 }
             }
+            Thread.sleep(1000); // 等待一小段时间
             String finalTaskID = taskID;
             System.out.printf("Task Collect Successfully: %s\n", finalTaskID);
             // 2. Get dataset column information
@@ -165,7 +182,7 @@ public class EvaService {
                     maxConversations,
                     0
             ));
-            System.out.printf("Fetched %d cases",listCases.getItems().size());
+            System.out.printf("Fetched %d cases", listCases.getItems().size());
             // 4. Execute inference and submit results
             System.out.println("Running inference and submitting results...");
             listCases.getItems().forEach(caseItem -> {
@@ -218,6 +235,7 @@ public class EvaService {
                 }
                 taskStatus = this.evaClient.getEvaTask(new GetEvaTaskRequest(
                         workspaceID,
+                        EvaTaskSourceDataset,
                         taskID,
                         null
                 )).getResultTaskStatus().getStatus();
@@ -244,6 +262,7 @@ public class EvaService {
         try {
             var taskID = this.evaClient.getEvaTask(new GetEvaTaskRequest(
                     workspaceID,
+                    EvaTaskSourceDataset,
                     null,
                     taskName
             )).getTaskID();
@@ -264,6 +283,7 @@ public class EvaService {
                 }
                 taskStatus = this.evaClient.getEvaTask(new GetEvaTaskRequest(
                         workspaceID,
+                        EvaTaskSourceDataset,
                         taskID,
                         null
                 )).getResultTaskStatus().getStatus();
@@ -284,6 +304,7 @@ public class EvaService {
                     workspaceID,
                     this.evaClient.getEvaTask(new GetEvaTaskRequest(
                             workspaceID,
+                            EvaTaskSourceDataset,
                             null,
                             taskName
                     )).getTaskID()
@@ -298,6 +319,7 @@ public class EvaService {
         try {
             var taskID = this.evaClient.getEvaTask(new GetEvaTaskRequest(
                     workspaceID,
+                    EvaTaskSourceDataset,
                     null,
                     taskName
             )).getTaskID();
@@ -323,6 +345,7 @@ public class EvaService {
                 }
                 taskStatus = this.evaClient.getEvaTask(new GetEvaTaskRequest(
                         workspaceID,
+                        EvaTaskSourceDataset,
                         taskID,
                         null
                 )).getResultTaskStatus().getStatus();

@@ -17,46 +17,46 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public class EvaTaskItem {
+public class EvaRule {
     private String TenantID;
     private String WorkspaceID;
-    private String TaskID;
+    private String RuleID;
     private String Name;
     @Nullable
     private String Description;
-    private EvaTaskSource Source;
-    @Nullable
-    private EvaTaskItemTaskTemplate TaskTemplate;
-    private String TargetType;
-    private EvaTaskRule Rules;
-    private EvaTaskItemDataset Dataset;
-    @Nullable
-    private List<EvaTaskItemTarget> Targets;
-    private EvaTaskStatusItem ResultTaskStatus;
+    private String Type;
+    private EvaRuleConfig Config;
     private String CreatedAt;
     private String UpdatedAt;
     private String CreatedBy;
     private String UpdatedBy;
+    private boolean IsDeleted;
+    @Nullable
+    private String RuleVersionID;
+    @Nullable
+    private String RuleVersionName;
+    @Nullable
+    private List<String> Labels;
 
-    public EvaTaskItem() {
+    public EvaRule() {
     }
 
-    public EvaTaskItem(String tenantID, String workspaceID, String taskID, String name, @Nullable String description, @Nullable EvaTaskItemTaskTemplate taskTemplate, String targetType, EvaTaskRule rules, EvaTaskItemDataset dataset, @Nullable List<EvaTaskItemTarget> targets, EvaTaskStatusItem resultTaskStatus, String createdAt, String updatedAt, String createdBy, String updatedBy) {
+    public EvaRule(String tenantID, String workspaceID, String ruleID, String name, @Nullable String description, String type, EvaRuleConfig config, String createdAt, String updatedAt, String createdBy, String updatedBy, boolean isDeleted, @Nullable String ruleVersionID, @Nullable String ruleVersionName, @Nullable List<String> labels) {
         TenantID = tenantID;
         WorkspaceID = workspaceID;
-        TaskID = taskID;
+        RuleID = ruleID;
         Name = name;
         Description = description;
-        TaskTemplate = taskTemplate;
-        TargetType = targetType;
-        Rules = rules;
-        Dataset = dataset;
-        Targets = targets;
-        ResultTaskStatus = resultTaskStatus;
+        Type = type;
+        Config = config;
         CreatedAt = createdAt;
         UpdatedAt = updatedAt;
         CreatedBy = createdBy;
         UpdatedBy = updatedBy;
+        IsDeleted = isDeleted;
+        RuleVersionID = ruleVersionID;
+        RuleVersionName = ruleVersionName;
+        Labels = labels;
     }
 
     public String getTenantID() {
@@ -75,12 +75,12 @@ public class EvaTaskItem {
         WorkspaceID = workspaceID;
     }
 
-    public String getTaskID() {
-        return TaskID;
+    public String getRuleID() {
+        return RuleID;
     }
 
-    public void setTaskID(String taskID) {
-        TaskID = taskID;
+    public void setRuleID(String ruleID) {
+        RuleID = ruleID;
     }
 
     public String getName() {
@@ -100,54 +100,20 @@ public class EvaTaskItem {
         Description = description;
     }
 
-    @Nullable
-    public EvaTaskItemTaskTemplate getTaskTemplate() {
-        return TaskTemplate;
+    public String getType() {
+        return Type;
     }
 
-    public void setTaskTemplate(@Nullable EvaTaskItemTaskTemplate taskTemplate) {
-        TaskTemplate = taskTemplate;
+    public void setType(String type) {
+        Type = type;
     }
 
-    public String getTargetType() {
-        return TargetType;
+    public EvaRuleConfig getConfig() {
+        return Config;
     }
 
-    public void setTargetType(String targetType) {
-        TargetType = targetType;
-    }
-
-    public EvaTaskRule getRules() {
-        return Rules;
-    }
-
-    public void setRules(EvaTaskRule rules) {
-        Rules = rules;
-    }
-
-    public EvaTaskItemDataset getDataset() {
-        return Dataset;
-    }
-
-    public void setDataset(EvaTaskItemDataset dataset) {
-        Dataset = dataset;
-    }
-
-    @Nullable
-    public List<EvaTaskItemTarget> getTargets() {
-        return Targets;
-    }
-
-    public void setTargets(@Nullable List<EvaTaskItemTarget> targets) {
-        Targets = targets;
-    }
-
-    public EvaTaskStatusItem getResultTaskStatus() {
-        return ResultTaskStatus;
-    }
-
-    public void setResultTaskStatus(EvaTaskStatusItem resultTaskStatus) {
-        ResultTaskStatus = resultTaskStatus;
+    public void setConfig(EvaRuleConfig config) {
+        Config = config;
     }
 
     public String getCreatedAt() {
@@ -180,5 +146,40 @@ public class EvaTaskItem {
 
     public void setUpdatedBy(String updatedBy) {
         UpdatedBy = updatedBy;
+    }
+
+    public boolean isDeleted() {
+        return IsDeleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        IsDeleted = deleted;
+    }
+
+    @Nullable
+    public String getRuleVersionID() {
+        return RuleVersionID;
+    }
+
+    public void setRuleVersionID(@Nullable String ruleVersionID) {
+        RuleVersionID = ruleVersionID;
+    }
+
+    @Nullable
+    public String getRuleVersionName() {
+        return RuleVersionName;
+    }
+
+    public void setRuleVersionName(@Nullable String ruleVersionName) {
+        RuleVersionName = ruleVersionName;
+    }
+
+    @Nullable
+    public List<String> getLabels() {
+        return Labels;
+    }
+
+    public void setLabels(@Nullable List<String> labels) {
+        Labels = labels;
     }
 }

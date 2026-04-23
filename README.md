@@ -12,7 +12,7 @@ including a rich set of development components and application example code.
 
 ## Documentation
 
-Access the document at [document address](https://bytedance.larkoffice.com/docx/EnpxdRL18oxsrqxubHjcylTDnif) to obtain the documentation.
+Access the document at [document address](https://bytedance.larkoffice.com/docx/N0nJdJgHhoKY0TxBKE9c88hSncg) to obtain the documentation.
 
 ## Quick Start
 
@@ -23,7 +23,7 @@ Access the document at [document address](https://bytedance.larkoffice.com/docx/
 
 ## Security **and privacy**
 
-This project takes security seriously.  For vulnerability reporting and supported versions, see \[SECURITY.md]\(SECURITY.md)
+This project takes security seriously.  For vulnerability reporting and supported versions, see [SECURITY.md](SECURITY.md)
 
 ## License
 

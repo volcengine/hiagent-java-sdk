@@ -23,7 +23,7 @@ Access the document at [document address](https://bytedance.larkoffice.com/docx/
 
 ## Security **and privacy**
 
-This project takes security seriously.  For vulnerability reporting and supported versions, see \[SECURITY.md]\(SECURITY.md)
+This project takes security seriously.  For vulnerability reporting and supported versions, see [SECURITY.md](SECURITY.md)
 
 ## License
 

@@ -17,6 +17,7 @@
         <module>hiagent-observe</module>
         <module>hiagent-chat</module>
         <module>hiagent-tool</module>
+        <module>hibot</module>
     </modules>
 
     <properties>

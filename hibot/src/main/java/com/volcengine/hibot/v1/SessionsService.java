@@ -269,9 +269,11 @@ public final class SessionsService {
         if (Bodies.isEmpty((String) body.get("Approve"))) {
             body.put("Approve", "all");
         }
-        V1ChatSyncResponse resp = requester.doAction(
-                new RequestExecutor.Action(config.serverService(), Versions.CHAT, "Chat", body),
-                new TypeReference<V1ChatSyncResponse>() {});
+        RequestExecutor.Action action =
+                new RequestExecutor.Action(config.serverService(), Versions.CHAT, "Chat", body);
+        action.retryable = false;
+        action.readTimeoutSeconds = config.streamReadTimeoutSeconds();
+        V1ChatSyncResponse resp = requester.doAction(action, new TypeReference<V1ChatSyncResponse>() {});
         V1Message m = new V1Message();
         m.role = "assistant";
         m.content = resp == null || resp.message == null ? "" : resp.message;

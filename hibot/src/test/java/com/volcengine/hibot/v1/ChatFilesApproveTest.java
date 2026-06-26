@@ -2,10 +2,13 @@ package com.volcengine.hibot.v1;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.volcengine.hibot.Hibot;
+import com.volcengine.hibot.HibotConfig;
+import com.volcengine.hibot.ApiException;
 import com.volcengine.hibot.testutil.MockHibotServer;
 import com.volcengine.hibot.v1.types.V1Message;
 import com.volcengine.hibot.v1.types.V1MessageFile;
 import com.volcengine.hibot.v1.types.V1SessionChatParams;
+import okhttp3.OkHttpClient;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,10 +20,13 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -68,6 +74,72 @@ class ChatFilesApproveTest {
         assertFalse(body.get("Stream").asBoolean(), "非流式 chat 必须发出 Stream=false");
         assertEquals("all", body.get("Approve").asText(),
                 "非流式 chat 在调用方未显式指定 approve 时应默认下发 \"all\"");
+    }
+
+    @Test
+    void chat_nonStreamingDoesNotRetryDuplicateClientMessageId() throws Exception {
+        AtomicInteger chatCalls = new AtomicInteger();
+        server.onRequest((rec, ex) -> {
+            try {
+                if ("Chat".equals(rec.action())) {
+                    chatCalls.incrementAndGet();
+                    MockHibotServer.writeJson(ex, 500,
+                            "{\"ResponseMetadata\":{\"Error\":{\"Code\":\"InternalError\",\"Message\":\"boom\"}}}");
+                } else {
+                    MockHibotServer.writeOk(ex, new LinkedHashMap<>());
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        V1SessionChatParams p = new V1SessionChatParams();
+        p.agentId = "ag";
+        p.input = "hi";
+        p.clientMessageId = "client-message-id";
+
+        assertThrows(ApiException.class, () -> client.v1.sessions.chat("ses", p));
+        assertEquals(1, chatCalls.get(), "non-streaming chat must not retry non-idempotent sends");
+    }
+
+    @Test
+    void chat_nonStreamingUsesLongReadTimeout() throws Exception {
+        client.close();
+        client = new Hibot(HibotConfig.builder()
+                .endpoint(server.baseUrl())
+                .accessKey("AK")
+                .secretKey("SK")
+                .workspaceId("ws-test")
+                .region("cn-north-1")
+                .httpClient(new OkHttpClient.Builder()
+                        .connectTimeout(30, TimeUnit.SECONDS)
+                        .readTimeout(100, TimeUnit.MILLISECONDS)
+                        .build())
+                .streamReadTimeoutSeconds(2)
+                .build());
+
+        server.onRequest((rec, ex) -> {
+            try {
+                if ("Chat".equals(rec.action())) {
+                    Thread.sleep(300);
+                    syncChat(ex, "ok-after-delay");
+                } else {
+                    MockHibotServer.writeOk(ex, new LinkedHashMap<>());
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException(e);
+            }
+        });
+
+        V1SessionChatParams p = new V1SessionChatParams();
+        p.agentId = "ag";
+        p.input = "hi";
+
+        V1Message m = client.v1.sessions.chat("ses", p);
+        assertEquals("ok-after-delay", m.content);
     }
 
     @Test

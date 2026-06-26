@@ -42,6 +42,16 @@ class ResponseDecoderTest {
     }
 
     @Test
+    void surfacesTopLevelApiErrorOnNon2xx() {
+        String body = "{\"code\":\"InvalidArgument\",\"message\":\"duplicate_client_message_id\",\"biz_code\":4000001}";
+        ApiException ex = assertThrows(ApiException.class, () ->
+                ResponseDecoder.decode(400, body.getBytes(), new TypeReference<LinkedHashMap<String, Object>>() {}));
+        assertEquals(400, ex.statusCode());
+        assertEquals("InvalidArgument", ex.code());
+        assertTrue(ex.getMessage().contains("duplicate_client_message_id"));
+    }
+
+    @Test
     void surfacesEmbeddedErrorOn200() {
         String body = "{\"ResponseMetadata\":{\"RequestId\":\"r-2\",\"Error\":{\"Code\":\"AccessDenied\",\"Message\":\"nope\"}}}";
         ApiException ex = assertThrows(ApiException.class, () ->

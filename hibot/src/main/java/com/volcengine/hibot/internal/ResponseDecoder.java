@@ -36,6 +36,9 @@ public final class ResponseDecoder {
             if (errNode != null && !errNode.isMissingNode() && !errNode.isNull()) {
                 code = errNode.path("Code").asText("");
                 message = errNode.path("Message").asText("");
+            } else {
+                code = firstText(root, "code", "Code", "error_code", "ErrorCode");
+                message = firstText(root, "message", "Message", "error", "Error");
             }
             throw new ApiException(statusCode, requestId, code, message);
         }
@@ -51,5 +54,18 @@ public final class ResponseDecoder {
         } catch (Exception e) {
             throw new RuntimeException("hibot: decode result: " + e.getMessage(), e);
         }
+    }
+
+    private static String firstText(JsonNode root, String... names) {
+        if (root == null) {
+            return "";
+        }
+        for (String name : names) {
+            JsonNode value = root.get(name);
+            if (value != null && !value.isMissingNode() && !value.isNull()) {
+                return value.asText("");
+            }
+        }
+        return "";
     }
 }

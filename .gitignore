@@ -53,6 +53,8 @@ gradle-app.setting
 # Maven build output
 target/
 **/target/
+.flattened-pom.xml
+**/.flattened-pom.xml
 
 .DS_Store
 .vscode/

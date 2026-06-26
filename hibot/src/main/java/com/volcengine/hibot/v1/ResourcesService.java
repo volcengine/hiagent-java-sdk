@@ -5,6 +5,8 @@ import com.volcengine.hibot.HibotConfig;
 import com.volcengine.hibot.internal.Bodies;
 import com.volcengine.hibot.internal.RequestExecutor;
 import com.volcengine.hibot.internal.Versions;
+import com.volcengine.hibot.v1.types.V1BatchCreateResourcesRequest;
+import com.volcengine.hibot.v1.types.V1BatchCreateResourcesResponse;
 import com.volcengine.hibot.v1.types.V1Directory;
 import com.volcengine.hibot.v1.types.V1DirectoryDeleteParams;
 import com.volcengine.hibot.v1.types.V1DirectoryGetByNameParams;
@@ -12,6 +14,7 @@ import com.volcengine.hibot.v1.types.V1DirectoryList;
 import com.volcengine.hibot.v1.types.V1DirectoryListParams;
 import com.volcengine.hibot.v1.types.V1DirectoryNewParams;
 import com.volcengine.hibot.v1.types.V1DirectoryUpdateParams;
+import com.volcengine.hibot.v1.types.V1MoveResourceRequest;
 import com.volcengine.hibot.v1.types.V1Resource;
 import com.volcengine.hibot.v1.types.V1ResourceBatchGetParams;
 import com.volcengine.hibot.v1.types.V1ResourceDeleteParams;
@@ -38,10 +41,10 @@ public final class ResourcesService {
     }
 
     public V1Resource create(V1ResourceNewParams params) {
-        if (params == null || isEmpty(params.name)) {
+        if (params == null || Bodies.isEmpty(params.name)) {
             throw new IllegalArgumentException("hibot: resource Name is required");
         }
-        if (isEmpty(params.blobId)) {
+        if (Bodies.isEmpty(params.blobId)) {
             throw new IllegalArgumentException("hibot: resource BlobID is required (call Uploads.NewBlob first)");
         }
         Map<String, Object> body = Bodies.map();
@@ -52,7 +55,7 @@ public final class ResourcesService {
         IdResult r = requester.doAction(
                 new RequestExecutor.Action(config.serverService(), Versions.SERVER, "CreateResource", body),
                 new TypeReference<IdResult>() {});
-        if (r == null || isEmpty(r.id)) {
+        if (r == null || Bodies.isEmpty(r.id)) {
             throw new IllegalStateException("hibot: create resource response missing ID");
         }
         V1Resource out = new V1Resource();
@@ -61,6 +64,12 @@ public final class ResourcesService {
         out.type = params.type;
         out.directoryId = params.directoryId;
         return out;
+    }
+
+    public V1BatchCreateResourcesResponse batchCreate(V1BatchCreateResourcesRequest params) {
+        return requester.doAction(
+                new RequestExecutor.Action(config.serverService(), Versions.SERVER, "BatchCreateResources", params),
+                new TypeReference<V1BatchCreateResourcesResponse>() {});
     }
 
     public V1ResourceList list(V1ResourceListParams params) {
@@ -77,7 +86,7 @@ public final class ResourcesService {
     }
 
     public void update(V1ResourceUpdateParams params) {
-        if (params == null || isEmpty(params.resourceId)) {
+        if (params == null || Bodies.isEmpty(params.resourceId)) {
             throw new IllegalArgumentException("hibot: resource id is required");
         }
         Map<String, Object> body = Bodies.map();
@@ -91,7 +100,7 @@ public final class ResourcesService {
     }
 
     public void delete(V1ResourceDeleteParams params) {
-        if (params == null || isEmpty(params.resourceId)) {
+        if (params == null || Bodies.isEmpty(params.resourceId)) {
             throw new IllegalArgumentException("hibot: resource id is required");
         }
         Map<String, Object> body = Bodies.map();
@@ -103,8 +112,14 @@ public final class ResourcesService {
                 null);
     }
 
+    public void move(V1MoveResourceRequest params) {
+        requester.doAction(
+                new RequestExecutor.Action(config.serverService(), Versions.SERVER, "MoveResource", params),
+                null);
+    }
+
     public V1Resource getByName(V1ResourceGetByNameParams params) {
-        if (params == null || isEmpty(params.name)) {
+        if (params == null || Bodies.isEmpty(params.name)) {
             throw new IllegalArgumentException("hibot: resource name is required");
         }
         Map<String, Object> body = Bodies.map();
@@ -115,7 +130,7 @@ public final class ResourcesService {
                 new RequestExecutor.Action(config.serverService(), Versions.SERVER,
                         "GetResourceByName", body),
                 new TypeReference<Wrapper>() {});
-        if (r == null || r.resource == null || isEmpty(r.resource.id)) {
+        if (r == null || r.resource == null || Bodies.isEmpty(r.resource.id)) {
             throw new IllegalStateException("hibot: get resource by name response missing ID");
         }
         return r.resource;
@@ -135,8 +150,6 @@ public final class ResourcesService {
         if (r == null || r.items == null) return new ArrayList<>();
         return r.items;
     }
-
-    private static boolean isEmpty(String s) { return s == null || s.isEmpty(); }
 
     private static final class IdResult {
         @com.fasterxml.jackson.annotation.JsonProperty("ID") public String id;
@@ -159,7 +172,7 @@ public final class ResourcesService {
         }
 
         public V1Directory create(V1DirectoryNewParams params) {
-            if (params == null || isEmpty(params.name)) {
+            if (params == null || Bodies.isEmpty(params.name)) {
                 throw new IllegalArgumentException("hibot: directory name is required");
             }
             Map<String, Object> body = Bodies.map();
@@ -169,7 +182,7 @@ public final class ResourcesService {
                     new RequestExecutor.Action(config.serverService(), Versions.SERVER,
                             "CreateDirectory", body),
                     new TypeReference<DirIdResult>() {});
-            if (r == null || isEmpty(r.id)) {
+            if (r == null || Bodies.isEmpty(r.id)) {
                 throw new IllegalStateException("hibot: create directory response missing ID");
             }
             V1Directory d = new V1Directory();
@@ -193,7 +206,7 @@ public final class ResourcesService {
         }
 
         public void update(V1DirectoryUpdateParams params) {
-            if (params == null || isEmpty(params.directoryId)) {
+            if (params == null || Bodies.isEmpty(params.directoryId)) {
                 throw new IllegalArgumentException("hibot: directory id is required");
             }
             Map<String, Object> body = Bodies.map();
@@ -207,7 +220,7 @@ public final class ResourcesService {
         }
 
         public void delete(V1DirectoryDeleteParams params) {
-            if (params == null || isEmpty(params.directoryId)) {
+            if (params == null || Bodies.isEmpty(params.directoryId)) {
                 throw new IllegalArgumentException("hibot: directory id is required");
             }
             Map<String, Object> body = Bodies.map();
@@ -220,7 +233,7 @@ public final class ResourcesService {
         }
 
         public V1Directory getByName(V1DirectoryGetByNameParams params) {
-            if (params == null || isEmpty(params.name)) {
+            if (params == null || Bodies.isEmpty(params.name)) {
                 throw new IllegalArgumentException("hibot: directory name is required");
             }
             Map<String, Object> body = Bodies.map();
@@ -230,13 +243,11 @@ public final class ResourcesService {
                     new RequestExecutor.Action(config.serverService(), Versions.SERVER,
                             "GetDirectoryByName", body),
                     new TypeReference<DirWrapper>() {});
-            if (r == null || r.directory == null || isEmpty(r.directory.id)) {
+            if (r == null || r.directory == null || Bodies.isEmpty(r.directory.id)) {
                 throw new IllegalStateException("hibot: get directory by name response missing ID");
             }
             return r.directory;
         }
-
-        private static boolean isEmpty(String s) { return s == null || s.isEmpty(); }
 
         private static final class DirIdResult {
             @com.fasterxml.jackson.annotation.JsonProperty("ID") public String id;

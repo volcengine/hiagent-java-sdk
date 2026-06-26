@@ -14,6 +14,13 @@ public final class V1Client {
     public final SkillsService skills;
     public final AgentsService agents;
     public final SessionsService sessions;
+    public final ChannelsService channels;
+    public final RuntimeApiKeysService runtimeApiKeys;
+    public final RunsService runs;
+    public final JobsService jobs;
+    public final ObservationsService observations;
+    public final OverviewService overview;
+    public final MemoryService memory;
 
     public V1Client(RequestExecutor requester, HibotConfig config) {
         this.uploads = new UploadsService(requester, config);
@@ -25,5 +32,12 @@ public final class V1Client {
         this.skills = new SkillsService(requester, config);
         this.agents = new AgentsService(requester, config, this.environments);
         this.sessions = new SessionsService(requester, config);
+        this.channels = new ChannelsService(requester, config);
+        this.runtimeApiKeys = new RuntimeApiKeysService(requester, config);
+        this.runs = new RunsService(requester, config);
+        this.jobs = new JobsService(requester, config);
+        this.observations = new ObservationsService(requester, config);
+        this.overview = new OverviewService(requester, config);
+        this.memory = new MemoryService(requester, config);
     }
 }

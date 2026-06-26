@@ -44,11 +44,11 @@ import com.volcengine.hibot.HibotConfig;
 import com.volcengine.hibot.v1.types.*;
 
 HibotConfig cfg = HibotConfig.builder()
-    .accessKeyId(System.getenv("VOLC_ACCESSKEY"))
-    .secretAccessKey(System.getenv("VOLC_SECRETKEY"))
+    .accessKey(System.getenv("VOLC_ACCESSKEY"))
+    .secretKey(System.getenv("VOLC_SECRETKEY"))
     .workspaceId(System.getenv("HIBOT_WORKSPACE_ID"))
-    .baseUrl("https://open.volcengineapi.com")
-    .region("cn-beijing")
+    .endpoint("https://open.volcengineapi.com")
+    .region("cn-north-1")
     .build();
 
 try (Hibot client = new Hibot(cfg)) {
@@ -58,19 +58,19 @@ try (Hibot client = new Hibot(cfg)) {
         .build());
 
     V1Session session = client.v1.sessions.create(V1SessionNewParams.builder()
-        .agentId(agent.getAgentId())
+        .agentId(agent.id)
         .build());
 
     // Streaming chat: AutoCloseable + Iterable<V1SessionChatEvent>
-    try (V1ChatStream stream = client.v1.sessions.chatStreaming(V1SessionChatParams.builder()
-            .sessionId(session.getSessionId())
-            .userMessage("hello")
-            .build())) {
+    try (V1ChatStream stream = client.v1.sessions.chatStreaming(session.id,
+            V1SessionChatParams.builder()
+                .input("hello")
+                .build())) {
         for (V1SessionChatEvent event : stream) {
-            System.out.println(event.getEvent() + " " + event.getDelta());
+            System.out.println(event.type + " " + event.delta);
         }
         V1Message finalMessage = stream.finalMessage();
-        System.out.println("final: " + finalMessage.getContent());
+        System.out.println("final: " + finalMessage.content);
     }
 }
 ```

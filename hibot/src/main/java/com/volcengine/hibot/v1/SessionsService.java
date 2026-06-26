@@ -10,6 +10,8 @@ import com.volcengine.hibot.internal.RequestExecutor;
 import com.volcengine.hibot.internal.ResponseDecoder;
 import com.volcengine.hibot.internal.SseDecoder;
 import com.volcengine.hibot.internal.Versions;
+import com.volcengine.hibot.v1.types.V1BatchGetSessionsRequest;
+import com.volcengine.hibot.v1.types.V1BatchGetSessionsResponse;
 import com.volcengine.hibot.v1.types.V1Message;
 import com.volcengine.hibot.v1.types.V1MessageGetParams;
 import com.volcengine.hibot.v1.types.V1MessageInjectParams;
@@ -19,6 +21,7 @@ import com.volcengine.hibot.v1.types.V1Session;
 import com.volcengine.hibot.v1.types.V1SessionArchiveParams;
 import com.volcengine.hibot.v1.types.V1SessionChatError;
 import com.volcengine.hibot.v1.types.V1SessionChatEvent;
+import com.volcengine.hibot.v1.types.V1ChatSyncResponse;
 import com.volcengine.hibot.v1.types.V1SessionChatParams;
 import com.volcengine.hibot.v1.types.V1SessionDeleteParams;
 import com.volcengine.hibot.v1.types.V1SessionGetByKeyParams;
@@ -82,13 +85,13 @@ public final class SessionsService {
         payload.put("PeerKind", "system");
         payload.put("PeerID", params.agentId);
         if (params.peer != null) {
-            if (!isEmpty(params.peer.channel)) {
+            if (!Bodies.isEmpty(params.peer.channel)) {
                 payload.put("Channel", params.peer.channel);
             }
-            if (!isEmpty(params.peer.peerKind)) {
+            if (!Bodies.isEmpty(params.peer.peerKind)) {
                 payload.put("PeerKind", params.peer.peerKind);
             }
-            if (!isEmpty(params.peer.peerId)) {
+            if (!Bodies.isEmpty(params.peer.peerId)) {
                 payload.put("PeerID", params.peer.peerId);
             }
         }
@@ -104,11 +107,11 @@ public final class SessionsService {
         V1Session result = requester.doAction(
                 new RequestExecutor.Action(config.serverService(), Versions.SERVER, "CreateSession", body),
                 new TypeReference<V1Session>() {});
-        if (result == null || isEmpty(result.id)) {
+        if (result == null || Bodies.isEmpty(result.id)) {
             throw new IllegalStateException("hibot: create session response missing ID");
         }
         result.agentId = params.agentId;
-        if (!isEmpty(params.agentId)) {
+        if (!Bodies.isEmpty(params.agentId)) {
             sessionAgents.put(result.id, params.agentId);
         }
         return result;
@@ -129,7 +132,7 @@ public final class SessionsService {
     }
 
     public V1Session get(V1SessionGetParams params) {
-        if (params == null || isEmpty(params.sessionId)) {
+        if (params == null || Bodies.isEmpty(params.sessionId)) {
             throw new IllegalArgumentException("hibot: session id is required");
         }
         Map<String, Object> body = Bodies.map();
@@ -138,14 +141,14 @@ public final class SessionsService {
         V1Session r = requester.doAction(
                 new RequestExecutor.Action(config.serverService(), Versions.SERVER, "GetSession", body),
                 new TypeReference<V1Session>() {});
-        if (r == null || isEmpty(r.id)) {
+        if (r == null || Bodies.isEmpty(r.id)) {
             throw new IllegalStateException("hibot: get session response missing ID");
         }
         return r;
     }
 
     public V1Session getByKey(V1SessionGetByKeyParams params) {
-        if (params == null || isEmpty(params.sessionKey)) {
+        if (params == null || Bodies.isEmpty(params.sessionKey)) {
             throw new IllegalArgumentException("hibot: session key is required");
         }
         Map<String, Object> body = Bodies.map();
@@ -155,18 +158,24 @@ public final class SessionsService {
         V1Session r = requester.doAction(
                 new RequestExecutor.Action(config.serverService(), Versions.SERVER, "GetSessionByKey", body),
                 new TypeReference<V1Session>() {});
-        if (r == null || isEmpty(r.id)) {
+        if (r == null || Bodies.isEmpty(r.id)) {
             throw new IllegalStateException("hibot: get session by key response missing ID");
         }
         return r;
     }
 
+    public V1BatchGetSessionsResponse batchGet(V1BatchGetSessionsRequest params) {
+        return requester.doAction(
+                new RequestExecutor.Action(config.serverService(), Versions.SERVER, "BatchGetSessions", params),
+                new TypeReference<V1BatchGetSessionsResponse>() {});
+    }
+
     public void archive(V1SessionArchiveParams params) {
-        if (params == null || isEmpty(params.sessionId)) {
+        if (params == null || Bodies.isEmpty(params.sessionId)) {
             throw new IllegalArgumentException("hibot: session id is required");
         }
         Map<String, Object> payload = new LinkedHashMap<>();
-        if (!isEmpty(params.summary)) payload.put("Summary", params.summary);
+        if (!Bodies.isEmpty(params.summary)) payload.put("Summary", params.summary);
         if (params.consolidate != null) payload.put("Consolidate", params.consolidate);
         Map<String, Object> body = Bodies.map();
         Bodies.putIfNotEmpty(body, "WorkspaceID", params.workspaceId);
@@ -178,7 +187,7 @@ public final class SessionsService {
     }
 
     public void delete(V1SessionDeleteParams params) {
-        if (params == null || isEmpty(params.sessionId)) {
+        if (params == null || Bodies.isEmpty(params.sessionId)) {
             throw new IllegalArgumentException("hibot: session id is required");
         }
         Map<String, Object> body = Bodies.map();
@@ -190,7 +199,7 @@ public final class SessionsService {
     }
 
     public V1MessageList listMessages(V1MessageListParams params) {
-        if (params == null || isEmpty(params.sessionId)) {
+        if (params == null || Bodies.isEmpty(params.sessionId)) {
             throw new IllegalArgumentException("hibot: session id is required");
         }
         Map<String, Object> body = Bodies.map();
@@ -204,7 +213,7 @@ public final class SessionsService {
     }
 
     public V1Message getMessage(V1MessageGetParams params) {
-        if (params == null || isEmpty(params.sessionId) || isEmpty(params.messageId)) {
+        if (params == null || Bodies.isEmpty(params.sessionId) || Bodies.isEmpty(params.messageId)) {
             throw new IllegalArgumentException("hibot: session id and message id are required");
         }
         Map<String, Object> body = Bodies.map();
@@ -214,19 +223,19 @@ public final class SessionsService {
         V1Message r = requester.doAction(
                 new RequestExecutor.Action(config.serverService(), Versions.SERVER, "GetMessage", body),
                 new TypeReference<V1Message>() {});
-        if (r == null || isEmpty(r.id)) {
+        if (r == null || Bodies.isEmpty(r.id)) {
             throw new IllegalStateException("hibot: get message response missing ID");
         }
         return r;
     }
 
     public V1Message injectMessage(V1MessageInjectParams params) {
-        if (params == null || isEmpty(params.sessionId)) {
+        if (params == null || Bodies.isEmpty(params.sessionId)) {
             throw new IllegalArgumentException("hibot: session id is required");
         }
         Map<String, Object> payload = new LinkedHashMap<>();
-        if (!isEmpty(params.role)) payload.put("Role", params.role);
-        if (!isEmpty(params.content)) payload.put("Content", params.content);
+        if (!Bodies.isEmpty(params.role)) payload.put("Role", params.role);
+        if (!Bodies.isEmpty(params.content)) payload.put("Content", params.content);
         Map<String, Object> body = Bodies.map();
         Bodies.putIfNotEmpty(body, "WorkspaceID", params.workspaceId);
         body.put("SessionID", params.sessionId);
@@ -234,38 +243,40 @@ public final class SessionsService {
         V1Message r = requester.doAction(
                 new RequestExecutor.Action(config.serverService(), Versions.SERVER, "InjectMessage", body),
                 new TypeReference<V1Message>() {});
-        if (r == null || isEmpty(r.id)) {
+        if (r == null || Bodies.isEmpty(r.id)) {
             throw new IllegalStateException("hibot: inject message response missing ID");
         }
         return r;
     }
 
     /**
-     * 发送一条 chat 消息并阻塞等待最终响应。
+     * Send a chat message and block until final response.
      *
-     * <p>对应服务端 {@code Stream=false} 同步分支：gateway 内部聚合所有
-     * {@code message_completed.content}，run_completed 后一次性返回普通
-     * HTTP JSON {@code ChatSyncResponse{Message}}。SDK 把它包装成 V1Message
-     * 返回；message id / runId / files 等字段服务端不再下发，调用方如需可走
-     * {@link #listMessages} / {@link #getMessage} 二次拉取。
+     * <p>Corresponds to server-side {@code Stream=false} sync branch: hibot-server aggregates all
+     * {@code message_completed.content} internally, and returns a single HTTP JSON
+     * {@code ChatSyncResponse{Message, TokenCount, Files}} after {@code run_completed}.
+     * The SDK wraps it as V1Message and returns; if callers need message id/runId/files etc.,
+     * they can call {@link #listMessages} / {@link #getMessage} for secondary fetch.
      *
-     * <p>非流式路径下若收到审批请求，gateway 仅在 {@code Approve=="all"} 时自动放行；
-     * 因此当调用方未显式设置 {@link V1SessionChatParams#approve} 时，SDK 默认下发
-     * {@code "all"} 以维持批回复可用。
+     * <p>On non-streaming path, if approval is requested, hibot-server auto-approves only when
+     * {@code Approve=="all"}. Therefore, when callers do not explicitly set
+     * {@link V1SessionChatParams#approve}, SDK defaults to {@code "all"} to ensure batch reply works.
      */
     public V1Message chat(String sessionId, V1SessionChatParams params) {
         if (params == null) params = new V1SessionChatParams();
         Map<String, Object> body = buildChatBody(sessionId, params);
         body.put("Stream", Boolean.FALSE);
-        if (isEmpty((String) body.get("Approve"))) {
+        if (Bodies.isEmpty((String) body.get("Approve"))) {
             body.put("Approve", "all");
         }
-        ChatSyncResponse resp = requester.doAction(
-                new RequestExecutor.Action(config.gatewayService(), Versions.CHAT, "Chat", body),
-                new TypeReference<ChatSyncResponse>() {});
+        V1ChatSyncResponse resp = requester.doAction(
+                new RequestExecutor.Action(config.serverService(), Versions.CHAT, "Chat", body),
+                new TypeReference<V1ChatSyncResponse>() {});
         V1Message m = new V1Message();
         m.role = "assistant";
         m.content = resp == null || resp.message == null ? "" : resp.message;
+        m.tokenCount = resp == null ? null : resp.tokenCount;
+        m.files = resp == null ? null : resp.files;
         return m;
     }
 
@@ -277,7 +288,7 @@ public final class SessionsService {
         V1ChatStream stream = new V1ChatStream();
         try {
             Response resp = requester.doStream(
-                    new RequestExecutor.Action(config.gatewayService(), Versions.CHAT, "Chat", body));
+                    new RequestExecutor.Action(config.serverService(), Versions.CHAT, "Chat", body));
             if (resp.code() >= 400) {
                 byte[] payload;
                 try (ResponseBody responseBody = resp.body();
@@ -305,7 +316,7 @@ public final class SessionsService {
     /** 构造 Chat / ChatStreaming 共用的请求体。 */
     private Map<String, Object> buildChatBody(String sessionId, V1SessionChatParams params) {
         String agentId = params.agentId;
-        if (isEmpty(agentId)) {
+        if (Bodies.isEmpty(agentId)) {
             agentId = sessionAgents.get(sessionId);
         }
         Map<String, Object> body = Bodies.map();
@@ -327,8 +338,6 @@ public final class SessionsService {
     String agentIdForSession(String sessionId) {
         return sessionAgents.get(sessionId);
     }
-
-    private static boolean isEmpty(String s) { return s == null || s.isEmpty(); }
 
     private static byte[] readAllBytes(InputStream in) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -374,7 +383,7 @@ public final class SessionsService {
             }
         }
         if (ev.delta == null) ev.delta = new V1SessionTextDelta();
-        if (isEmpty(ev.delta.text)) {
+        if (Bodies.isEmpty(ev.delta.text)) {
             JsonNode rawText = firstNode(payload, "text", "Text", "content", "Content");
             if (rawText != null && rawText.isTextual()) {
                 ev.delta.text = rawText.asText("");
@@ -390,11 +399,11 @@ public final class SessionsService {
                 } catch (Exception ignore) {
                     // Tolerate unknown fields — fall back to manual extraction below.
                 }
-                if (isEmpty(ev.error.code)) {
+                if (Bodies.isEmpty(ev.error.code)) {
                     JsonNode c = firstNode(rawErr, "code", "Code");
                     if (c != null) ev.error.code = c.asText("");
                 }
-                if (isEmpty(ev.error.message)) {
+                if (Bodies.isEmpty(ev.error.message)) {
                     JsonNode m = firstNode(rawErr, "message", "Message");
                     if (m != null) ev.error.message = m.asText("");
                 }
@@ -402,14 +411,55 @@ public final class SessionsService {
                 ev.error.message = rawErr.asText("");
             }
         }
-        if (isEmpty(ev.error.code)) {
+        if (Bodies.isEmpty(ev.error.code)) {
             JsonNode rawCode = firstNode(payload, "code", "Code");
             if (rawCode != null) ev.error.code = rawCode.asText("");
         }
-        if (isEmpty(ev.error.message)) {
+        if (Bodies.isEmpty(ev.error.message)) {
             JsonNode rawMsg = firstNode(payload, "message", "Message");
             if (rawMsg != null && rawMsg.isTextual()) {
                 ev.error.message = rawMsg.asText("");
+            }
+        }
+        if (V1Constants.V1_SESSION_CHAT_EVENT_FAILED.equals(ev.type) && Bodies.isEmpty(ev.error.message)) {
+            JsonNode rawContent = firstNode(payload, "content", "Content");
+            if (rawContent != null && rawContent.isTextual()) {
+                ev.error.message = rawContent.asText("");
+            }
+        }
+        if (V1Constants.V1_SESSION_CHAT_EVENT_FAILED.equals(ev.type)) {
+            JsonNode rawPayload = payload.get("payload");
+            if (rawPayload != null && rawPayload.isTextual()) {
+                try {
+                    JsonNode inner = MAPPER.readTree(rawPayload.asText(""));
+                    if (inner != null && inner.isObject()) {
+                        JsonNode turn = inner.get("turn");
+                        if (turn != null && turn.isObject()) {
+                            JsonNode turnErr = turn.get("error");
+                            if (turnErr != null && turnErr.isObject()) {
+                                if (Bodies.isEmpty(ev.error.message)) {
+                                    JsonNode m = turnErr.get("message");
+                                    if (m != null && m.isTextual()) ev.error.message = m.asText("");
+                                }
+                                if (Bodies.isEmpty(ev.error.code)) {
+                                    JsonNode c = turnErr.get("code");
+                                    if (c != null && c.isTextual()) ev.error.code = c.asText("");
+                                }
+                            }
+                            if (Bodies.isEmpty(ev.error.message)) {
+                                JsonNode status = turn.get("status");
+                                if (status != null && status.isTextual() && "failed".equals(status.asText(""))) {
+                                    JsonNode rawContent = firstNode(payload, "content", "Content");
+                                    if (rawContent != null && rawContent.isTextual() && Bodies.isEmpty(ev.error.message)) {
+                                        ev.error.message = rawContent.asText("");
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception ignore) {
+                    // payload may not be JSON; that's fine.
+                }
             }
         }
         JsonNode rawMessage = firstNode(payload, "message", "Message");
@@ -427,7 +477,7 @@ public final class SessionsService {
             if (rawId != null) msg.id = rawId.asText("");
             JsonNode rawContent = firstNode(payload, "content", "Content");
             if (rawContent != null && rawContent.isTextual()) msg.content = rawContent.asText("");
-            if (!isEmpty(msg.id) || !isEmpty(msg.content)) {
+            if (!Bodies.isEmpty(msg.id) || !Bodies.isEmpty(msg.content)) {
                 ev.message = msg;
             }
         }

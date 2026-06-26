@@ -3,6 +3,7 @@ package com.volcengine.hibot.v1.types;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -14,5 +15,6 @@ public class V1Message {
     @JsonProperty("Content") public String content;
     @JsonProperty("Visibility") public String visibility;
     @JsonProperty("CreatedAt") public String createdAt;
-    @JsonProperty("Files") public List<V1MessageFile> files;
+    @JsonProperty("Files") public List<V1MessageFile> files = new ArrayList<>();
+    @JsonProperty("TokenCount") public Long tokenCount;
 }

@@ -5,7 +5,16 @@ import com.volcengine.hibot.HibotConfig;
 import com.volcengine.hibot.internal.Bodies;
 import com.volcengine.hibot.internal.RequestExecutor;
 import com.volcengine.hibot.internal.Versions;
+import com.volcengine.hibot.v1.types.V1BatchGetSkillsRequest;
+import com.volcengine.hibot.v1.types.V1BatchGetSkillsResponse;
 import com.volcengine.hibot.v1.types.V1CredentialSecretInputParams;
+import com.volcengine.hibot.v1.types.V1GetArkSkillHubSkillRequest;
+import com.volcengine.hibot.v1.types.V1GetArkSkillHubSkillResponse;
+import com.volcengine.hibot.v1.types.V1ImportArkSkillHubSkillRequest;
+import com.volcengine.hibot.v1.types.V1ListArkSkillHubSkillsRequest;
+import com.volcengine.hibot.v1.types.V1ListArkSkillHubSkillsResponse;
+import com.volcengine.hibot.v1.types.V1ParseSkillRequest;
+import com.volcengine.hibot.v1.types.V1ParseSkillResponse;
 import com.volcengine.hibot.v1.types.V1Skill;
 import com.volcengine.hibot.v1.types.V1SkillCredentialInputParams;
 import com.volcengine.hibot.v1.types.V1SkillDeleteParams;
@@ -32,6 +41,30 @@ public final class SkillsService {
         this.config = config;
     }
 
+    public V1ParseSkillResponse parse(V1ParseSkillRequest params) {
+        return requester.doAction(
+                new RequestExecutor.Action(config.serverService(), Versions.SERVER, "ParseSkill", params),
+                new TypeReference<V1ParseSkillResponse>() {});
+    }
+
+    public V1ListArkSkillHubSkillsResponse listArkSkillHubSkills(V1ListArkSkillHubSkillsRequest params) {
+        return requester.doAction(
+                new RequestExecutor.Action(config.serverService(), Versions.SERVER, "ListArkSkillHubSkills", params),
+                new TypeReference<V1ListArkSkillHubSkillsResponse>() {});
+    }
+
+    public V1GetArkSkillHubSkillResponse getArkSkillHubSkill(V1GetArkSkillHubSkillRequest params) {
+        return requester.doAction(
+                new RequestExecutor.Action(config.serverService(), Versions.SERVER, "GetArkSkillHubSkill", params),
+                new TypeReference<V1GetArkSkillHubSkillResponse>() {});
+    }
+
+    public V1ParseSkillResponse importArkSkillHubSkill(V1ImportArkSkillHubSkillRequest params) {
+        return requester.doAction(
+                new RequestExecutor.Action(config.serverService(), Versions.SERVER, "ImportArkSkillHubSkill", params),
+                new TypeReference<V1ParseSkillResponse>() {});
+    }
+
     /**
      * Creates a skill and returns a {@link V1Skill} handle for the created record.
      *
@@ -41,7 +74,7 @@ public final class SkillsService {
      */
     public V1Skill create(V1SkillNewParams params) {
         if (params == null) params = new V1SkillNewParams();
-        if (isEmpty(params.source)) params.source = "manual";
+        if (Bodies.isEmpty(params.source)) params.source = "manual";
         Map<String, Object> body = Bodies.map();
         Bodies.putIfNotEmpty(body, "WorkspaceID", params.workspaceId);
         Bodies.putIfNotEmpty(body, "SkillID", params.skillId);
@@ -58,7 +91,7 @@ public final class SkillsService {
         IdResult r = requester.doAction(
                 new RequestExecutor.Action(config.serverService(), Versions.SERVER, "CreateSkill", body),
                 new TypeReference<IdResult>() {});
-        if (r == null || isEmpty(r.id)) {
+        if (r == null || Bodies.isEmpty(r.id)) {
             throw new IllegalStateException("hibot: create skill response missing ID");
         }
         V1Skill skill = new V1Skill();
@@ -91,7 +124,7 @@ public final class SkillsService {
     }
 
     public V1Skill get(V1SkillGetParams params) {
-        if (params == null || (isEmpty(params.id) && isEmpty(params.skillId))) {
+        if (params == null || (Bodies.isEmpty(params.id) && Bodies.isEmpty(params.skillId))) {
             throw new IllegalArgumentException("hibot: skill id or skill_id is required");
         }
         Map<String, Object> body = Bodies.map();
@@ -102,21 +135,27 @@ public final class SkillsService {
         V1Skill r = requester.doAction(
                 new RequestExecutor.Action(config.serverService(), Versions.SERVER, "GetSkill", body),
                 new TypeReference<V1Skill>() {});
-        if (r == null || isEmpty(r.id)) {
+        if (r == null || Bodies.isEmpty(r.id)) {
             throw new IllegalStateException("hibot: get skill response missing ID");
         }
         return r;
     }
 
+    public V1BatchGetSkillsResponse batchGet(V1BatchGetSkillsRequest params) {
+        return requester.doAction(
+                new RequestExecutor.Action(config.serverService(), Versions.SERVER, "BatchGetSkills", params),
+                new TypeReference<V1BatchGetSkillsResponse>() {});
+    }
+
     public void update(V1SkillUpdateParams params) {
-        if (params == null || (isEmpty(params.id) && isEmpty(params.skillId))) {
+        if (params == null || (Bodies.isEmpty(params.id) && Bodies.isEmpty(params.skillId))) {
             throw new IllegalArgumentException("hibot: skill id or skill_id is required");
         }
         Map<String, Object> body = Bodies.map();
         Bodies.putIfNotEmpty(body, "WorkspaceID", params.workspaceId);
-        if (!isEmpty(params.id)) body.put("ID", params.id);
-        if (!isEmpty(params.skillId)) body.put("SkillID", params.skillId);
-        if (!isEmpty(params.version)) body.put("Version", params.version);
+        if (!Bodies.isEmpty(params.id)) body.put("ID", params.id);
+        if (!Bodies.isEmpty(params.skillId)) body.put("SkillID", params.skillId);
+        if (!Bodies.isEmpty(params.version)) body.put("Version", params.version);
         if (params.description != null) body.put("Description", params.description);
         if (params.source != null) body.put("Source", params.source);
         if (params.artifactId != null) body.put("ArtifactID", params.artifactId);
@@ -132,7 +171,7 @@ public final class SkillsService {
     }
 
     public void delete(V1SkillDeleteParams params) {
-        if (params == null || (isEmpty(params.id) && isEmpty(params.skillId))) {
+        if (params == null || (Bodies.isEmpty(params.id) && Bodies.isEmpty(params.skillId))) {
             throw new IllegalArgumentException("hibot: skill id or skill_id is required");
         }
         Map<String, Object> body = Bodies.map();
@@ -146,7 +185,7 @@ public final class SkillsService {
     }
 
     public List<V1SkillVersion> listVersions(V1SkillVersionListParams params) {
-        if (params == null || isEmpty(params.skillId)) {
+        if (params == null || Bodies.isEmpty(params.skillId)) {
             throw new IllegalArgumentException("hibot: skill_id is required");
         }
         Map<String, Object> body = Bodies.map();
@@ -166,14 +205,14 @@ public final class SkillsService {
         if (params == null) {
             throw new IllegalArgumentException("hibot: skill name is required");
         }
-        if (!isEmpty(params.id)) {
+        if (!Bodies.isEmpty(params.id)) {
             V1SkillVersion v = new V1SkillVersion();
             v.id = params.id;
             v.name = params.name;
             v.constraint = params.constraint;
             return v;
         }
-        if (isEmpty(params.name)) {
+        if (Bodies.isEmpty(params.name)) {
             throw new IllegalArgumentException("hibot: skill name is required");
         }
         String skillId = resolveSkillId(params);
@@ -184,7 +223,7 @@ public final class SkillsService {
                 new RequestExecutor.Action(config.serverService(), Versions.SERVER, "ListSkillVersions", body),
                 new TypeReference<VersionItems>() {});
         V1SkillVersion v = (r != null && r.items != null && !r.items.isEmpty()) ? r.items.get(0) : null;
-        if (v == null || isEmpty(v.id)) {
+        if (v == null || Bodies.isEmpty(v.id)) {
             throw new IllegalStateException(
                     "hibot: no skill version matched name=\"" + params.name
                             + "\" constraint=\"" + (params.constraint == null ? "" : params.constraint) + "\"");
@@ -203,18 +242,16 @@ public final class SkillsService {
                 new TypeReference<SkillIdItems>() {});
         if (r != null && r.items != null) {
             for (SkillIdItem it : r.items) {
-                if (params.name.equals(it.name) && !isEmpty(it.skillId)) {
+                if (params.name.equals(it.name) && !Bodies.isEmpty(it.skillId)) {
                     return it.skillId;
                 }
             }
-            if (!r.items.isEmpty() && !isEmpty(r.items.get(0).skillId)) {
+            if (!r.items.isEmpty() && !Bodies.isEmpty(r.items.get(0).skillId)) {
                 return r.items.get(0).skillId;
             }
         }
         throw new IllegalStateException("hibot: skill \"" + params.name + "\" not found");
     }
-
-    private static boolean isEmpty(String s) { return s == null || s.isEmpty(); }
 
     /** 把 V1SkillCredentialInputParams 序列化为服务端 CredentialConfig 字段。 */
     static Map<String, Object> credentialConfigToMap(V1SkillCredentialInputParams cfg) {

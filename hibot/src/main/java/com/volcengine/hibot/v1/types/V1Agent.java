@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -15,9 +16,9 @@ public class V1Agent {
     @JsonProperty("ModelID") public String modelId;
     @JsonProperty("EnvID") public String envId;
     @JsonProperty("SystemPrompt") public String systemPrompt;
-    @JsonProperty("Skills") public List<V1AgentSkillBinding> skills;
-    @JsonProperty("MCPs") public List<V1AgentMCPBinding> mcps;
-    @JsonProperty("ResourceIDs") public List<String> resourceIds;
+    @JsonProperty("Skills") public List<V1AgentSkillBinding> skills = new ArrayList<>();
+    @JsonProperty("MCPs") public List<V1AgentMCPBinding> mcps = new ArrayList<>();
+    @JsonProperty("ResourceIDs") public List<String> resourceIds = new ArrayList<>();
     @JsonProperty("CreatedAt") public String createdAt;
     @JsonProperty("UpdatedAt") public String updatedAt;
     @JsonProperty("CreatedBy") public String createdBy;

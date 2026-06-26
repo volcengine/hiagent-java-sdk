@@ -3,6 +3,8 @@ package com.volcengine.hibot.v1.types;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -14,18 +16,43 @@ public class V1MCP {
     @JsonProperty("Transport") public String transport;
     /** Note: server-side field is named URL while SDK exposes as "endpoint". */
     @JsonProperty("URL") public String endpoint;
-    @JsonProperty("Headers") public Map<String, String> headers;
-    @JsonProperty("Env") public Map<String, String> env;
+    @JsonProperty("Headers") public Map<String, String> headers = new LinkedHashMap<>();
+    @JsonProperty("Env") public Map<String, String> env = new LinkedHashMap<>();
     @JsonProperty("Command") public String command;
-    @JsonProperty("Args") public List<String> args;
+    @JsonProperty("Args") public List<String> args = new ArrayList<>();
     @JsonProperty("AuthType") public String authType;
     @JsonProperty("CredentialProviderID") public String credentialProviderId;
-    @JsonProperty("ToolAllowlist") public List<String> toolAllowlist;
-    @JsonProperty("ToolDenylist") public List<String> toolDenylist;
+    @JsonProperty("ToolAllowlist") public List<String> toolAllowlist = new ArrayList<>();
+    @JsonProperty("ToolDenylist") public List<String> toolDenylist = new ArrayList<>();
     @JsonProperty("ToolPrefix") public String toolPrefix;
     @JsonProperty("Timeout") public Long timeout;
     @JsonProperty("Status") public String status;
     @JsonProperty("Source") public String source;
     @JsonProperty("CreatedAt") public String createdAt;
     @JsonProperty("UpdatedAt") public String updatedAt;
+
+    @Override
+    public String toString() {
+        return "V1MCP{" +
+                "id='" + id + '\'' +
+                ", name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", transport='" + transport + '\'' +
+                ", endpoint='" + endpoint + '\'' +
+                ", headers='***'" +
+                ", env='***'" +
+                ", command='" + command + '\'' +
+                ", args=" + args +
+                ", authType='" + authType + '\'' +
+                ", credentialProviderId='" + credentialProviderId + '\'' +
+                ", toolAllowlist=" + toolAllowlist +
+                ", toolDenylist=" + toolDenylist +
+                ", toolPrefix='" + toolPrefix + '\'' +
+                ", timeout=" + timeout +
+                ", status='" + status + '\'' +
+                ", source='" + source + '\'' +
+                ", createdAt='" + createdAt + '\'' +
+                ", updatedAt='" + updatedAt + '\'' +
+                '}';
+    }
 }

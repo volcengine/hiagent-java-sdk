@@ -7,7 +7,6 @@ public final class Versions {
     public static final String DEFAULT_REGION = "cn-north-1";
 
     public static final String SERVER_SERVICE = "hibot-server";
-    public static final String GATEWAY_SERVICE = "hibot-gateway";
     public static final String AIGW_SERVICE = "aigw";
     public static final String UP_SERVICE = "up";
 

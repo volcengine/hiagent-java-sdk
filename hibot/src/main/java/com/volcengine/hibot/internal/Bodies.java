@@ -22,4 +22,8 @@ public final class Bodies {
             m.put(key, value);
         }
     }
+
+    public static boolean isEmpty(String s) {
+        return s == null || s.isEmpty();
+    }
 }

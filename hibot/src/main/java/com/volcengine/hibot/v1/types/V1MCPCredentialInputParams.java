@@ -14,4 +14,16 @@ public final class V1MCPCredentialInputParams {
     /** Free-form provider config; Jackson serializes into JSON. */
     public Object config;
     public List<V1CredentialSecretInputParams> secrets;
+
+    @Override
+    public String toString() {
+        return "V1MCPCredentialInputParams{" +
+                "name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", source='" + source + '\'' +
+                ", providerType='" + providerType + '\'' +
+                ", config=" + config +
+                ", secrets=" + secrets +
+                '}';
+    }
 }

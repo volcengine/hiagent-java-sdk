@@ -13,6 +13,9 @@ import com.volcengine.hibot.v1.types.V1AgentListParams;
 import com.volcengine.hibot.v1.types.V1AgentNewParams;
 import com.volcengine.hibot.v1.types.V1AgentNewParamsToolUnion;
 import com.volcengine.hibot.v1.types.V1AgentUpdateParams;
+import com.volcengine.hibot.v1.types.V1ResumeAgentRequest;
+import com.volcengine.hibot.v1.types.V1RetryCreateAgentRequest;
+import com.volcengine.hibot.v1.types.V1StopAgentRequest;
 import com.volcengine.hibot.v1.types.V1Environment;
 import com.volcengine.hibot.v1.types.V1EnvironmentListParams;
 import com.volcengine.hibot.v1.types.V1ManagedAgentMCPToolParams;
@@ -40,7 +43,7 @@ public final class AgentsService {
     public V1Agent create(V1AgentNewParams params) {
         if (params == null) params = new V1AgentNewParams();
         String envId = params.envId;
-        if (isEmpty(envId)) {
+        if (Bodies.isEmpty(envId)) {
             V1EnvironmentListParams elp = new V1EnvironmentListParams();
             elp.workspaceId = params.workspaceId;
             V1Environment env = environments.defaultEnvironment(elp);
@@ -64,12 +67,12 @@ public final class AgentsService {
         List<Map<String, Object>> mcps = new ArrayList<>();
         if (params.tools != null) {
             for (V1AgentNewParamsToolUnion t : params.tools) {
-                if (t.ofSkill != null && !isEmpty(t.ofSkill.skillVersionId)) {
+                if (t.ofSkill != null && !Bodies.isEmpty(t.ofSkill.skillVersionId)) {
                     Map<String, Object> m = new LinkedHashMap<>();
                     m.put("ID", t.ofSkill.skillVersionId);
                     skills.add(m);
                 }
-                if (t.ofMcp != null && !isEmpty(t.ofMcp.id)) {
+                if (t.ofMcp != null && !Bodies.isEmpty(t.ofMcp.id)) {
                     Map<String, Object> m = new LinkedHashMap<>();
                     m.put("ID", t.ofMcp.id);
                     m.put("Enabled", true);
@@ -83,7 +86,7 @@ public final class AgentsService {
         V1Agent result = requester.doAction(
                 new RequestExecutor.Action(config.serverService(), Versions.SERVER, "CreateAgent", body),
                 new TypeReference<V1Agent>() {});
-        if (result == null || isEmpty(result.id)) {
+        if (result == null || Bodies.isEmpty(result.id)) {
             throw new IllegalStateException("hibot: create agent response missing ID");
         }
         result.name = params.name;
@@ -105,7 +108,7 @@ public final class AgentsService {
     }
 
     public V1Agent get(V1AgentGetParams params) {
-        if (params == null || isEmpty(params.agentId)) {
+        if (params == null || Bodies.isEmpty(params.agentId)) {
             throw new IllegalArgumentException("hibot: agent id is required");
         }
         Map<String, Object> body = Bodies.map();
@@ -114,7 +117,7 @@ public final class AgentsService {
         V1Agent r = requester.doAction(
                 new RequestExecutor.Action(config.serverService(), Versions.SERVER, "GetAgent", body),
                 new TypeReference<V1Agent>() {});
-        if (r == null || isEmpty(r.id)) {
+        if (r == null || Bodies.isEmpty(r.id)) {
             throw new IllegalStateException("hibot: get agent response missing ID");
         }
         return r;
@@ -135,7 +138,7 @@ public final class AgentsService {
     }
 
     public void update(V1AgentUpdateParams params) {
-        if (params == null || isEmpty(params.agentId)) {
+        if (params == null || Bodies.isEmpty(params.agentId)) {
             throw new IllegalArgumentException("hibot: agent id is required");
         }
         Map<String, Object> body = Bodies.map();
@@ -148,7 +151,7 @@ public final class AgentsService {
         if (params.skills != null) {
             List<Map<String, Object>> skills = new ArrayList<>();
             for (V1ManagedAgentSkillToolParams t : params.skills) {
-                if (t == null || isEmpty(t.skillVersionId)) continue;
+                if (t == null || Bodies.isEmpty(t.skillVersionId)) continue;
                 Map<String, Object> m = new LinkedHashMap<>();
                 m.put("ID", t.skillVersionId);
                 skills.add(m);
@@ -158,7 +161,7 @@ public final class AgentsService {
         if (params.mcps != null) {
             List<Map<String, Object>> mcps = new ArrayList<>();
             for (V1ManagedAgentMCPToolParams t : params.mcps) {
-                if (t == null || isEmpty(t.id)) continue;
+                if (t == null || Bodies.isEmpty(t.id)) continue;
                 Map<String, Object> m = new LinkedHashMap<>();
                 m.put("ID", t.id);
                 m.put("Enabled", true);
@@ -176,7 +179,7 @@ public final class AgentsService {
     }
 
     public void delete(V1AgentDeleteParams params) {
-        if (params == null || isEmpty(params.agentId)) {
+        if (params == null || Bodies.isEmpty(params.agentId)) {
             throw new IllegalArgumentException("hibot: agent id is required");
         }
         Map<String, Object> body = Bodies.map();
@@ -187,15 +190,33 @@ public final class AgentsService {
                 null);
     }
 
+    public void retryCreate(V1RetryCreateAgentRequest params) {
+        requester.doAction(
+                new RequestExecutor.Action(config.serverService(), Versions.SERVER, "RetryCreateAgent", params),
+                null);
+    }
+
+    public void stop(V1StopAgentRequest params) {
+        requester.doAction(
+                new RequestExecutor.Action(config.serverService(), Versions.SERVER, "StopAgent", params),
+                null);
+    }
+
+    public void resume(V1ResumeAgentRequest params) {
+        requester.doAction(
+                new RequestExecutor.Action(config.serverService(), Versions.SERVER, "ResumeAgent", params),
+                null);
+    }
+
     static Map<String, Object> buildResourceInput(List<V1ManagedAgentResourceRefParams> resources) {
         if (resources == null || resources.isEmpty()) return null;
         List<String> resourceIds = new ArrayList<>();
         List<String> directoryIds = new ArrayList<>();
         for (V1ManagedAgentResourceRefParams r : resources) {
             if (r == null) continue;
-            if (!isEmpty(r.directoryId)) {
+            if (!Bodies.isEmpty(r.directoryId)) {
                 directoryIds.add(r.directoryId);
-            } else if (!isEmpty(r.id)) {
+            } else if (!Bodies.isEmpty(r.id)) {
                 resourceIds.add(r.id);
             }
         }
@@ -205,8 +226,6 @@ public final class AgentsService {
         if (out.isEmpty()) return null;
         return out;
     }
-
-    private static boolean isEmpty(String s) { return s == null || s.isEmpty(); }
 
     private static final class AgentItems {
         @com.fasterxml.jackson.annotation.JsonProperty("Items") public List<V1Agent> items;

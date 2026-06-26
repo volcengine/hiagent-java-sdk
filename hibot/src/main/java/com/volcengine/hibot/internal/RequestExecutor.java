@@ -68,6 +68,8 @@ public final class RequestExecutor {
         public final String action;
         public final Object body;
         public boolean stream;
+        public boolean retryable = true;
+        public long readTimeoutSeconds = -1;
 
         public Action(String service, String version, String action, Object body) {
             this.service = service;
@@ -82,25 +84,27 @@ public final class RequestExecutor {
         byte[] body = marshalActionBody(req.body);
         Request httpRequest = buildHttpRequest(req, body, "application/json", null);
         Exception lastException = null;
-        for (int attempt = 0; attempt <= maxRetries; attempt++) {
+        int effectiveMaxRetries = effectiveMaxRetries(req);
+        OkHttpClient effectiveClient = clientFor(req);
+        for (int attempt = 0; attempt <= effectiveMaxRetries; attempt++) {
             if (attempt > 0) {
                 sleepRetryDelay(attempt);
             }
-            try (Response resp = httpClient.newCall(httpRequest).execute()) {
+            try (Response resp = effectiveClient.newCall(httpRequest).execute()) {
                 ResponseBody responseBody = resp.body();
                 byte[] payload = responseBody == null ? new byte[0] : responseBody.bytes();
-                if (isRetryableStatus(resp.code()) && attempt < maxRetries) {
+                if (isRetryableStatus(resp.code()) && attempt < effectiveMaxRetries) {
                     continue;
                 }
                 return ResponseDecoder.decode(resp.code(), payload, resultType);
             } catch (ApiException e) {
-                if (isRetryableStatus(e.statusCode()) && attempt < maxRetries) {
+                if (isRetryableStatus(e.statusCode()) && attempt < effectiveMaxRetries) {
                     lastException = e;
                     continue;
                 }
                 throw e;
             } catch (Exception e) {
-                if (attempt < maxRetries) {
+                if (attempt < effectiveMaxRetries) {
                     lastException = e;
                     continue;
                 }
@@ -108,10 +112,10 @@ public final class RequestExecutor {
             }
         }
         if (lastException != null) {
-            throw new RuntimeException("hibot: send request failed after " + maxRetries + " retries: "
+            throw new RuntimeException("hibot: send request failed after " + effectiveMaxRetries + " retries: "
                     + lastException.getMessage(), lastException);
         }
-        throw new RuntimeException("hibot: send request failed after " + maxRetries + " retries");
+        throw new RuntimeException("hibot: send request failed after " + effectiveMaxRetries + " retries");
     }
 
     /** Send a raw (non-JSON-encoded) Action request — used for UploadBlob. */
@@ -119,25 +123,27 @@ public final class RequestExecutor {
             Map<String, String> extraQuery, TypeReference<T> resultType) {
         Request httpRequest = buildHttpRequest(req, body == null ? new byte[0] : body, contentType, extraQuery);
         Exception lastException = null;
-        for (int attempt = 0; attempt <= maxRetries; attempt++) {
+        int effectiveMaxRetries = effectiveMaxRetries(req);
+        OkHttpClient effectiveClient = clientFor(req);
+        for (int attempt = 0; attempt <= effectiveMaxRetries; attempt++) {
             if (attempt > 0) {
                 sleepRetryDelay(attempt);
             }
-            try (Response resp = httpClient.newCall(httpRequest).execute()) {
+            try (Response resp = effectiveClient.newCall(httpRequest).execute()) {
                 ResponseBody responseBody = resp.body();
                 byte[] payload = responseBody == null ? new byte[0] : responseBody.bytes();
-                if (isRetryableStatus(resp.code()) && attempt < maxRetries) {
+                if (isRetryableStatus(resp.code()) && attempt < effectiveMaxRetries) {
                     continue;
                 }
                 return ResponseDecoder.decode(resp.code(), payload, resultType);
             } catch (ApiException e) {
-                if (isRetryableStatus(e.statusCode()) && attempt < maxRetries) {
+                if (isRetryableStatus(e.statusCode()) && attempt < effectiveMaxRetries) {
                     lastException = e;
                     continue;
                 }
                 throw e;
             } catch (Exception e) {
-                if (attempt < maxRetries) {
+                if (attempt < effectiveMaxRetries) {
                     lastException = e;
                     continue;
                 }
@@ -145,10 +151,10 @@ public final class RequestExecutor {
             }
         }
         if (lastException != null) {
-            throw new RuntimeException("hibot: send request failed after " + maxRetries + " retries: "
+            throw new RuntimeException("hibot: send request failed after " + effectiveMaxRetries + " retries: "
                     + lastException.getMessage(), lastException);
         }
-        throw new RuntimeException("hibot: send request failed after " + maxRetries + " retries");
+        throw new RuntimeException("hibot: send request failed after " + effectiveMaxRetries + " retries");
     }
 
     /**
@@ -160,7 +166,8 @@ public final class RequestExecutor {
         req.stream = true;
         Request httpRequest = buildHttpRequest(req, body, "application/json", null);
         Exception lastException = null;
-        for (int attempt = 0; attempt <= maxRetries; attempt++) {
+        int effectiveMaxRetries = effectiveMaxRetries(req);
+        for (int attempt = 0; attempt <= effectiveMaxRetries; attempt++) {
             if (attempt > 0) {
                 sleepRetryDelay(attempt);
             }
@@ -169,13 +176,13 @@ public final class RequestExecutor {
                         .readTimeout(streamReadTimeoutSeconds, TimeUnit.SECONDS)
                         .build();
                 Response resp = streamClient.newCall(httpRequest).execute();
-                if (isRetryableStatus(resp.code()) && attempt < maxRetries) {
+                if (isRetryableStatus(resp.code()) && attempt < effectiveMaxRetries) {
                     resp.close();
                     continue;
                 }
                 return resp;
             } catch (Exception e) {
-                if (attempt < maxRetries) {
+                if (attempt < effectiveMaxRetries) {
                     lastException = e;
                     continue;
                 }
@@ -183,10 +190,23 @@ public final class RequestExecutor {
             }
         }
         if (lastException != null) {
-            throw new RuntimeException("hibot: send stream request failed after " + maxRetries + " retries: "
+            throw new RuntimeException("hibot: send stream request failed after " + effectiveMaxRetries + " retries: "
                     + lastException.getMessage(), lastException);
         }
-        throw new RuntimeException("hibot: send stream request failed after " + maxRetries + " retries");
+        throw new RuntimeException("hibot: send stream request failed after " + effectiveMaxRetries + " retries");
+    }
+
+    private int effectiveMaxRetries(Action req) {
+        return req != null && !req.retryable ? 0 : maxRetries;
+    }
+
+    private OkHttpClient clientFor(Action req) {
+        if (req == null || req.readTimeoutSeconds <= 0) {
+            return httpClient;
+        }
+        return httpClient.newBuilder()
+                .readTimeout(req.readTimeoutSeconds, TimeUnit.SECONDS)
+                .build();
     }
 
     private static boolean isRetryableStatus(int statusCode) {

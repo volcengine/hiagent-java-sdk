@@ -5,6 +5,8 @@ import com.volcengine.hibot.HibotConfig;
 import com.volcengine.hibot.internal.Bodies;
 import com.volcengine.hibot.internal.RequestExecutor;
 import com.volcengine.hibot.internal.Versions;
+import com.volcengine.hibot.v1.types.V1BatchGetMCPsRequest;
+import com.volcengine.hibot.v1.types.V1BatchGetMCPsResponse;
 import com.volcengine.hibot.v1.types.V1MCP;
 import com.volcengine.hibot.v1.types.V1MCPCredentialInputParams;
 import com.volcengine.hibot.v1.types.V1MCPDeleteParams;
@@ -55,7 +57,7 @@ public final class McpsService {
         IdResult r = requester.doAction(
                 new RequestExecutor.Action(config.serverService(), Versions.SERVER, "CreateMCP", body),
                 new TypeReference<IdResult>() {});
-        if (r == null || isEmpty(r.id)) {
+        if (r == null || Bodies.isEmpty(r.id)) {
             throw new IllegalStateException("hibot: create mcp response missing ID");
         }
         V1MCP out = new V1MCP();
@@ -83,7 +85,7 @@ public final class McpsService {
     }
 
     public V1MCP get(V1MCPGetParams params) {
-        if (params == null || isEmpty(params.id)) {
+        if (params == null || Bodies.isEmpty(params.id)) {
             throw new IllegalArgumentException("hibot: mcp id is required");
         }
         Map<String, Object> body = Bodies.map();
@@ -92,14 +94,20 @@ public final class McpsService {
         V1MCP r = requester.doAction(
                 new RequestExecutor.Action(config.serverService(), Versions.SERVER, "GetMCP", body),
                 new TypeReference<V1MCP>() {});
-        if (r == null || isEmpty(r.id)) {
+        if (r == null || Bodies.isEmpty(r.id)) {
             throw new IllegalStateException("hibot: get mcp response missing ID");
         }
         return r;
     }
 
+    public V1BatchGetMCPsResponse batchGet(V1BatchGetMCPsRequest params) {
+        return requester.doAction(
+                new RequestExecutor.Action(config.serverService(), Versions.SERVER, "BatchGetMCPs", params),
+                new TypeReference<V1BatchGetMCPsResponse>() {});
+    }
+
     public void update(V1MCPUpdateParams params) {
-        if (params == null || isEmpty(params.id)) {
+        if (params == null || Bodies.isEmpty(params.id)) {
             throw new IllegalArgumentException("hibot: mcp id is required");
         }
         Map<String, Object> body = Bodies.map();
@@ -130,7 +138,7 @@ public final class McpsService {
     }
 
     public void delete(V1MCPDeleteParams params) {
-        if (params == null || isEmpty(params.id)) {
+        if (params == null || Bodies.isEmpty(params.id)) {
             throw new IllegalArgumentException("hibot: mcp id is required");
         }
         Map<String, Object> body = Bodies.map();
@@ -167,13 +175,13 @@ public final class McpsService {
         if (params == null) {
             throw new IllegalArgumentException("hibot: mcp id or name is required");
         }
-        if (!isEmpty(params.id)) {
+        if (!Bodies.isEmpty(params.id)) {
             V1MCP m = new V1MCP();
             m.id = params.id;
             m.name = params.name;
             return m;
         }
-        if (isEmpty(params.name)) {
+        if (Bodies.isEmpty(params.name)) {
             throw new IllegalArgumentException("hibot: mcp id or name is required");
         }
         V1MCPListParams lp = new V1MCPListParams();
@@ -181,14 +189,12 @@ public final class McpsService {
         lp.keyword = params.name;
         List<V1MCP> items = list(lp);
         for (V1MCP item : items) {
-            if (params.name.equals(item.name) && !isEmpty(item.id)) {
+            if (params.name.equals(item.name) && !Bodies.isEmpty(item.id)) {
                 return item;
             }
         }
         throw new IllegalStateException("hibot: mcp \"" + params.name + "\" not found");
     }
-
-    private static boolean isEmpty(String s) { return s == null || s.isEmpty(); }
 
     /** 把 V1MCPCredentialInputParams 序列化为 server expects 的 CredentialConfig map。 */
     static Map<String, Object> credentialConfigToMap(V1MCPCredentialInputParams cfg) {

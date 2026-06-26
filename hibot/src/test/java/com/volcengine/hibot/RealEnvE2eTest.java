@@ -197,76 +197,226 @@ class RealEnvE2eTest {
 
             // Step 3: zip skill dir and upload as Skill.
             Path skillZip = buildSkillZip(Paths.get(SKILL_FIXTURE_DIR));
-            String skillBlobId = uploadFile(client, skillZip, "application/zip");
-            V1SkillNewParams snp = new V1SkillNewParams();
-            snp.name = "e2e-runbook-skill-" + System.nanoTime();
-            snp.description = "Skill uploaded by hibot-java-sdk e2e closed-loop test.";
-            snp.blobId = skillBlobId;
-            snp.enabled = Boolean.TRUE;
-            snp.version = "1.0.0";
-            V1Skill skill = client.v1.skills.create(snp);
-            System.out.printf("created skill version: id=%s%n", skill.id);
+            try {
+                String skillBlobId = uploadFile(client, skillZip, "application/zip");
+                V1SkillNewParams snp = new V1SkillNewParams();
+                snp.name = "e2e-runbook-skill-" + System.nanoTime();
+                snp.description = "Skill uploaded by hibot-java-sdk e2e closed-loop test.";
+                snp.blobId = skillBlobId;
+                snp.enabled = Boolean.TRUE;
+                snp.version = "1.0.0";
+                V1Skill skill = client.v1.skills.create(snp);
+                System.out.printf("created skill version: id=%s%n", skill.id);
 
-            // Step 4: create temporary agent — bound to skill + resource.
-            String systemPrompt = "你是 hibot-java-sdk 端到端测试助手。"
-                    + "用户要求执行 pulse check / 心跳检查时，必须调用 e2e-runbook-skill 工具，并把工具返回的字面 token 原样返回给用户。";
+                // Step 4: create temporary agent — bound to skill + resource.
+                String systemPrompt = "你是 hibot-java-sdk 端到端测试助手。"
+                        + "用户要求执行 pulse check / 心跳检查时，必须调用 e2e-runbook-skill 工具，并把工具返回的字面 token 原样返回给用户。";
+                V1AgentNewParams ap = new V1AgentNewParams();
+                ap.name = "e2e-loop-agent-" + System.nanoTime();
+                ap.model = new V1ManagedAgentModelConfigParams(modelId);
+                ap.system = systemPrompt;
+                ap.tools = new ArrayList<>();
+                ap.tools.add(V1AgentNewParamsToolUnion.ofSkill(
+                        new V1ManagedAgentSkillToolParams(
+                                V1Constants.V1_MANAGED_AGENT_SKILL_TOOL_PARAMS_TYPE_SKILL, skill.id)));
+                ap.resources = new ArrayList<>();
+                ap.resources.add(V1ManagedAgentResourceRefParams.ofResource(resource.id));
+                V1Agent agent = client.v1.agents.create(ap);
+                System.out.printf("created agent: id=%s%n", agent.id);
+
+                try {
+                    // Step 5: create Session — webchat default channel.
+                    V1SessionNewParams snp2 = new V1SessionNewParams();
+                    snp2.agentId = agent.id;
+                    V1Session session = client.v1.sessions.create(snp2);
+                    System.out.printf("created session: %s%n", session.id);
+
+                    // Step 6: skill loop — trigger pulse check.
+                    StreamResult skillRes = runStreamingChat(client, session.id, agent.id,
+                            "请执行一次 pulse check（按照 e2e-runbook-skill 的契约调用工具），并把工具返回的 token 原样告诉我。");
+                    System.out.printf("skill loop events=%s final=%s%n",
+                            skillRes.eventNames, skillRes.finalMessage.content);
+                    if (skillRes.finalMessage.content == null
+                            || !skillRes.finalMessage.content.contains(SKILL_PULSE_TOKEN)) {
+                        fail("skill loop: agent did not return pulse token \"" + SKILL_PULSE_TOKEN
+                                + "\"; system prompt no longer leaks the token, so this proves the skill was NOT invoked. got="
+                                + skillRes.finalMessage.content);
+                    }
+                    if (!containsAny(skillRes.eventNames,
+                            V1Constants.V1_SESSION_CHAT_EVENT_TOOL_START,
+                            V1Constants.V1_SESSION_CHAT_EVENT_TOOL_COMPLETE)) {
+                        fail("skill loop: no tool_start/tool_complete event observed on SSE stream; "
+                                + "the model likely answered without actually invoking e2e-runbook-skill. events="
+                                + skillRes.eventNames);
+                    }
+                    System.out.printf("skill loop ok: pulse token \"%s\" returned via real skill invocation (events=%s)%n",
+                            SKILL_PULSE_TOKEN, skillRes.eventNames);
+                } finally {
+                    if (!keepAgent) {
+                        cleanup(() -> {
+                            V1AgentDeleteParams dp = new V1AgentDeleteParams(agent.id);
+                            client.v1.agents.delete(dp);
+                        }, "agent " + agent.id);
+                        cleanup(() -> {
+                            V1SkillDeleteParams dp = new V1SkillDeleteParams();
+                            dp.id = skill.id;
+                            client.v1.skills.delete(dp);
+                        }, "skill " + skill.id);
+                        cleanup(() -> {
+                            V1ResourceDeleteParams dp = new V1ResourceDeleteParams();
+                            dp.resourceId = resource.id;
+                            client.v1.resources.delete(dp);
+                        }, "resource " + resource.id);
+                    }
+                }
+            } finally {
+                cleanup(() -> {
+                    try {
+                        Files.deleteIfExists(skillZip);
+                    } catch (IOException e) {
+                        System.out.printf("cleanup skill zip %s: %s%n", skillZip, e.getMessage());
+                    }
+                }, "skill zip " + skillZip);
+            }
+        }
+    }
+
+    /**
+     * 用例 C：创建一个纯对话 Agent（不带自定义 skill），发起 chat 并打印返回。
+     * 设置 HIBOT_E2E_KEEP_AGENT=1 时不删除创建出的 Agent。
+     */
+    @Test
+    void realEnvCreateAgentAndChat_simpleDialog() throws Exception {
+        String host = trimEnv("HIBOT_E2E_TOP_HOST");
+        String ak = trimEnv("HIBOT_E2E_AK");
+        String sk = trimEnv("HIBOT_E2E_SK");
+        String workspace = trimEnv("HIBOT_E2E_WORKSPACE");
+        if (ak.isEmpty() || sk.isEmpty() || workspace.isEmpty()) {
+            fail("real-env simple dialog requires HIBOT_E2E_AK / HIBOT_E2E_SK / HIBOT_E2E_WORKSPACE");
+        }
+        System.out.printf("real-env simple dialog: host=%s workspace=%s%n", host, workspace);
+        boolean keepAgent = !trimEnv("HIBOT_E2E_KEEP_AGENT").isEmpty();
+
+        try (Hibot client = new Hibot(HibotConfig.builder()
+                .endpoint(host)
+                .accessKey(ak)
+                .secretKey(sk)
+                .workspaceId(workspace)
+                .build())) {
+
+            V1Model model;
+            try {
+                V1ModelGetParams gp = new V1ModelGetParams();
+                gp.modelName = V1Constants.V1_MANAGED_AGENT_MODEL_DOUBAO_SEED_PRO;
+                model = client.v1.models.get(gp);
+                System.out.printf("matched model by ModelName: id=%s name=%s%n", model.id, model.name);
+            } catch (RuntimeException e) {
+                System.out.printf("get default model by ModelName failed: %s; falling back to ListModels%n",
+                        e.getMessage());
+                V1ModelList list = client.v1.models.list(new V1ModelListParams());
+                if (list == null || list.items == null || list.items.isEmpty()) {
+                    fail("real-env workspace " + workspace + " has no models");
+                }
+                model = list.items.get(0);
+                System.out.printf("fallback model picked: id=%s name=%s%n", model.id, model.name);
+            }
+
             V1AgentNewParams ap = new V1AgentNewParams();
-            ap.name = "e2e-loop-agent-" + System.nanoTime();
-            ap.model = new V1ManagedAgentModelConfigParams(modelId);
-            ap.system = systemPrompt;
-            ap.tools = new ArrayList<>();
-            ap.tools.add(V1AgentNewParamsToolUnion.ofSkill(
-                    new V1ManagedAgentSkillToolParams(
-                            V1Constants.V1_MANAGED_AGENT_SKILL_TOOL_PARAMS_TYPE_SKILL, skill.id)));
-            ap.resources = new ArrayList<>();
-            ap.resources.add(V1ManagedAgentResourceRefParams.ofResource(resource.id));
+            ap.name = "e2e-simple-agent-" + System.nanoTime();
+            ap.model = new V1ManagedAgentModelConfigParams(model.id);
+            ap.system = "你是 hibot-java-sdk 端到端测试助手，回答简短直接。";
             V1Agent agent = client.v1.agents.create(ap);
-            System.out.printf("created agent: id=%s%n", agent.id);
+            System.out.printf("created agent: id=%s name=%s%n", agent.id, agent.name);
 
             try {
-                // Step 5: create Session — webchat default channel.
-                V1SessionNewParams snp2 = new V1SessionNewParams();
-                snp2.agentId = agent.id;
-                V1Session session = client.v1.sessions.create(snp2);
+                V1SessionNewParams sp = new V1SessionNewParams();
+                sp.agentId = agent.id;
+                V1Session session = client.v1.sessions.create(sp);
                 System.out.printf("created session: %s%n", session.id);
 
-                // Step 6: skill loop — trigger pulse check.
-                StreamResult skillRes = runStreamingChat(client, session.id, agent.id,
-                        "请执行一次 pulse check（按照 e2e-runbook-skill 的契约调用工具），并把工具返回的 token 原样告诉我。");
-                System.out.printf("skill loop events=%s final=%s%n",
-                        skillRes.eventNames, skillRes.finalMessage.content);
-                if (skillRes.finalMessage.content == null
-                        || !skillRes.finalMessage.content.contains(SKILL_PULSE_TOKEN)) {
-                    fail("skill loop: agent did not return pulse token \"" + SKILL_PULSE_TOKEN
-                            + "\"; system prompt no longer leaks the token, so this proves the skill was NOT invoked. got="
-                            + skillRes.finalMessage.content);
+                V1SessionChatParams batchParams = new V1SessionChatParams();
+                batchParams.agentId = agent.id;
+                batchParams.input = "你好，请用一句话介绍你自己。";
+                try {
+                    V1Message batchRes = client.v1.sessions.chat(session.id, batchParams);
+                    System.out.printf("batch chat result id=%s role=%s content=%s%n",
+                            batchRes.id == null ? "" : batchRes.id,
+                            batchRes.role == null ? "" : batchRes.role,
+                            batchRes.content == null ? "" : batchRes.content);
+                    assertNotNull(batchRes.content, "batch chat final missing content");
+                    assertFalse(batchRes.content.isEmpty(), "batch chat final content is empty");
+                } catch (RuntimeException e) {
+                    System.out.printf("batch chat failed: %s%n", e.getMessage());
+                    throw e;
                 }
-                if (!containsAny(skillRes.eventNames,
-                        V1Constants.V1_SESSION_CHAT_EVENT_TOOL_START,
-                        V1Constants.V1_SESSION_CHAT_EVENT_TOOL_COMPLETE)) {
-                    fail("skill loop: no tool_start/tool_complete event observed on SSE stream; "
-                            + "the model likely answered without actually invoking e2e-runbook-skill. events="
-                            + skillRes.eventNames);
-                }
-                System.out.printf("skill loop ok: pulse token \"%s\" returned via real skill invocation (events=%s)%n",
-                        SKILL_PULSE_TOKEN, skillRes.eventNames);
             } finally {
                 if (!keepAgent) {
                     cleanup(() -> {
                         V1AgentDeleteParams dp = new V1AgentDeleteParams(agent.id);
                         client.v1.agents.delete(dp);
                     }, "agent " + agent.id);
-                    cleanup(() -> {
-                        V1SkillDeleteParams dp = new V1SkillDeleteParams();
-                        dp.id = skill.id;
-                        client.v1.skills.delete(dp);
-                    }, "skill " + skill.id);
-                    cleanup(() -> {
-                        V1ResourceDeleteParams dp = new V1ResourceDeleteParams();
-                        dp.resourceId = resource.id;
-                        client.v1.resources.delete(dp);
-                    }, "resource " + resource.id);
+                } else {
+                    System.out.printf("HIBOT_E2E_KEEP_AGENT=1, keeping agent %s%n", agent.id);
                 }
+            }
+        }
+    }
+
+    /**
+     * 用例 D：使用指定 agent id 发起 chat，打印流式和批量返回。
+     * agent id 通过 HIBOT_E2E_AGENT_ID 指定；不填时跳过。
+     */
+    @Test
+    void realEnvChatWithSpecifiedAgent() throws Exception {
+        String host = trimEnv("HIBOT_E2E_TOP_HOST");
+        String ak = trimEnv("HIBOT_E2E_AK");
+        String sk = trimEnv("HIBOT_E2E_SK");
+        String workspace = trimEnv("HIBOT_E2E_WORKSPACE");
+        String agentId = trimEnv("HIBOT_E2E_AGENT_ID");
+        if (ak.isEmpty() || sk.isEmpty() || workspace.isEmpty() || agentId.isEmpty()) {
+            System.out.println("skip: HIBOT_E2E_AGENT_ID not set");
+            return;
+        }
+        System.out.printf("real-env chat with agent: host=%s agent=%s%n", host, agentId);
+
+        try (Hibot client = new Hibot(HibotConfig.builder()
+                .endpoint(host)
+                .accessKey(ak)
+                .secretKey(sk)
+                .workspaceId(workspace)
+                .build())) {
+
+            V1SessionNewParams sp = new V1SessionNewParams();
+            sp.agentId = agentId;
+            V1Session session = client.v1.sessions.create(sp);
+            System.out.printf("created session: %s%n", session.id);
+
+            System.out.println("--- streaming chat ---");
+            StreamResult streaming = runStreamingChat(client, session.id, agentId,
+                    "你好，请用一句话介绍你自己。");
+            System.out.printf("streaming events: %s%n", streaming.eventNames);
+            System.out.printf("streaming final message id: %s%n",
+                    streaming.finalMessage.id == null ? "" : streaming.finalMessage.id);
+            System.out.printf("streaming final content: %s%n",
+                    streaming.finalMessage.content == null ? "" : streaming.finalMessage.content);
+            assertNotNull(streaming.finalMessage.content,
+                    "streaming chat final missing content");
+            assertFalse(streaming.finalMessage.content.isEmpty(),
+                    "streaming chat final content is empty");
+
+            System.out.println("--- batch chat ---");
+            try {
+                V1SessionChatParams batchParams = new V1SessionChatParams();
+                batchParams.agentId = agentId;
+                batchParams.input = "再用一句话介绍一下你的能力。";
+                V1Message batchFinal = client.v1.sessions.chat(session.id, batchParams);
+                System.out.printf("batch final content: %s%n",
+                        batchFinal.content == null ? "" : batchFinal.content);
+                assertNotNull(batchFinal.content, "batch chat final missing content");
+                assertFalse(batchFinal.content.isEmpty(), "batch chat final content is empty");
+            } catch (RuntimeException e) {
+                System.out.printf("batch chat error (expected if non-streaming not available): %s%n",
+                        e.getMessage() == null ? e.toString() : e.getMessage());
             }
         }
     }

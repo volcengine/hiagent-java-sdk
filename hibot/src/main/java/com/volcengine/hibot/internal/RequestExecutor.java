@@ -32,20 +32,34 @@ public final class RequestExecutor {
     private final String workspaceId;
     private final String region;
     private final OkHttpClient httpClient;
+    private final int maxRetries;
+    private final long retryBaseDelayMs;
+    private final long streamReadTimeoutSeconds;
 
     public RequestExecutor(String endpoint, String accessKey, String secretKey,
             String workspaceId, String region, OkHttpClient httpClient) {
+        this(endpoint, accessKey, secretKey, workspaceId, region, httpClient,
+                3, 500, 3600);
+    }
+
+    public RequestExecutor(String endpoint, String accessKey, String secretKey,
+            String workspaceId, String region, OkHttpClient httpClient,
+            int maxRetries, long retryBaseDelayMs, long streamReadTimeoutSeconds) {
         this.endpoint = endpoint;
         this.accessKey = accessKey;
         this.secretKey = secretKey;
         this.workspaceId = workspaceId;
         this.region = region;
         this.httpClient = httpClient;
+        this.maxRetries = maxRetries;
+        this.retryBaseDelayMs = retryBaseDelayMs;
+        this.streamReadTimeoutSeconds = streamReadTimeoutSeconds;
     }
 
     public RequestExecutor(HibotConfig config) {
         this(config.endpoint(), config.accessKey(), config.secretKey(),
-                config.workspaceId(), config.region(), config.httpClient());
+                config.workspaceId(), config.region(), config.httpClient(),
+                config.maxRetries(), config.retryBaseDelayMs(), config.streamReadTimeoutSeconds());
     }
 
     public static final class Action {
@@ -67,30 +81,74 @@ public final class RequestExecutor {
     public <T> T doAction(Action req, TypeReference<T> resultType) {
         byte[] body = marshalActionBody(req.body);
         Request httpRequest = buildHttpRequest(req, body, "application/json", null);
-        try (Response resp = httpClient.newCall(httpRequest).execute()) {
-            ResponseBody responseBody = resp.body();
-            byte[] payload = responseBody == null ? new byte[0] : responseBody.bytes();
-            return ResponseDecoder.decode(resp.code(), payload, resultType);
-        } catch (ApiException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new RuntimeException("hibot: send request: " + e.getMessage(), e);
+        Exception lastException = null;
+        for (int attempt = 0; attempt <= maxRetries; attempt++) {
+            if (attempt > 0) {
+                sleepRetryDelay(attempt);
+            }
+            try (Response resp = httpClient.newCall(httpRequest).execute()) {
+                ResponseBody responseBody = resp.body();
+                byte[] payload = responseBody == null ? new byte[0] : responseBody.bytes();
+                if (isRetryableStatus(resp.code()) && attempt < maxRetries) {
+                    continue;
+                }
+                return ResponseDecoder.decode(resp.code(), payload, resultType);
+            } catch (ApiException e) {
+                if (isRetryableStatus(e.statusCode()) && attempt < maxRetries) {
+                    lastException = e;
+                    continue;
+                }
+                throw e;
+            } catch (Exception e) {
+                if (attempt < maxRetries) {
+                    lastException = e;
+                    continue;
+                }
+                throw new RuntimeException("hibot: send request: " + e.getMessage(), e);
+            }
         }
+        if (lastException != null) {
+            throw new RuntimeException("hibot: send request failed after " + maxRetries + " retries: "
+                    + lastException.getMessage(), lastException);
+        }
+        throw new RuntimeException("hibot: send request failed after " + maxRetries + " retries");
     }
 
     /** Send a raw (non-JSON-encoded) Action request — used for UploadBlob. */
     public <T> T doRawAction(Action req, byte[] body, String contentType,
             Map<String, String> extraQuery, TypeReference<T> resultType) {
         Request httpRequest = buildHttpRequest(req, body == null ? new byte[0] : body, contentType, extraQuery);
-        try (Response resp = httpClient.newCall(httpRequest).execute()) {
-            ResponseBody responseBody = resp.body();
-            byte[] payload = responseBody == null ? new byte[0] : responseBody.bytes();
-            return ResponseDecoder.decode(resp.code(), payload, resultType);
-        } catch (ApiException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new RuntimeException("hibot: send request: " + e.getMessage(), e);
+        Exception lastException = null;
+        for (int attempt = 0; attempt <= maxRetries; attempt++) {
+            if (attempt > 0) {
+                sleepRetryDelay(attempt);
+            }
+            try (Response resp = httpClient.newCall(httpRequest).execute()) {
+                ResponseBody responseBody = resp.body();
+                byte[] payload = responseBody == null ? new byte[0] : responseBody.bytes();
+                if (isRetryableStatus(resp.code()) && attempt < maxRetries) {
+                    continue;
+                }
+                return ResponseDecoder.decode(resp.code(), payload, resultType);
+            } catch (ApiException e) {
+                if (isRetryableStatus(e.statusCode()) && attempt < maxRetries) {
+                    lastException = e;
+                    continue;
+                }
+                throw e;
+            } catch (Exception e) {
+                if (attempt < maxRetries) {
+                    lastException = e;
+                    continue;
+                }
+                throw new RuntimeException("hibot: send request: " + e.getMessage(), e);
+            }
         }
+        if (lastException != null) {
+            throw new RuntimeException("hibot: send request failed after " + maxRetries + " retries: "
+                    + lastException.getMessage(), lastException);
+        }
+        throw new RuntimeException("hibot: send request failed after " + maxRetries + " retries");
     }
 
     /**
@@ -101,14 +159,46 @@ public final class RequestExecutor {
         byte[] body = marshalActionBody(req.body);
         req.stream = true;
         Request httpRequest = buildHttpRequest(req, body, "application/json", null);
+        Exception lastException = null;
+        for (int attempt = 0; attempt <= maxRetries; attempt++) {
+            if (attempt > 0) {
+                sleepRetryDelay(attempt);
+            }
+            try {
+                OkHttpClient streamClient = httpClient.newBuilder()
+                        .readTimeout(streamReadTimeoutSeconds, TimeUnit.SECONDS)
+                        .build();
+                Response resp = streamClient.newCall(httpRequest).execute();
+                if (isRetryableStatus(resp.code()) && attempt < maxRetries) {
+                    resp.close();
+                    continue;
+                }
+                return resp;
+            } catch (Exception e) {
+                if (attempt < maxRetries) {
+                    lastException = e;
+                    continue;
+                }
+                throw new RuntimeException("hibot: send stream request: " + e.getMessage(), e);
+            }
+        }
+        if (lastException != null) {
+            throw new RuntimeException("hibot: send stream request failed after " + maxRetries + " retries: "
+                    + lastException.getMessage(), lastException);
+        }
+        throw new RuntimeException("hibot: send stream request failed after " + maxRetries + " retries");
+    }
+
+    private static boolean isRetryableStatus(int statusCode) {
+        return statusCode == 429 || statusCode >= 500;
+    }
+
+    private void sleepRetryDelay(int attempt) {
+        long delay = retryBaseDelayMs * (1L << (attempt - 1));
         try {
-            // For streaming we want no client-level timeout to prevent SSE getting cut off.
-            OkHttpClient streamClient = httpClient.newBuilder()
-                    .readTimeout(60, TimeUnit.MINUTES)
-                    .build();
-            return streamClient.newCall(httpRequest).execute();
-        } catch (Exception e) {
-            throw new RuntimeException("hibot: send stream request: " + e.getMessage(), e);
+            Thread.sleep(delay);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 

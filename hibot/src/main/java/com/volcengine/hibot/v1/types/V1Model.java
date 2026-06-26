@@ -26,4 +26,28 @@ public class V1Model {
     @JsonProperty("Property") public JsonNode property;
     @JsonProperty("CredentialSchema") public JsonNode credentialSchema;
     @JsonProperty("Credential") public Map<String, String> credential;
+
+    @Override
+    public String toString() {
+        return "V1Model{" +
+                "id='" + id + '\'' +
+                ", name='" + name + '\'' +
+                ", type='" + type + '\'' +
+                ", provider='" + provider + '\'' +
+                ", spec='" + spec + '\'' +
+                ", modelName='" + modelName + '\'' +
+                ", description='" + description + '\'' +
+                ", createUserName='" + createUserName + '\'' +
+                ", createTime='" + createTime + '\'' +
+                ", deleteAt='" + deleteAt + '\'' +
+                ", tenantId='" + tenantId + '\'' +
+                ", updateUserName='" + updateUserName + '\'' +
+                ", updateTime='" + updateTime + '\'' +
+                ", status='" + status + '\'' +
+                ", featuresConfig=" + featuresConfig +
+                ", property=" + property +
+                ", credentialSchema=" + credentialSchema +
+                ", credential='***'" +
+                '}';
+    }
 }

@@ -11,6 +11,8 @@ import com.volcengine.hibot.v1.types.V1EnvironmentGetParams;
 import com.volcengine.hibot.v1.types.V1EnvironmentListParams;
 import com.volcengine.hibot.v1.types.V1EnvironmentNewParams;
 import com.volcengine.hibot.v1.types.V1EnvironmentUpdateParams;
+import com.volcengine.hibot.v1.types.V1ListWorkspaceSpecsRequest;
+import com.volcengine.hibot.v1.types.V1ListWorkspaceSpecsResponse;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -128,6 +130,12 @@ public final class EnvironmentsService {
         }
         items.sort(Comparator.comparing((V1Environment e) -> e.createdAt == null ? "" : e.createdAt));
         return items.get(0);
+    }
+
+    public V1ListWorkspaceSpecsResponse listWorkspaceSpecs(V1ListWorkspaceSpecsRequest params) {
+        return requester.doAction(
+                new RequestExecutor.Action(config.serverService(), Versions.SERVER, "ListWorkspaceSpecs", params),
+                new TypeReference<V1ListWorkspaceSpecsResponse>() {});
     }
 
     private static final class EnvList {

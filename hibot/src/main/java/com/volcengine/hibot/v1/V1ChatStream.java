@@ -20,6 +20,7 @@ public final class V1ChatStream implements AutoCloseable, Iterable<V1SessionChat
     SseDecoder decoder;
     V1SessionChatEvent current = new V1SessionChatEvent();
     V1Message finalMsg;
+    StringBuilder deltaBuf = new StringBuilder();
     Throwable err;
     boolean closed;
 
@@ -43,8 +44,25 @@ public final class V1ChatStream implements AutoCloseable, Iterable<V1SessionChat
         try {
             V1SessionChatEvent event = SessionsService.decodeChatEvent(frame.event, frame.data);
             current = event;
+            if (event.delta != null && event.delta.text != null && !event.delta.text.isEmpty()) {
+                deltaBuf.append(event.delta.text);
+            }
             if (event.message != null) {
-                finalMsg = event.message;
+                if (event.message.content == null || event.message.content.isEmpty()) {
+                    if (finalMsg == null) {
+                        finalMsg = event.message;
+                    } else {
+                        finalMsg.id = event.message.id;
+                        finalMsg.sessionId = event.message.sessionId;
+                        finalMsg.runId = event.message.runId;
+                        finalMsg.role = event.message.role;
+                        finalMsg.visibility = event.message.visibility;
+                        finalMsg.createdAt = event.message.createdAt;
+                        finalMsg.files = event.message.files;
+                    }
+                } else {
+                    finalMsg = event.message;
+                }
             }
             return true;
         } catch (RuntimeException e) {
@@ -83,9 +101,24 @@ public final class V1ChatStream implements AutoCloseable, Iterable<V1SessionChat
             if (err instanceof RuntimeException) throw (RuntimeException) err;
             throw new RuntimeException(err);
         }
-        if (finalMsg != null) return finalMsg;
-        if (current != null && current.message != null) return current.message;
-        throw new IllegalStateException("hibot: final message is not available");
+        V1Message msg = finalMsg;
+        if (msg == null && current != null) msg = current.message;
+        if (msg == null) {
+            throw new IllegalStateException("hibot: final message is not available");
+        }
+        if ((msg.content == null || msg.content.isEmpty()) && deltaBuf.length() > 0) {
+            V1Message out = new V1Message();
+            out.id = msg.id;
+            out.sessionId = msg.sessionId;
+            out.runId = msg.runId;
+            out.role = msg.role;
+            out.content = deltaBuf.toString();
+            out.visibility = msg.visibility;
+            out.createdAt = msg.createdAt;
+            out.files = msg.files;
+            return out;
+        }
+        return msg;
     }
 
     /**

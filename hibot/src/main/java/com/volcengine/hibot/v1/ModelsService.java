@@ -41,8 +41,8 @@ public final class ModelsService {
             params.ids = new ArrayList<>(Arrays.asList(params.id));
         }
         if (params.ids == null || params.ids.isEmpty()) {
-            if (isEmpty(params.name) && isEmpty(params.modelName) && isEmpty(params.provider)
-                    && isEmpty(params.type) && isEmpty(params.spec)) {
+            if (Bodies.isEmpty(params.name) && Bodies.isEmpty(params.modelName) && Bodies.isEmpty(params.provider)
+                    && Bodies.isEmpty(params.type) && Bodies.isEmpty(params.spec)) {
                 throw new IllegalArgumentException(
                         "hibot: model id is required (or provide Name/ModelName/Provider/Type/Spec)");
             }
@@ -96,8 +96,8 @@ public final class ModelsService {
             if (notEmpty(params.spec) && !params.spec.equals(m.spec)) continue;
             return m;
         }
-        if (isEmpty(params.name) && isEmpty(params.modelName) && isEmpty(params.provider)
-                && isEmpty(params.type) && isEmpty(params.spec) && !items.isEmpty()) {
+        if (Bodies.isEmpty(params.name) && Bodies.isEmpty(params.modelName) && Bodies.isEmpty(params.provider)
+                && Bodies.isEmpty(params.type) && Bodies.isEmpty(params.spec) && !items.isEmpty()) {
             return items.get(0);
         }
         return null;
@@ -122,17 +122,17 @@ public final class ModelsService {
     }
 
     public V1Model create(V1ModelNewParams params) {
-        if (params == null || isEmpty(params.name)) {
+        if (params == null || Bodies.isEmpty(params.name)) {
             throw new IllegalArgumentException("hibot: model Name is required");
         }
-        if (isEmpty(params.type)) {
+        if (Bodies.isEmpty(params.type)) {
             throw new IllegalArgumentException("hibot: model Type is required");
         }
         Map<String, Object> body = paramsToMap(params);
         IdResult result = requester.doAction(
                 new RequestExecutor.Action(config.modelService(), Versions.MODEL, "CreateModel", body),
                 new TypeReference<IdResult>() {});
-        if (result == null || isEmpty(result.id)) {
+        if (result == null || Bodies.isEmpty(result.id)) {
             throw new IllegalStateException("hibot: create model response missing ID");
         }
         V1Model out = new V1Model();
@@ -146,10 +146,10 @@ public final class ModelsService {
     }
 
     public void update(V1ModelUpdateParams params) {
-        if (params == null || isEmpty(params.id)) {
+        if (params == null || Bodies.isEmpty(params.id)) {
             throw new IllegalArgumentException("hibot: model id is required");
         }
-        if (isEmpty(params.type)) {
+        if (Bodies.isEmpty(params.type)) {
             throw new IllegalArgumentException("hibot: model Type is required");
         }
         Map<String, Object> body = Bodies.map();
@@ -170,7 +170,7 @@ public final class ModelsService {
     }
 
     public void delete(V1ModelDeleteParams params) {
-        if (params == null || isEmpty(params.id)) {
+        if (params == null || Bodies.isEmpty(params.id)) {
             throw new IllegalArgumentException("hibot: model id is required");
         }
         Map<String, Object> body = Bodies.map();
@@ -224,10 +224,10 @@ public final class ModelsService {
     }
 
     public Object getModelProviderCredentialSchema(V1ModelProviderCredentialSchemaParams params) {
-        if (params == null || isEmpty(params.provider)) {
+        if (params == null || Bodies.isEmpty(params.provider)) {
             throw new IllegalArgumentException("hibot: provider is required");
         }
-        if (isEmpty(params.type)) {
+        if (Bodies.isEmpty(params.type)) {
             throw new IllegalArgumentException("hibot: model type is required");
         }
         Map<String, Object> body = Bodies.map();
@@ -266,7 +266,6 @@ public final class ModelsService {
         }
     }
 
-    private static boolean isEmpty(String s) { return s == null || s.isEmpty(); }
     private static boolean notEmpty(String s) { return s != null && !s.isEmpty(); }
 
     private static final class ModelItems {

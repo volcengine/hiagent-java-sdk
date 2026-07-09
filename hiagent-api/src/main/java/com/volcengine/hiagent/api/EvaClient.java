@@ -6,11 +6,14 @@ import com.volcengine.ApiResponse;
 import com.volcengine.Pair;
 import com.volcengine.hiagent.api.model.*;
 import com.volcengine.hiagent.api.model.base.EvaTaskItem;
+import com.volcengine.hiagent.api.model.base.EvaTaskRunConfig;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static com.volcengine.hiagent.api.model.base.EvaTaskRunConfigInitiator.EvaTaskRunConfigInitiatorSDK;
 
 public class EvaClient {
     private ApiClient apiClient;
@@ -36,6 +39,8 @@ public class EvaClient {
      *                      deserialize the response body
      */
     public CreateEvaTaskResponse createEvaTask(CreateEvaTaskRequest body) throws ApiException {
+        body.setRunConfig(new EvaTaskRunConfig(EvaTaskRunConfigInitiatorSDK, null, false));
+
         Object localVarPostBody = body;
 
         // create path and map variables

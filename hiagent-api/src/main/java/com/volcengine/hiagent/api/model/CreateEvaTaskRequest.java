@@ -30,6 +30,8 @@ public class CreateEvaTaskRequest {
     private DatasetTaskConfigForModify DatasetConfig;
     public EvaTaskRulesConfig RulesConfig;
     private EvaTaskSource Source;
+    @Nullable
+    private EvaTaskRunConfig RunConfig;
 
 
     public CreateEvaTaskRequest() {
@@ -118,5 +120,14 @@ public class CreateEvaTaskRequest {
 
     public void setSource(EvaTaskSource source) {
         Source = source;
+    }
+
+    @Nullable
+    public EvaTaskRunConfig getRunConfig() {
+        return RunConfig;
+    }
+
+    public void setRunConfig(@Nullable EvaTaskRunConfig runConfig) {
+        RunConfig = runConfig;
     }
 }

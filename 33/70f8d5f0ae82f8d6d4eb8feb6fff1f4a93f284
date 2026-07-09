@@ -1,0 +1,267 @@
+hiagent-api/src/main/java/com/volcengine/hiagent/api/model/base/EvaTaskRunConfigInitiator.java
+  s_b1ad06cc000133::t_55bd95f1bc910d 1-32 gitai:{"mixed_line_ranges":[],"operations":[{"operation_id":"6a4f809ac660d3cec3c04e68","tool_type":"agent","tool_id":"apply_patch","line_ranges":[{"Range":[1,32]}]}]}
+hiagent-api/src/main/java/com/volcengine/hiagent/api/model/base/EvaTaskRunConfig.java
+  s_b1ad06cc000133::t_3385107e691540 1-48 gitai:{"mixed_line_ranges":[],"operations":[{"operation_id":"6a4f80a0c660d3cec3c04eb4","tool_type":"agent","tool_id":"apply_patch","line_ranges":[{"Range":[1,48]}]}]}
+hiagent-api/src/main/java/com/volcengine/hiagent/api/model/CreateEvaTaskRequest.java
+  s_b1ad06cc000133::t_da754245affa6c 33-34,124-132 gitai:{"mixed_line_ranges":[],"operations":[{"operation_id":"6a4f80a7c660d3cec3c04efe","tool_type":"agent","tool_id":"apply_patch","line_ranges":[{"Range":[33,34]},{"Range":[124,132]}]}]}
+hiagent-api/src/main/java/com/volcengine/hiagent/api/EvaClient.java
+  s_b1ad06cc000133::t_99ad27923ca0c0 9,16-17,42-43 gitai:{"mixed_line_ranges":[],"operations":[{"operation_id":"6a4f8102c660d3cec3c05005","tool_type":"agent","tool_id":"apply_patch","line_ranges":[{"Single":9},{"Range":[16,17]},{"Range":[42,43]}]}]}
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "3370f8d5f0ae82f8d6d4eb8feb6fff1f4a93f284",
+  "prompts": {},
+  "sessions": {
+    "s_b1ad06cc000133": {
+      "agent_id": {
+        "tool": "trae",
+        "id": "6a4f8018c660d3cec3c04d5e",
+        "model": "gpt-5.5__dev",
+        "display_model_name": "GPT-5.5"
+      },
+      "human_author": "QIWEN WANG <wangqiwen.wangqw@bytedance.com>"
+    }
+  },
+  "attestation_metadata": {
+    "hiagent-api/src/main/java/com/volcengine/hiagent/api/EvaClient.java": [
+      {
+        "hash": "s_b1ad06cc000133::t_99ad27923ca0c0",
+        "line_ranges": [
+          {
+            "Single": 9
+          },
+          {
+            "Range": [
+              16,
+              17
+            ]
+          },
+          {
+            "Range": [
+              42,
+              43
+            ]
+          }
+        ],
+        "mixed_line_ranges": [],
+        "operations": [
+          {
+            "operation_id": "6a4f8102c660d3cec3c05005",
+            "tool_type": "agent",
+            "tool_id": "apply_patch",
+            "line_ranges": [
+              {
+                "Single": 9
+              },
+              {
+                "Range": [
+                  16,
+                  17
+                ]
+              },
+              {
+                "Range": [
+                  42,
+                  43
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "hiagent-api/src/main/java/com/volcengine/hiagent/api/model/CreateEvaTaskRequest.java": [
+      {
+        "hash": "s_b1ad06cc000133::t_da754245affa6c",
+        "line_ranges": [
+          {
+            "Range": [
+              33,
+              34
+            ]
+          },
+          {
+            "Range": [
+              124,
+              132
+            ]
+          }
+        ],
+        "mixed_line_ranges": [],
+        "operations": [
+          {
+            "operation_id": "6a4f80a7c660d3cec3c04efe",
+            "tool_type": "agent",
+            "tool_id": "apply_patch",
+            "line_ranges": [
+              {
+                "Range": [
+                  33,
+                  34
+                ]
+              },
+              {
+                "Range": [
+                  124,
+                  132
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "hiagent-api/src/main/java/com/volcengine/hiagent/api/model/base/EvaTaskRunConfig.java": [
+      {
+        "hash": "s_b1ad06cc000133::t_3385107e691540",
+        "line_ranges": [
+          {
+            "Range": [
+              1,
+              48
+            ]
+          }
+        ],
+        "mixed_line_ranges": [],
+        "operations": [
+          {
+            "operation_id": "6a4f80a0c660d3cec3c04eb4",
+            "tool_type": "agent",
+            "tool_id": "apply_patch",
+            "line_ranges": [
+              {
+                "Range": [
+                  1,
+                  48
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "hiagent-api/src/main/java/com/volcengine/hiagent/api/model/base/EvaTaskRunConfigInitiator.java": [
+      {
+        "hash": "s_b1ad06cc000133::t_55bd95f1bc910d",
+        "line_ranges": [
+          {
+            "Range": [
+              1,
+              32
+            ]
+          }
+        ],
+        "mixed_line_ranges": [],
+        "operations": [
+          {
+            "operation_id": "6a4f809ac660d3cec3c04e68",
+            "tool_type": "agent",
+            "tool_id": "apply_patch",
+            "line_ranges": [
+              {
+                "Range": [
+                  1,
+                  32
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "remote_transcripts": {
+    "s_b1ad06cc000133": {
+      "tool": "trae",
+      "conversation_id": "6a4f8018c660d3cec3c04d5e",
+      "session_id": "6a4f8018c660d3cec3c04d5e",
+      "status": "remote_only",
+      "message": "Remote transcript resolution is not implemented yet for TRAE prompts."
+    },
+    "s_b1ad06cc000133::t_04ef767ebc1998": {
+      "tool": "trae",
+      "conversation_id": "6a4f8018c660d3cec3c04d5e",
+      "session_id": "6a4f8018c660d3cec3c04d5e",
+      "status": "remote_only",
+      "message": "Remote transcript resolution is not implemented yet for TRAE prompts."
+    },
+    "s_b1ad06cc000133::t_0e042736d2ee4f": {
+      "tool": "trae",
+      "conversation_id": "6a4f8018c660d3cec3c04d5e",
+      "session_id": "6a4f8018c660d3cec3c04d5e",
+      "status": "remote_only",
+      "message": "Remote transcript resolution is not implemented yet for TRAE prompts."
+    },
+    "s_b1ad06cc000133::t_1ab0dfd722eeee": {
+      "tool": "trae",
+      "conversation_id": "6a4f8018c660d3cec3c04d5e",
+      "session_id": "6a4f8018c660d3cec3c04d5e",
+      "status": "remote_only",
+      "message": "Remote transcript resolution is not implemented yet for TRAE prompts."
+    },
+    "s_b1ad06cc000133::t_1b849a7a77a933": {
+      "tool": "trae",
+      "conversation_id": "6a4f8018c660d3cec3c04d5e",
+      "session_id": "6a4f8018c660d3cec3c04d5e",
+      "status": "remote_only",
+      "message": "Remote transcript resolution is not implemented yet for TRAE prompts."
+    },
+    "s_b1ad06cc000133::t_3385107e691540": {
+      "tool": "trae",
+      "conversation_id": "6a4f8018c660d3cec3c04d5e",
+      "session_id": "6a4f8018c660d3cec3c04d5e",
+      "status": "remote_only",
+      "message": "Remote transcript resolution is not implemented yet for TRAE prompts."
+    },
+    "s_b1ad06cc000133::t_55bd95f1bc910d": {
+      "tool": "trae",
+      "conversation_id": "6a4f8018c660d3cec3c04d5e",
+      "session_id": "6a4f8018c660d3cec3c04d5e",
+      "status": "remote_only",
+      "message": "Remote transcript resolution is not implemented yet for TRAE prompts."
+    },
+    "s_b1ad06cc000133::t_6ef9fd6b941768": {
+      "tool": "trae",
+      "conversation_id": "6a4f8018c660d3cec3c04d5e",
+      "session_id": "6a4f8018c660d3cec3c04d5e",
+      "status": "remote_only",
+      "message": "Remote transcript resolution is not implemented yet for TRAE prompts."
+    },
+    "s_b1ad06cc000133::t_99ad27923ca0c0": {
+      "tool": "trae",
+      "conversation_id": "6a4f8018c660d3cec3c04d5e",
+      "session_id": "6a4f8018c660d3cec3c04d5e",
+      "status": "remote_only",
+      "message": "Remote transcript resolution is not implemented yet for TRAE prompts."
+    },
+    "s_b1ad06cc000133::t_9c24d1aa6a8dc3": {
+      "tool": "trae",
+      "conversation_id": "6a4f8018c660d3cec3c04d5e",
+      "session_id": "6a4f8018c660d3cec3c04d5e",
+      "status": "remote_only",
+      "message": "Remote transcript resolution is not implemented yet for TRAE prompts."
+    },
+    "s_b1ad06cc000133::t_ad7da7f4d83c06": {
+      "tool": "trae",
+      "conversation_id": "6a4f8018c660d3cec3c04d5e",
+      "session_id": "6a4f8018c660d3cec3c04d5e",
+      "status": "remote_only",
+      "message": "Remote transcript resolution is not implemented yet for TRAE prompts."
+    },
+    "s_b1ad06cc000133::t_d225fca345e9a3": {
+      "tool": "trae",
+      "conversation_id": "6a4f8018c660d3cec3c04d5e",
+      "session_id": "6a4f8018c660d3cec3c04d5e",
+      "status": "remote_only",
+      "message": "Remote transcript resolution is not implemented yet for TRAE prompts."
+    },
+    "s_b1ad06cc000133::t_da754245affa6c": {
+      "tool": "trae",
+      "conversation_id": "6a4f8018c660d3cec3c04d5e",
+      "session_id": "6a4f8018c660d3cec3c04d5e",
+      "status": "remote_only",
+      "message": "Remote transcript resolution is not implemented yet for TRAE prompts."
+    }
+  }
+}

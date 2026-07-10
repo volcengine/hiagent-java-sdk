@@ -69,8 +69,10 @@ public class UpClient {
     }
 
     Object localVarPostBody = fileBytes;
-
-    String localVarPath = "/UploadRaw/2023-08-01/app/post/application_json/";
+    String effectiveContentType = body.getContentType() != null
+        ? body.getContentType()
+        : "application/octet-stream";
+    String localVarPath = "/UploadRaw/2023-08-01/app/post/" + effectiveContentType.replace("/", "_") + "/";
 
     List<Pair> localVarQueryParams = new ArrayList<Pair>();
     List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
@@ -88,11 +90,7 @@ public class UpClient {
       localVarHeaderParams.put("x-content-sha256", body.getSha256());
     }
 
-    if (body.getContentType() != null) {
-      localVarHeaderParams.put("Content-Type", body.getContentType());
-    } else {
-      localVarHeaderParams.put("Content-Type", "application/octet-stream");
-    }
+    localVarHeaderParams.put("Content-Type", effectiveContentType);
 
     Map<String, Object> localVarFormParams = new HashMap<String, Object>();
 

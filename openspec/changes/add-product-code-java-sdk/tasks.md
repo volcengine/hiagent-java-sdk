@@ -1,0 +1,14 @@
+- [x] 盘点 `hiagent-api`、`hibot`、`hiagent-observe` 的请求构造点和签名边界，记录具体文件。
+- [x] 为 legacy `BaseApiClient` 增加 Header 注入、缺省和显式覆盖的失败测试。
+- [x] 实现 legacy 客户端的可选 productCode 配置，并保持原有构造函数兼容。
+- [x] 为生成式 TOP Client 增加签名前 Header 注入测试和本地签名验证。
+- [x] 实现生成式 TOP Client 的共享 Header hook。
+- [x] 为 `HibotConfig`/`RequestExecutor` 增加 productCode 传播测试。
+- [x] 实现 Hibot 客户端配置和签名前 Header 注入。
+- [ ] 为 Observe 验证 Token 请求体不变、OTLP 导出带 Header、刷新后 Header 保留。
+- [x] 实现 Observe Client/Exporter 的 productCode 配置和导出 Header。
+- [x] 增加空白值、控制字符和线程安全配置测试。
+- [x] 执行受影响模块测试和完整 `mvn clean test`。
+- [ ] 使用明确 productCode 执行一次真实环境 smoke test，记录 URL、Header、状态码和响应协议，不记录凭据。
+- [x] 更新 Java SDK README 与版本说明。
+- [x] 更新 `hiagent-api` examples：TOP 示例统一使用 productCode-aware ApiClient，Chat 示例传递可选 productCode，并补充初始化测试。

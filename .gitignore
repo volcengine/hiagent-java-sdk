@@ -49,6 +49,7 @@ gradle-app.setting
 
 # IntelliJ IDEA
 .idea/
+.codex/
 
 # Maven build output
 target/

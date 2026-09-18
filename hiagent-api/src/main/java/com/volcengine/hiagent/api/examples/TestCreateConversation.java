@@ -24,7 +24,8 @@ public class TestCreateConversation {
         Dotenv dotenv = Dotenv.configure().load();
         String baseUrl = dotenv.get("HIAGENT_APP_BASE_URL");
         String apiKey = dotenv.get("HIAGENT_AGENT_APP_KEY");
-        ChatClient client = new ChatClient(baseUrl, apiKey);
+        String productCode = dotenv.get("HIAGENT_PRODUCT_CODE");
+        ChatClient client = new ChatClient(baseUrl, apiKey, productCode);
         CreateConversationRequest request = new CreateConversationRequest();
         request.setUserID("user123");
         try {

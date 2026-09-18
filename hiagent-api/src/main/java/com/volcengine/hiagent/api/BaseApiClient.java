@@ -47,6 +47,7 @@ public abstract class BaseApiClient {
     private OkHttpClient httpClient;
     private String baseUrl;
     private String apiKey;
+    private volatile String productCode;
     private static final String BASE_PATH = "/api/proxy/api/v1/";
     public static final String DATA_MARKER = "data:";
     private static final String END_MARKER = "[DONE]";
@@ -76,6 +77,22 @@ public abstract class BaseApiClient {
         this.baseUrl = baseUrl;
         this.httpClient = httpClient;
         this.apiKey = apiKey;
+    }
+
+    public BaseApiClient(String baseUrl, String apiKey, String productCode) {
+        this(baseUrl, apiKey);
+        this.productCode = ProductCode.normalize(productCode);
+    }
+
+    public BaseApiClient(String baseUrl, String apiKey, OkHttpClient httpClient, String productCode) {
+        this(baseUrl, apiKey, httpClient);
+        this.productCode = ProductCode.normalize(productCode);
+    }
+
+    public String getProductCode() { return productCode; }
+
+    public void setProductCode(String productCode) {
+        this.productCode = ProductCode.normalize(productCode);
     }
 
     /**
@@ -161,6 +178,7 @@ public abstract class BaseApiClient {
                 .header("Content-Type", "application/json")
                 .header("Accept", "application/json")
                 .post(RequestBody.create(requestBodyJson, JSON_MEDIA_TYPE));
+        addProductCodeHeader(requestBuilder);
 
         // 添加自定义请求头
         addCustomHeaders(requestBuilder, customHeaders);
@@ -201,6 +219,7 @@ public abstract class BaseApiClient {
                 .header("Content-Type", "application/json")
                 .header("Accept", "text/event-stream")
                 .post(RequestBody.create(requestBodyJson, JSON_MEDIA_TYPE));
+        addProductCodeHeader(requestBuilder);
 
         Request request = requestBuilder.build();
 
@@ -305,6 +324,7 @@ public abstract class BaseApiClient {
                 .header("Content-Type", "application/json")
                 .header("Accept", "application/json")
                 .get();
+        addProductCodeHeader(requestBuilder);
 
         // 添加自定义请求头
         addCustomHeaders(requestBuilder, customHeaders);
@@ -365,6 +385,7 @@ public abstract class BaseApiClient {
                 .header("Content-Type", "application/json")
                 .header("Accept", "application/json")
                 .put(RequestBody.create(requestBodyJson, JSON_MEDIA_TYPE));
+        addProductCodeHeader(requestBuilder);
 
         // 添加自定义请求头
         addCustomHeaders(requestBuilder, customHeaders);
@@ -437,6 +458,7 @@ public abstract class BaseApiClient {
                 .header("Content-Type", "application/json")
                 .header("Accept", "application/json")
                 .delete();
+        addProductCodeHeader(requestBuilder);
 
         // 添加自定义请求头
         addCustomHeaders(requestBuilder, customHeaders);
@@ -520,6 +542,10 @@ public abstract class BaseApiClient {
                 requestBuilder.header(entry.getKey(), entry.getValue());
             }
         }
+    }
+
+    private void addProductCodeHeader(Request.Builder requestBuilder) {
+        if (productCode != null) requestBuilder.header(ProductCode.HEADER_NAME, productCode);
     }
 
     private String encodeParam(String value) {

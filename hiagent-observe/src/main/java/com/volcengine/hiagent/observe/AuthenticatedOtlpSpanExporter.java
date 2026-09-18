@@ -1,7 +1,9 @@
 package com.volcengine.hiagent.observe;
 
 import com.volcengine.ApiException;
+import com.volcengine.hiagent.api.ProductCode;
 import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporter;
+import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporterBuilder;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
@@ -18,11 +20,17 @@ public class AuthenticatedOtlpSpanExporter implements SpanExporter {
 
   private final AuthSession authSession;
   private final String endpoint;
+  private final String productCode;
   private volatile OtlpHttpSpanExporter currentExporter;
 
   public AuthenticatedOtlpSpanExporter(String endpoint, AuthSession authSession) {
+    this(endpoint, authSession, null);
+  }
+
+  public AuthenticatedOtlpSpanExporter(String endpoint, AuthSession authSession, String productCode) {
     this.endpoint = endpoint;
     this.authSession = authSession;
+    this.productCode = ProductCode.normalize(productCode);
     this.currentExporter = createExporter();
   }
 
@@ -30,10 +38,13 @@ public class AuthenticatedOtlpSpanExporter implements SpanExporter {
     try {
       authSession.refreshTokenIfNeeded();
       String token = authSession.getToken();
-      return OtlpHttpSpanExporter.builder()
+      OtlpHttpSpanExporterBuilder builder = OtlpHttpSpanExporter.builder()
           .setEndpoint(endpoint)
-          .addHeader("Authorization", "Bearer " + token)
-          .build();
+          .addHeader("Authorization", "Bearer " + token);
+      if (productCode != null) {
+        builder.addHeader(ProductCode.HEADER_NAME, productCode);
+      }
+      return builder.build();
     } catch (ApiException e) {
       logger.severe("Failed to create exporter with token: " + e.getMessage());
       throw new RuntimeException("Failed to create authenticated exporter", e);

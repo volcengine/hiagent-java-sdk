@@ -38,10 +38,15 @@ public class EvaService {
     private final EvaClient evaClient;
 
     public EvaService(String endpoint, String ak, String sk, String workspaceID, String appID) {
+        this(endpoint, ak, sk, workspaceID, appID, null);
+    }
+
+    public EvaService(String endpoint, String ak, String sk, String workspaceID, String appID,
+            String productCode) {
         this.workspaceID = workspaceID;
         this.appID = appID;
 
-        ApiClient apiClient = new ApiClient(endpoint, ak, sk, "cn-north-1");
+        ApiClient apiClient = new ApiClient(endpoint, ak, sk, "cn-north-1", productCode);
 
         this.evaClient = new EvaClient(apiClient);
     }

@@ -14,6 +14,7 @@
 package com.volcengine.hiagent.observe;
 
 import com.volcengine.ApiException;
+import com.volcengine.hiagent.api.ProductCode;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
@@ -36,6 +37,7 @@ public class Client {
     private final String sk;
     private final String workspaceId;
     private final String appId;
+    private final String productCode;
 
     private AuthSession authSession;
     private OpenTelemetrySdk openTelemetry;
@@ -49,6 +51,18 @@ public class Client {
         this.sk = sk;
         this.workspaceId = workspaceId;
         this.appId = appId;
+        this.productCode = null;
+    }
+
+    public Client(String traceEndpoint, String topEndpoint, String ak, String sk, String workspaceId, String appId,
+            String productCode) {
+        this.traceEndpoint = traceEndpoint;
+        this.topEndpoint = topEndpoint;
+        this.ak = ak;
+        this.sk = sk;
+        this.workspaceId = workspaceId;
+        this.appId = appId;
+        this.productCode = ProductCode.normalize(productCode);
     }
 
     public SdkTracerProvider init() throws RuntimeException {
@@ -63,7 +77,7 @@ public class Client {
             // 创建带认证的 OTLP Span Exporter
             AuthenticatedOtlpSpanExporter exporter = new AuthenticatedOtlpSpanExporter(
                     traceEndpoint + "/v1/traces",
-                    authSession);
+                    authSession, productCode);
 
             // 创建资源
             Resource resource = Resource.getDefault()

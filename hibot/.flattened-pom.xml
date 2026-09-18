@@ -5,11 +5,11 @@
   <parent>
     <groupId>com.volcengine</groupId>
     <artifactId>hiagent-java-sdk</artifactId>
-    <version>1.0.0</version>
+    <version>3.1.0</version>
     <relativePath>..</relativePath>
   </parent>
   <artifactId>hibot</artifactId>
-  <version>1.0.0</version>
+  <version>3.1.0</version>
   <name>Hibot Java SDK</name>
   <description>Official Java SDK for the Hibot Managed Agent platform.</description>
   <properties>

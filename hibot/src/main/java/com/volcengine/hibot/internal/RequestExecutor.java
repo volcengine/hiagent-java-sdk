@@ -31,6 +31,7 @@ public final class RequestExecutor {
     private final String secretKey;
     private final String workspaceId;
     private final String region;
+    private final String productCode;
     private final OkHttpClient httpClient;
     private final int maxRetries;
     private final long retryBaseDelayMs;
@@ -39,17 +40,25 @@ public final class RequestExecutor {
     public RequestExecutor(String endpoint, String accessKey, String secretKey,
             String workspaceId, String region, OkHttpClient httpClient) {
         this(endpoint, accessKey, secretKey, workspaceId, region, httpClient,
-                3, 500, 3600);
+                3, 500, 3600, null);
     }
 
     public RequestExecutor(String endpoint, String accessKey, String secretKey,
             String workspaceId, String region, OkHttpClient httpClient,
             int maxRetries, long retryBaseDelayMs, long streamReadTimeoutSeconds) {
+        this(endpoint, accessKey, secretKey, workspaceId, region, httpClient,
+                maxRetries, retryBaseDelayMs, streamReadTimeoutSeconds, null);
+    }
+
+    public RequestExecutor(String endpoint, String accessKey, String secretKey,
+            String workspaceId, String region, OkHttpClient httpClient,
+            int maxRetries, long retryBaseDelayMs, long streamReadTimeoutSeconds, String productCode) {
         this.endpoint = endpoint;
         this.accessKey = accessKey;
         this.secretKey = secretKey;
         this.workspaceId = workspaceId;
         this.region = region;
+        this.productCode = ProductCodeSupport.normalize(productCode);
         this.httpClient = httpClient;
         this.maxRetries = maxRetries;
         this.retryBaseDelayMs = retryBaseDelayMs;
@@ -59,7 +68,7 @@ public final class RequestExecutor {
     public RequestExecutor(HibotConfig config) {
         this(config.endpoint(), config.accessKey(), config.secretKey(),
                 config.workspaceId(), config.region(), config.httpClient(),
-                config.maxRetries(), config.retryBaseDelayMs(), config.streamReadTimeoutSeconds());
+                config.maxRetries(), config.retryBaseDelayMs(), config.streamReadTimeoutSeconds(), config.productCode());
     }
 
     public static final class Action {
@@ -250,6 +259,9 @@ public final class RequestExecutor {
         // Signing
         Map<String, String> headersForSign = new LinkedHashMap<>();
         headersForSign.put("content-type", ct);
+        if (productCode != null) {
+            headersForSign.put("x-trace-product-code", productCode);
+        }
         Signer signer = new Signer(accessKey, secretKey, region, req.service);
         Signer.Signed signed = signer.sign("POST", uri, headersForSign, body, null);
 
@@ -262,6 +274,7 @@ public final class RequestExecutor {
                 .header("X-Date", signed.xDate)
                 .header("X-Content-Sha256", signed.xContentSha256)
                 .header("Authorization", signed.authorization);
+        if (productCode != null) b.header("X-Trace-Product-Code", productCode);
         if (req.stream) {
             b.header("Accept", "text/event-stream");
         }

@@ -1,5 +1,6 @@
 package com.volcengine.hibot;
 
+import com.volcengine.hibot.internal.ProductCodeSupport;
 import com.volcengine.hibot.internal.Versions;
 import okhttp3.OkHttpClient;
 
@@ -12,6 +13,7 @@ public final class HibotConfig {
     private final String secretKey;
     private final String workspaceId;
     private final String region;
+    private final String productCode;
     private final OkHttpClient httpClient;
     private final String serverService;
     private final String modelService;
@@ -26,6 +28,7 @@ public final class HibotConfig {
         this.secretKey = trim(b.secretKey);
         this.workspaceId = trim(b.workspaceId);
         this.region = orDefault(trim(b.region), Versions.DEFAULT_REGION);
+        this.productCode = ProductCodeSupport.normalize(b.productCode);
         this.serverService = orDefault(trim(b.serverService), Versions.SERVER_SERVICE);
         this.modelService = orDefault(trim(b.modelService), Versions.AIGW_SERVICE);
         this.upService = orDefault(trim(b.upService), Versions.UP_SERVICE);
@@ -60,6 +63,7 @@ public final class HibotConfig {
     public String secretKey() { return secretKey; }
     public String workspaceId() { return workspaceId; }
     public String region() { return region; }
+    public String productCode() { return productCode; }
     public OkHttpClient httpClient() { return httpClient; }
     public String serverService() { return serverService; }
     public String modelService() { return modelService; }
@@ -104,6 +108,7 @@ public final class HibotConfig {
         private String secretKey;
         private String workspaceId;
         private String region;
+        private String productCode;
         private OkHttpClient httpClient;
         private String serverService;
         private String modelService;
@@ -117,6 +122,7 @@ public final class HibotConfig {
         public Builder secretKey(String v) { this.secretKey = v; return this; }
         public Builder workspaceId(String v) { this.workspaceId = v; return this; }
         public Builder region(String v) { this.region = v; return this; }
+        public Builder productCode(String v) { this.productCode = v; return this; }
         public Builder httpClient(OkHttpClient v) { this.httpClient = v; return this; }
         public Builder serverService(String v) { this.serverService = v; return this; }
         public Builder modelService(String v) { this.modelService = v; return this; }

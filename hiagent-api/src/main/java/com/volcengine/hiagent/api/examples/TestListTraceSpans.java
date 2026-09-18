@@ -13,11 +13,10 @@
 // limitations under the License.
 package com.volcengine.hiagent.api.examples;
 
-import com.volcengine.ApiClient;
 import com.volcengine.ApiException;
+import com.volcengine.hiagent.api.ApiClient;
 import com.volcengine.hiagent.api.ObserveClient;
 import com.volcengine.hiagent.api.model.*;
-import com.volcengine.sign.Credentials;
 
 public class TestListTraceSpans {
   public static void main(String[] args) {
@@ -28,9 +27,7 @@ public class TestListTraceSpans {
 
     String workspaceID = System.getenv("WORKSPACE_ID");
 
-    ApiClient apiClient = new ApiClient()
-        .setCredentials(Credentials.getCredentials(ak, sk))
-        .setRegion(region).setEndpoint(endpoint).setDisableSSL(true);
+    ApiClient apiClient = ExampleSupport.topApiClient();
 
     ObserveClient api = new ObserveClient(apiClient);
     ListTraceSpansRequest createApiTokenReq = new ListTraceSpansRequest();

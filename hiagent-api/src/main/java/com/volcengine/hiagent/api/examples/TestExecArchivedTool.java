@@ -31,7 +31,8 @@ public class TestExecArchivedTool {
         String workspaceID = System.getenv("WORKSPACE_ID");
         String toolID = System.getenv("TOOL_ID");
 
-        ApiClient apiClient = new ApiClient(endpoint, ak, sk, region);
+        ApiClient apiClient = new ApiClient(endpoint, ak, sk, region,
+                System.getenv("HIAGENT_PRODUCT_CODE"));
 
         ToolClient api = new ToolClient(apiClient);
 

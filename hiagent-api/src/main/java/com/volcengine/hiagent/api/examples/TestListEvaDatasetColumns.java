@@ -13,13 +13,12 @@
 // limitations under the License.
 package com.volcengine.hiagent.api.examples;
 
-import com.volcengine.ApiClient;
 import com.volcengine.ApiException;
+import com.volcengine.hiagent.api.ApiClient;
 import com.volcengine.hiagent.api.EvaClient;
 import com.volcengine.hiagent.api.model.ListEvaDatasetColumnsRequest;
 import com.volcengine.hiagent.api.model.ListEvaDatasetColumnsResponse;
 import com.volcengine.hiagent.api.model.base.EvaDatasetColumn;
-import com.volcengine.sign.Credentials;
 
 import java.util.List;
 
@@ -39,9 +38,7 @@ public class TestListEvaDatasetColumns {
         boolean useLatestPublishedVersion = false;
 
         // 创建API客户端
-        ApiClient apiClient = new ApiClient()
-                .setCredentials(Credentials.getCredentials(ak, sk))
-                .setRegion(region).setEndpoint(endpoint).setDisableSSL(true);
+        ApiClient apiClient = ExampleSupport.topApiClient();
 
         // 创建EvaClient实例
         EvaClient api = new EvaClient(apiClient);

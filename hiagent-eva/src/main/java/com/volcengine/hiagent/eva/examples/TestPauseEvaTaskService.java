@@ -20,13 +20,14 @@ public class TestPauseEvaTaskService {
             String workspaceID = System.getenv("WORKSPACE_ID");
             String taskName = System.getenv("TASK_NAME");
             String appID = System.getenv("CUSTOM_APP_ID");
+            String productCode = System.getenv("HIAGENT_PRODUCT_CODE");
 
 
             // 验证必要的环境变量
             validateEnvVars(ak, sk, workspaceID, appID);
 
             // 创建EvaService实例
-            EvaService evaService = new EvaService(endpoint, ak, sk, workspaceID, appID);
+            EvaService evaService = new EvaService(endpoint, ak, sk, workspaceID, appID, productCode);
 
 
             // 运行评估任务

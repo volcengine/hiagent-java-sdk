@@ -45,6 +45,7 @@ public class TestInferenceAndEvaluateEvaTaskService {
             String endpoint = System.getenv("HIAGENT_TOP_ENDPOINT");
             String workspaceID = System.getenv("WORKSPACE_ID");
             String appID = System.getenv("CUSTOM_APP_ID");
+            String productCode = System.getenv("HIAGENT_PRODUCT_CODE");
             String datasetID = System.getenv("DATASET_ID");
             String datasetVersionID = System.getenv("DATASET_VERSION_ID");
             String rulesetID = System.getenv("RULESET_ID");
@@ -58,7 +59,7 @@ public class TestInferenceAndEvaluateEvaTaskService {
             validateEnvVars(ak, sk, workspaceID, appID, datasetID, rulesetID, ruleParams);
 
             // 创建EvaService实例
-            EvaService evaService = new EvaService(endpoint, ak, sk, workspaceID, appID);
+            EvaService evaService = new EvaService(endpoint, ak, sk, workspaceID, appID, productCode);
 
             // 创建模型代理配置
             ModelAgentConfig modelConfig = new ModelAgentConfig();

@@ -31,6 +31,10 @@ public class ChatClient extends BaseApiClient {
         super(baseUrl, apiKey);
     }
 
+    public ChatClient(String baseUrl, String apiKey, String productCode) {
+        super(baseUrl, apiKey, productCode);
+    }
+
     /**
      * 创建会话
      *

@@ -13,11 +13,10 @@
 // limitations under the License.
 package com.volcengine.hiagent.api.examples;
 
-import com.volcengine.ApiClient;
 import com.volcengine.ApiException;
+import com.volcengine.hiagent.api.ApiClient;
 import com.volcengine.hiagent.api.UpClient;
 import com.volcengine.hiagent.api.model.*;
-import com.volcengine.sign.Credentials;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -34,11 +33,12 @@ public class TestUp {
     String uploadEndpoint = System.getenv("HIAGENT_UP_UPLOAD_ENDPOINT");
 
     // Create upload client
-    ApiClient uploadApiClient = new ApiClient()
-        .setCredentials(Credentials.getCredentials(ak, sk))
-        .setRegion(region)
-        .setEndpoint(uploadEndpoint)
-        .setDisableSSL(true);
+    ApiClient uploadApiClient = new ApiClient(
+        uploadEndpoint,
+        ak,
+        sk,
+        region,
+        System.getenv("HIAGENT_PRODUCT_CODE"));
     // .setDebugging(true); // Disable debugging for cleaner output
 
     UpClient upUploadClient = new UpClient(uploadApiClient);

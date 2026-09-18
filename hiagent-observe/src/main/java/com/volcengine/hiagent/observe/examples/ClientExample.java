@@ -21,8 +21,18 @@ public class ClientExample {
     String sk = System.getenv("VOLC_SECRETKEY");
     String workspaceId = System.getenv("WORKSPACE_ID");
     String appId = System.getenv("CUSTOM_APP_ID");
+    String productCode = System.getenv("HIAGENT_PRODUCT_CODE");
 
-    Client client = new Client(traceEndpoint, topEndpoint, ak, sk, workspaceId, appId);
+    require("HIAGENT_TRACE_ENDPOINT", traceEndpoint);
+    require("HIAGENT_TOP_ENDPOINT", topEndpoint);
+    require("VOLC_ACCESSKEY", ak);
+    require("VOLC_SECRETKEY", sk);
+    require("WORKSPACE_ID", workspaceId);
+    require("CUSTOM_APP_ID", appId);
+    require("HIAGENT_PRODUCT_CODE", productCode);
+    System.out.println("Using product code: " + productCode.trim());
+
+    Client client = new Client(traceEndpoint, topEndpoint, ak, sk, workspaceId, appId, productCode.trim());
 
     try {
       client.init();
@@ -144,6 +154,12 @@ public class ClientExample {
       e.printStackTrace();
     } finally {
       client.shutdown();
+    }
+  }
+
+  private static void require(String name, String value) {
+    if (value == null || value.trim().isEmpty()) {
+      throw new IllegalArgumentException("Missing environment variable: " + name);
     }
   }
 }

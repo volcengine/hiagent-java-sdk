@@ -22,6 +22,7 @@ public class ApiClient extends com.volcengine.ApiClient {
 
     private static final String HTTP = "http://";
     private static final String HTTPS = "https://";
+    private volatile String productCode;
 
     /**
      * 构造函数，初始化API客户端。
@@ -45,6 +46,35 @@ public class ApiClient extends com.volcengine.ApiClient {
             this.setEndpoint(endpoint)
                     .setDisableSSL(true);
         }
+    }
+
+    public ApiClient(String endpoint, String ak, String sk, String region, String productCode) {
+        this(endpoint, ak, sk, region);
+        this.productCode = ProductCode.normalize(productCode);
+    }
+
+    public String getProductCode() {
+        return productCode;
+    }
+
+    public ApiClient setProductCode(String productCode) {
+        this.productCode = ProductCode.normalize(productCode);
+        return this;
+    }
+
+    @Override
+    public com.volcengine.interceptor.InterceptorContext buildCall(
+            String path, String method, java.util.List<com.volcengine.Pair> queryParams,
+            java.util.List<com.volcengine.Pair> collectionFormats, Object body,
+            java.util.Map<String, String> headerParams, java.util.Map<String, Object> formParams,
+            String[] authNames, com.volcengine.ProgressRequestBody.ProgressRequestListener listener,
+            boolean... async) throws com.volcengine.ApiException {
+        if (productCode != null && headerParams != null
+                && !ProductCode.containsIgnoreCase(headerParams, ProductCode.HEADER_NAME)) {
+            headerParams.put(ProductCode.HEADER_NAME, productCode);
+        }
+        return super.buildCall(path, method, queryParams, collectionFormats, body, headerParams,
+                formParams, authNames, listener, async);
     }
 
 }

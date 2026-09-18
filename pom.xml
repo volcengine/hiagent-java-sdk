@@ -21,7 +21,7 @@
     </modules>
 
     <properties>
-        <revision>1.0.0</revision>
+        <revision>3.1.0</revision>
         <java.version>1.8</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
@@ -29,7 +29,10 @@
 
         <volcengine.version>0.2.30</volcengine.version>
         <gson.version>2.11.0</gson.version>
+        <!-- Keep the SDK and OpenTelemetry HTTP clients on one OkHttp line. -->
         <okhttp.version>4.12.0</okhttp.version>
+        <okhttp-jvm.version>5.1.0</okhttp-jvm.version>
+        <kotlin.version>2.2.0</kotlin.version>
         <junit.jupiter.version>5.11.3</junit.jupiter.version>
     </properties>
 
@@ -49,6 +52,16 @@
                 <groupId>com.squareup.okhttp3</groupId>
                 <artifactId>okhttp</artifactId>
                 <version>${okhttp.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>okhttp-jvm</artifactId>
+                <version>${okhttp-jvm.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-stdlib</artifactId>
+                <version>${kotlin.version}</version>
             </dependency>
 
             <dependency>

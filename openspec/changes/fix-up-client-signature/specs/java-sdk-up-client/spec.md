@@ -57,9 +57,9 @@ Every `UpClient` request MUST carry `X-Content-Sha256`. For `uploadRaw` the valu
 - WHEN any `UpClient` method sends a request
 - THEN `Authorization` is `HMAC-SHA256 Credential=<AK>/<date>/<region>/up/request, SignedHeaders=x-content-sha256;x-date, Signature=<hex>`
 
-### Requirement: Stream file transfers
+### Requirement: Stream uploads and write downloads only when complete
 
-`uploadRaw` MUST stream the file instead of loading it into memory. `download` MUST stream the response into a temporary file next to `saveTo` and move it into place only after the whole body is written.
+`uploadRaw` MUST stream the file instead of loading it into memory. `download` MUST NOT write `saveTo` until the whole response body has been received.
 
 #### Scenario: Download failure leaves no file
 
@@ -75,7 +75,7 @@ Every `UpClient` request MUST carry `X-Content-Sha256`. For `uploadRaw` the valu
 - WHEN `download` is called
 - THEN an `ApiException` is thrown
 - AND the existing file keeps its previous content
-- AND no temporary file remains in the directory
+- AND no other file is written in the directory
 
 #### Scenario: Save to a bare file name
 

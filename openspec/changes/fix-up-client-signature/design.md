@@ -83,16 +83,14 @@ AK 或 STS token 里如果有 OkHttp 不允许出现在 Header 中的字符（`<
 
 经域名或七层网关访问时，网关可能改写 Host（例如去掉非默认端口），签了 `host` 就会失配。UP 不要求签 `host`，SignedHeaders 固定为 `x-content-sha256;x-date`。
 
-### `download` 流式写文件
+### `download` 落盘
 
-`DownloadResponse` 是空类，`download()` 原本就只把内容写到 `saveTo` 并返回空对象，所以内部改成流式不影响公开 API，不需要新增重载。为保持"失败时不留下文件、不破坏已有文件"的现有语义：
+保持原先的做法：先用 `bytes()` 读完整个响应，再 `Files.write` 到 `saveTo`。整个响应读完之前不碰目标文件，所以传输失败或中途截断时不留下文件，已有文件保持原样；`saveTo` 是符号链接时，`Files.write` 写入它指向的文件。本次只改两处：
 
-- 先写到目标目录下的临时文件 `.up-download-<UUID>.part`。名字长度固定，与目标文件名无关，目标文件名接近文件系统上限时也放得下。
-- 成功后原子 move 到 `saveTo`；文件系统不支持原子 move 时退化为普通替换。传输中途失败时删除临时文件，已有的目标文件保持原样。
-- `saveTo` 是符号链接时替换它指向的文件，链接本身保留，与原先 `Files.write` 跟随链接的行为一致。
-- `saveTo` 只有文件名时按当前目录处理，不再 NPE；`saveTo` 是根目录时直接报错。
+- `saveTo` 没有父目录（只有文件名）时不再创建父目录，按当前目录写入，不再 NPE。
+- 非 2xx 时读取 UP 返回的 JSON 错误信封，见上文"响应"。
 
-与原先直接覆盖写入相比的差异：目标文件是新建的，权限按进程 umask 生成，不继承原文件的权限和属主；目标目录必须可写（要在其中创建临时文件）。
+流式写文件不在本次范围，原因见 proposal 的非目标。
 
 ### 与 `hibot` 签名器的关系
 
@@ -108,7 +106,6 @@ AK 或 STS token 里如果有 OkHttp 不允许出现在 Header 中的字符（`<
 
 - **修改 core 或向 core 打补丁**：core 是外部依赖，对其他 TOP Client 行为影响面大。
 - **只改 `uploadRaw` 和 `downloadKey`**：`download`、`delete` 在 endpoint 带路径时同样失败，productCode 在四个方法上都缺失，将来支持国密也需要只改一处。
-- **`download` 新增 `download(req, File)` 重载**：前提不成立，见上文。
 
 ## 兼容性
 
@@ -116,7 +113,6 @@ AK 或 STS token 里如果有 OkHttp 不允许出现在 Header 中的字符（`<
 - 未配置 productCode 时不发送 `X-Trace-Product-Code`。
 - Credential scope 的 service 由 `app` 改为 `up`，见 proposal。
 - `longLive` 不再自动重试，见 proposal。它原先支持的 `ResponseMetadata`、异常 cause 和 `CredentialProvider` 都保留，并且五个方法现在一致支持。
-- `download` 替换目标文件而不是原地覆盖，见上文。
 - 依赖不变，仍为 Java 8 + core 0.2.30 自带的 OkHttp 2.7.5。
 
 ## 测试方案
@@ -124,7 +120,7 @@ AK 或 STS token 里如果有 OkHttp 不允许出现在 Header 中的字符（`<
 三层验证，前两层离线运行：
 
 1. **服务端样例（主验收）**：用 UP 服务端验签所用的签名库，按服务端从请求中取材的方式（解析 query、取 `URL.Path`、读 `X-Content-Sha256`）离线生成固定样例，提交为 `hiagent-api/src/test/resources/up-signature-vectors.json`，内含 canonical request、待签串和签名。测试运行时不依赖 Go。生成程序依赖服务端的非公开模块，不随 SDK 提交。样例覆盖：文本与含非法 UTF-8 的二进制请求体、根路径与 `/up/` 路径、含 `/`、空格、`+`、`=`、`&`、`!'()*`、中文的 query 值、大小写混合的参数名排序、https 域名。
-2. **签的就是发的**：本地 `HttpServer` 接收 `UpClient` 五个方法实际发出的请求，用已被样例验证过的 `UpSigner` 按**收到的** path、query、Header 重算签名，必须等于收到的 `Authorization`；同时校验收到的 `X-Content-Sha256` 等于收到的请求体的真实 SHA256。另外覆盖 productCode 注入与缺省、STS token 与 `CredentialProvider`、`longLive` 不带 `Id=test`、URL 无空名参数、endpoint 末尾有无 `/`、错误响应带 `ResponseMetadata`、网络异常保留 cause。`download` 覆盖：内容正确、自动创建目录、响应中途截断时旧文件不变且不留临时文件、符号链接、超长文件名、只有文件名。截断用例已用变异验证：改成直接写目标文件、或不删除临时文件，都会让它失败。
+2. **签的就是发的**：本地 `HttpServer` 接收 `UpClient` 五个方法实际发出的请求，用已被样例验证过的 `UpSigner` 按**收到的** path、query、Header 重算签名，必须等于收到的 `Authorization`；同时校验收到的 `X-Content-Sha256` 等于收到的请求体的真实 SHA256。另外覆盖 productCode 注入与缺省、STS token 与 `CredentialProvider`、`longLive` 不带 `Id=test`、URL 无空名参数、endpoint 末尾有无 `/`、错误响应带 `ResponseMetadata`、网络异常保留 cause。`download` 覆盖：内容正确、自动创建目录、错误信封、响应中途截断时旧文件不变、只有文件名。截断用例已做变异验证：把实现改成边读响应边写目标文件，用例会失败。
 3. **真实环境**：在一个关闭匿名访问的 UP 上跑一次上传、长期化、获取下载 Key、下载、删除，作为补充。已在 UP v3.2.1（`enableIsAnonymous: false`）上通过。`Download` 除 `Key` 外还需要 `Path` 或 `Sha256`，UP 用它们校验 Key 与文件是否对应。
 
 ## 风险与边界

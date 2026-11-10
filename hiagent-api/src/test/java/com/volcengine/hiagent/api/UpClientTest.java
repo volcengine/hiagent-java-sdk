@@ -17,7 +17,6 @@ import com.volcengine.hiagent.api.model.UploadRawRequest;
 import com.volcengine.hiagent.api.model.UploadRawResponse;
 import com.volcengine.sign.Credentials;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -287,7 +286,7 @@ class UpClientTest {
     }
 
     @Test
-    void downloadStreamsIntoMissingDirectoriesAndLeavesNoTempFile() throws Exception {
+    void downloadWritesIntoMissingDirectories() throws Exception {
         downloadBody = binaryContent(LARGE_FILE_BYTES);
         Path target = tmp.resolve("nested/dir/out.bin");
         DownloadRequest req = new DownloadRequest();
@@ -322,11 +321,11 @@ class UpClientTest {
         assertNotNull(e.getResponseMetadata(), "error envelope must be attached");
         assertEquals("InvalidParameter", e.getResponseMetadata().getError().getCode());
         assertEquals("sha256 or path must be provided", e.getResponseMetadata().getError().getMessage());
-        assertTrue(listNames(dir).isEmpty(), "no file or temp file may remain");
+        assertTrue(listNames(dir).isEmpty(), "no file may be written");
     }
 
     @Test
-    void truncatedDownloadKeepsTheOldFileAndLeavesNoTempFile() throws Exception {
+    void truncatedDownloadKeepsTheOldFile() throws Exception {
         truncateDownload = true;
         downloadBody = binaryContent(LARGE_FILE_BYTES);
         Path dir = Files.createDirectories(tmp.resolve("out"));
@@ -343,44 +342,7 @@ class UpClientTest {
 
         assertTrue(e.getMessage().startsWith("Failed to save file: "), e.getMessage());
         assertArrayEquals("previous".getBytes(StandardCharsets.UTF_8), Files.readAllBytes(target));
-        assertEquals(Arrays.asList("out.bin"), listNames(dir), "no temp file may remain");
-    }
-
-    @Test
-    void downloadAcceptsAFileNameNearTheFilesystemLimit() throws Exception {
-        downloadBody = "long".getBytes(StandardCharsets.UTF_8);
-        StringBuilder name = new StringBuilder();
-        for (int i = 0; i < 240; i++) {
-            name.append('a');
-        }
-        Path target = tmp.resolve(name.append(".bin").toString());
-        DownloadRequest req = new DownloadRequest();
-        req.setKey("download-key");
-        req.setSaveTo(target.toString());
-
-        client("", null).download(req);
-
-        assertArrayEquals(downloadBody, Files.readAllBytes(target));
-    }
-
-    @Test
-    void downloadThroughASymlinkReplacesTheLinkedFile() throws Exception {
-        downloadBody = "fresh".getBytes(StandardCharsets.UTF_8);
-        Path real = Files.write(tmp.resolve("real.bin"), "stale".getBytes(StandardCharsets.UTF_8));
-        Path link = tmp.resolve("link.bin");
-        try {
-            Files.createSymbolicLink(link, real);
-        } catch (UnsupportedOperationException | IOException e) {
-            Assumptions.assumeTrue(false, "symbolic links are not available: " + e);
-        }
-        DownloadRequest req = new DownloadRequest();
-        req.setKey("download-key");
-        req.setSaveTo(link.toString());
-
-        client("", null).download(req);
-
-        assertTrue(Files.isSymbolicLink(link), "the link itself must be kept");
-        assertArrayEquals(downloadBody, Files.readAllBytes(real));
+        assertEquals(Arrays.asList("out.bin"), listNames(dir), "nothing else may be written");
     }
 
     @Test

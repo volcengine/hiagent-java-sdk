@@ -12,4 +12,6 @@
 - [x] 执行 `openspec-cn validate fix-up-client-signature`。
 - [x] 在关闭匿名访问的真实 UP 上执行 `UpClientRealEnvE2eTest`（上传、长期化、获取下载 Key、下载、删除），不记录凭据。环境为 UP v3.2.1，`enableIsAnonymous: false`，`unsignedActions: []`，未签名请求在验签阶段被拒。五个请求均通过验签。首轮 `Download` 返回 400，原因是测试只传了 `Key`，UP 还要求 `Path` 或 `Sha256`。据此修正测试，并让 `download` 失败时与其余方法一样携带 `ResponseMetadata`、状态码和响应体（先补用例确认失败，再修复）。测试的删除步骤移入 `finally`，首轮遗留的文件已删除。
 - [x] PR review：AK 或 token 含非 ASCII 字符（如 `é`）时，原先的 `isISOControl` 检查会放行，OkHttp 设置 Header 失败的异常信息会带出凭证。改为删除自定义检查，在设置 Header 处捕获异常、换成不含值的信息且不挂 cause；先补 `é` 用例确认泄露，再修复。
+- [x] PR review：`download` 的流式改造与签名无关，还带来文件权限、目录可写性上的行为变化，不适合进补丁版本，拆出到后续变更。`download` 恢复为读完响应再 `Files.write`，保留 NPE 修复和错误信封；删除只针对临时文件的超长文件名、符号链接用例；截断用例对新实现重新做了变异验证。
+- [x] 在 JDK 8 上重新执行 `mvn clean test`：`hiagent-api` 31 个（跳过 1 个端到端），`hibot` 51 个（跳过 4 个端到端）。
 - [ ] 从 `main` 发布 3.1.1。

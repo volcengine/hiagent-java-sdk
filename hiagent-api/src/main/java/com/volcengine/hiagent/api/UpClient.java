@@ -22,7 +22,6 @@ import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
-import com.squareup.okhttp.ResponseBody;
 import com.volcengine.ApiClient;
 import com.volcengine.ApiException;
 import com.volcengine.auth.CredentialProvider;
@@ -42,17 +41,13 @@ import com.volcengine.sign.Credentials;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * Client for the UP (upload) service.
@@ -73,8 +68,6 @@ public class UpClient {
   private static final String ACCEPT = "Accept";
   private static final String JSON_ACCEPT = "application/json";
   private static final String RESPONSE_METADATA = "ResponseMetadata";
-  private static final String TEMP_FILE_PREFIX = ".up-download-";
-  private static final String TEMP_FILE_SUFFIX = ".part";
 
   private ApiClient apiClient;
 
@@ -143,10 +136,10 @@ public class UpClient {
   }
 
   /**
-   * Download File into {@code body.getSaveTo()}. The response is streamed into a
-   * temporary file next to the target and moved into place only once complete,
-   * so a failed download leaves no file behind and keeps any existing one. A
-   * symbolic link at {@code saveTo} is followed: the linked file is replaced.
+   * Download File into {@code body.getSaveTo()}, creating missing parent
+   * directories. The whole response is read before the file is written, so a
+   * failed or interrupted download leaves no file behind and keeps any
+   * existing one.
    *
    * @param body DownloadRequest (required)
    * @return DownloadResponse
@@ -159,14 +152,19 @@ public class UpClient {
     }
     Path target = Paths.get(body.getSaveTo());
     Response response = executeJson("Download", new LinkedHashMap<String, String>(), toJson(body));
+    if (!response.isSuccessful()) {
+      throw downloadFailure(response);
+    }
     try {
-      if (!response.isSuccessful()) {
-        throw downloadFailure(response);
+      byte[] content = response.body().bytes();
+      Path parent = target.getParent();
+      if (parent != null) {
+        Files.createDirectories(parent);
       }
-      writeAtomically(response.body(), target);
+      Files.write(target, content);
       return new DownloadResponse();
-    } finally {
-      closeQuietly(response.body());
+    } catch (IOException e) {
+      throw new ApiException("Failed to save file: " + e.getMessage(), e, 0, null, null);
     }
   }
 
@@ -342,52 +340,6 @@ public class UpClient {
   private static void putIfPresent(Map<String, String> query, String name, String value) {
     if (value != null) {
       query.put(name, value);
-    }
-  }
-
-  private static void writeAtomically(ResponseBody responseBody, Path target) throws ApiException {
-    Path absolute = target.toAbsolutePath();
-    Path dir = absolute.getParent();
-    if (dir == null || absolute.getFileName() == null) {
-      throw new ApiException("DownloadRequest.saveTo must name a file: " + target);
-    }
-    // Fixed-length name, so a target name near the filesystem limit still fits.
-    Path temp = dir.resolve(TEMP_FILE_PREFIX + UUID.randomUUID() + TEMP_FILE_SUFFIX);
-    try {
-      Files.createDirectories(dir);
-      try (InputStream in = responseBody.byteStream()) {
-        Files.copy(in, temp);
-      }
-      // Replace the file a link points to, not the link itself.
-      Path destination = Files.isSymbolicLink(absolute) ? absolute.toRealPath() : absolute;
-      moveIntoPlace(temp, destination);
-    } catch (IOException e) {
-      throw new ApiException("Failed to save file: " + e.getMessage(), e, 0, null, null);
-    } finally {
-      try {
-        Files.deleteIfExists(temp);
-      } catch (IOException ignored) {
-        // Best effort: the temp file is hidden and uniquely named.
-      }
-    }
-  }
-
-  private static void moveIntoPlace(Path temp, Path target) throws IOException {
-    try {
-      Files.move(temp, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
-    } catch (AtomicMoveNotSupportedException e) {
-      Files.move(temp, target, StandardCopyOption.REPLACE_EXISTING);
-    }
-  }
-
-  private static void closeQuietly(ResponseBody body) {
-    if (body == null) {
-      return;
-    }
-    try {
-      body.close();
-    } catch (IOException ignored) {
-      // The response has already been consumed or failed; nothing to report.
     }
   }
 }

@@ -20,7 +20,7 @@
 - `UpClient` 的五个公开方法不再经过 core 的 `buildRequest`，改为自行构造 OkHttp `Request`，由新增的包内类 `UpSigner` 对**最终要发出的 `Request`** 签名。
 - 签名覆盖实际 path 与全部 query；SignedHeaders 固定为 `x-content-sha256;x-date`，不签 `host`；Credential scope 的 service 为 `up`。
 - 每个请求都发送 `X-Content-Sha256`，签名里的 payload hash 取同一个值：调用方提供了 `Sha256` 就用调用方的值，否则 SDK 先流式扫描一遍文件计算。
-- `uploadRaw` 流式发送文件；`download` 流式写入同目录临时文件，成功后原子替换目标文件。
+- `uploadRaw` 流式发送文件。`download` 保持原先"整个响应读进内存再写文件"的方式，只修 `saveTo` 无父目录时的 NPE；失败时异常携带 UP 的错误信封。
 - 删除 `longLive` 的 `Id=test`。
 - 五个方法统一按 Client 配置注入 `X-Trace-Product-Code`。
 - 根 `pom.xml` 的 `pluginManagement` 固定 `maven-surefire-plugin` 3.2.5，所有模块统一使用能识别 JUnit 5 的版本。
@@ -31,13 +31,14 @@
 - 国密（HMAC-SM3 签名、SM3 文件哈希）。UP 的签名算法与文件哈希算法是两个独立开关，SDK 无法探测，需要单独立项设计配置项与 SM3 实现。
 - 中间代理改写路径（如 ingress `rewrite-target`）的部署形态。UP 按收到的路径验签，客户端无法签对。
 - `InputStream` 上传重载。
+- `download` 流式写文件。它和签名无关，而要保住"失败不留文件、不破坏已有文件"，就得引入临时文件和原子替换，带来文件权限、目录可写性上的行为变化，不适合放进补丁版本，后续单独变更。动机是：OkHttp 2.7.5 的 `bytes()` 遇到 Content-Length 超过 2GB 的响应会直接报错，大文件还会占满堆。
 - `UpClient` 以外的 TOP Client。
 
 ## 功能 (Capabilities)
 
 ### 新增功能
 
-- `java-sdk-up-client`: `UpClient` 的请求签名、请求体哈希与文件流式传输。
+- `java-sdk-up-client`: `UpClient` 的请求签名、请求体哈希、流式上传与下载落盘。
 
 ### 修改功能
 

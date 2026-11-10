@@ -1,0 +1,17 @@
+- [x] 对照 core 0.2.30 源码与 UP 服务端验签实现，确认 query、请求体哈希、path 三处失配和 productCode 缺失、`longLive` 的 `Id=test`。
+- [x] 用 UP 服务端验签所用签名库离线生成固定样例，提交到 `hiagent-api/src/test/resources/up-signature-vectors.json`。
+- [x] 增加 `UpSigner` 样例测试（先失败）。
+- [x] 实现包内类 `UpSigner`：只对最终 `Request` 签名，SignedHeaders 为 `x-content-sha256;x-date`，service 为 `up`。
+- [x] 增加本地 `HttpServer` 测试：五个方法"签的就是发的"、`X-Content-Sha256` 等于真实哈希、productCode 注入与缺省、`longLive` 无 `Id=test`、URL 无空名参数、endpoint 带 `/up`。旧实现上 12 个用例 10 个失败。
+- [x] 改写 `UpClient` 五个方法：共用 `execute`，`uploadRaw` 流式上传、未给哈希时先流式计算，`download` 临时文件加原子 move。
+- [x] 增加 `download` 失败不留文件、`saveTo` 无父目录的测试。
+- [x] 增加 `UpClientRealEnvE2eTest`（未设置 `HIAGENT_UP_E2E_ENDPOINT` 时跳过）。对一个以 UP 服务端验签代码验签的本地服务跑通根路径与 `/up` 两种 endpoint；旧实现在同一服务上返回 `signature not match`。
+- [x] 根 `pom.xml` 的 `pluginManagement` 固定 `maven-surefire-plugin` 3.2.5，删除 `hibot` 中重复的版本声明。
+- [x] 代码 review 后补充：错误响应挂 `ResponseMetadata`、网络异常保留 cause、支持 `CredentialProvider`、JSON 请求恢复 `Accept`、AK/token 含控制字符时不回显、临时文件名定长、跟随符号链接；补截断下载用例并做变异验证。
+- [x] 在 JDK 8 上执行 `mvn clean test`：`hiagent-api` 31 个（跳过 1 个端到端），`hibot` 51 个（跳过 4 个端到端），全部模块使用 surefire 3.2.5。
+- [x] 执行 `openspec-cn validate fix-up-client-signature`。
+- [x] 在关闭匿名访问的真实 UP 上执行 `UpClientRealEnvE2eTest`（上传、长期化、获取下载 Key、下载、删除），不记录凭据。环境为 UP v3.2.1，`enableIsAnonymous: false`，`unsignedActions: []`，未签名请求在验签阶段被拒。五个请求均通过验签。首轮 `Download` 返回 400，原因是测试只传了 `Key`，UP 还要求 `Path` 或 `Sha256`。据此修正测试，并让 `download` 失败时与其余方法一样携带 `ResponseMetadata`、状态码和响应体（先补用例确认失败，再修复）。测试的删除步骤移入 `finally`，首轮遗留的文件已删除。
+- [x] PR review：AK 或 token 含非 ASCII 字符（如 `é`）时，原先的 `isISOControl` 检查会放行，OkHttp 设置 Header 失败的异常信息会带出凭证。改为删除自定义检查，在设置 Header 处捕获异常、换成不含值的信息且不挂 cause；先补 `é` 用例确认泄露，再修复。
+- [x] PR review：`download` 的流式改造与签名无关，还带来文件权限、目录可写性上的行为变化，不适合进补丁版本，拆出到后续变更。`download` 恢复为读完响应再 `Files.write`，保留 NPE 修复和错误信封；删除只针对临时文件的超长文件名、符号链接用例；截断用例对新实现重新做了变异验证。
+- [x] 在 JDK 8 上重新执行 `mvn clean test`：`hiagent-api` 31 个（跳过 1 个端到端），`hibot` 51 个（跳过 4 个端到端）。
+- [ ] 从 `main` 发布 3.1.1。

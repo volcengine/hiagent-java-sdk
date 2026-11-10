@@ -87,15 +87,40 @@ class UpSignerTest {
                 () -> new UpSigner("ak", "", null, "cn-north-1"));
         assertFalse(e.getMessage().contains("ak"), "message must not echo credentials");
         assertThrows(IllegalArgumentException.class, () -> new UpSigner("ak", "sk", null, " "));
+    }
 
-        IllegalArgumentException badToken = assertThrows(IllegalArgumentException.class,
-                () -> new UpSigner("ak", "sk", "secret\r\ntoken", "cn-north-1"));
-        assertFalse(badToken.getMessage().contains("secret"), "message must not echo the token");
-        // A token read from a file with a trailing newline is trimmed, not rejected.
-        new UpSigner("ak", "sk", "secret-token\r\n", "cn-north-1");
-        IllegalArgumentException badKey = assertThrows(IllegalArgumentException.class,
-                () -> new UpSigner("secret-ak\n", "sk", null, "cn-north-1"));
-        assertFalse(badKey.getMessage().contains("secret-ak"), "message must not echo the access key");
+    @Test
+    void credentialsOkHttpCannotSendFailWithoutEchoingThem() {
+        // OkHttp refuses header chars <= 0x1f and >= 0x7f, and quotes the whole value when it does.
+        String[][] accessKeyAndToken = {
+                {"secret-ak\n", null},
+                {"AKLTsecreté", null},
+                {"ak", "secret\r\ntoken"},
+                {"ak", "secret-tokén"},
+        };
+        for (String[] c : accessKeyAndToken) {
+            UpSigner signer = new UpSigner(c[0], "sk", c[1], "cn-north-1");
+
+            IllegalArgumentException e = assertThrows(IllegalArgumentException.class,
+                    () -> signer.sign(signableRequest(), Instant.now()));
+
+            assertFalse(e.getMessage().contains("secret"), "message must not echo credentials");
+            assertNull(e.getCause(), "OkHttp's exception quotes the header value and must not be chained");
+        }
+    }
+
+    @Test
+    void trimsATrailingNewlineFromTheSessionToken() {
+        // A token read from a file keeps its trailing newline; that is not a reason to fail.
+        Request signed = new UpSigner("ak", "sk", "sts-token\r\n", "cn-north-1")
+                .sign(signableRequest(), Instant.now());
+
+        assertEquals("sts-token", signed.header("X-Security-Token"));
+    }
+
+    private static Request signableRequest() {
+        return unsignedRequest("http://127.0.0.1:31010/?Action=Delete&Version=2023-08-01",
+                "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
     }
 
     @Test

@@ -71,7 +71,7 @@ Body     uploadRaw：RequestBody.create(MediaType, File)，OkHttp 按文件流�
 
 scheme、endpoint、region、`OkHttpClient`（超时、代理）全部取自调用方传入的 `com.volcengine.ApiClient`，不新增配置项。凭证与 core 签名器的取法一致：先用静态 `Credentials`，没有时用 `CredentialProvider`。
 
-AK 或 STS token 含控制字符时，`UpSigner` 构造即拒绝，错误信息不带凭证值；否则 OkHttp 校验 Header 时抛出的异常会把整个值写进信息里。token 首尾的空白会被去掉（例如从文件读入时带的换行）。
+AK 或 STS token 里如果有 OkHttp 不允许出现在 Header 中的字符（`<= 0x1f` 或 `>= 0x7f`，包括 `é` 这类非 ASCII 字符），OkHttp 设置 Header 时抛出的异常会把整个值写进信息里。`UpSigner` 在设置 `Authorization` 和 `X-Security-Token` 时捕获这个异常，换成不含凭证值的信息，也不把原异常作为 cause。SDK 不另写一套字符规则，拒绝条件始终与 OkHttp 一致。token 首尾的空白会被去掉（例如从文件读入时带的换行）。
 
 ### 请求体哈希
 

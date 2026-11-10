@@ -190,16 +190,25 @@ class UpClientTest {
     }
 
     @Test
-    void sessionTokenWithControlCharactersFailsWithoutEchoingIt() {
-        ApiClient apiClient = apiClient("", null);
-        apiClient.setCredentials(Credentials.getCredentials(AK, SK, "secret-token\nx"));
-        DeleteRequest req = new DeleteRequest();
-        req.setId("id-1");
+    void credentialsOkHttpCannotSendFailWithoutEchoingThem() {
+        Credentials[] unsendable = {
+                Credentials.getCredentials(AK, SK, "secret-token\nx"),
+                Credentials.getCredentials(AK, SK, "secret-tokén"),
+                Credentials.getCredentials("AKLTsecreté", SK),
+        };
+        for (Credentials credentials : unsendable) {
+            ApiClient apiClient = apiClient("", null);
+            apiClient.setCredentials(credentials);
+            DeleteRequest req = new DeleteRequest();
+            req.setId("id-1");
 
-        ApiException e = assertThrows(ApiException.class, () -> new UpClient(apiClient).delete(req));
+            ApiException e = assertThrows(ApiException.class, () -> new UpClient(apiClient).delete(req));
 
-        assertFalse(e.getMessage().contains("secret-token"), e.getMessage());
-        assertTrue(captured.isEmpty());
+            for (Throwable t = e; t != null; t = t.getCause()) {
+                assertFalse(String.valueOf(t.getMessage()).contains("secret"), t.toString());
+            }
+        }
+        assertTrue(captured.isEmpty(), "nothing may be sent");
     }
 
     @Test

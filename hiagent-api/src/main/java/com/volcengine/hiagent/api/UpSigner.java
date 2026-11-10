@@ -69,10 +69,7 @@ final class UpSigner {
     private final String sessionToken;
     private final String region;
 
-    /**
-     * Messages never contain the credential values: OkHttp would otherwise
-     * reject a bad header with an exception that quotes the whole value.
-     */
+    /** Error messages never contain the credential values. */
     UpSigner(String accessKey, String secretKey, String sessionToken, String region) {
         if (isBlank(accessKey) || isBlank(secretKey)) {
             throw new IllegalArgumentException("AccessKey and SecretKey must be set on the ApiClient credentials");
@@ -80,16 +77,10 @@ final class UpSigner {
         if (isBlank(region)) {
             throw new IllegalArgumentException("Region must be set on the ApiClient");
         }
-        if (hasControlCharacter(accessKey)) {
-            throw new IllegalArgumentException("AccessKey contains control characters");
-        }
-        String token = isBlank(sessionToken) ? null : sessionToken.trim();
-        if (token != null && hasControlCharacter(token)) {
-            throw new IllegalArgumentException("Session token contains control characters");
-        }
         this.accessKey = accessKey;
         this.secretKey = secretKey;
-        this.sessionToken = token;
+        // A token read from a file often keeps its trailing newline.
+        this.sessionToken = isBlank(sessionToken) ? null : sessionToken.trim();
         this.region = region;
     }
 
@@ -111,11 +102,16 @@ final class UpSigner {
         String authorization = ALGORITHM + " Credential=" + accessKey + "/" + credentialScope(shortDate, region)
                 + ", SignedHeaders=" + SIGNED_HEADERS + ", Signature=" + signature;
 
-        Request.Builder signed = request.newBuilder()
-                .header(HEADER_DATE, xDate)
-                .header(HEADER_AUTHORIZATION, authorization);
-        if (sessionToken != null) {
-            signed.header(HEADER_SECURITY_TOKEN, sessionToken);
+        Request.Builder signed = request.newBuilder().header(HEADER_DATE, xDate);
+        try {
+            signed.header(HEADER_AUTHORIZATION, authorization);
+            if (sessionToken != null) {
+                signed.header(HEADER_SECURITY_TOKEN, sessionToken);
+            }
+        } catch (IllegalArgumentException e) {
+            // OkHttp's message quotes the whole header value, so it is neither reused nor chained.
+            throw new IllegalArgumentException(
+                    "AccessKey or session token contains characters not allowed in an HTTP header");
         }
         return signed.build();
     }
@@ -258,14 +254,5 @@ final class UpSigner {
 
     private static boolean isBlank(String s) {
         return s == null || s.trim().isEmpty();
-    }
-
-    private static boolean hasControlCharacter(String s) {
-        for (int i = 0; i < s.length(); i++) {
-            if (Character.isISOControl(s.charAt(i))) {
-                return true;
-            }
-        }
-        return false;
     }
 }

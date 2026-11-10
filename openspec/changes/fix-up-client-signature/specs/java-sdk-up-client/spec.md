@@ -110,12 +110,12 @@ When UP answers with an error envelope, the `ApiException` thrown by an `UpClien
 - THEN the `ApiException` has code 400 and carries that `ResponseMetadata`
 - AND no file exists at `saveTo`
 
-#### Scenario: Session token with control characters
+#### Scenario: Credentials that cannot be sent in a header
 
-- GIVEN the session token contains a line break inside it
+- GIVEN the access key or the session token contains a line break or a non-ASCII character such as `é`
 - WHEN any `UpClient` method is called
 - THEN an `ApiException` is thrown before any request is sent
-- AND its message does not contain the token
+- AND neither its message nor the message of any exception in its cause chain contains the access key or the token
 
 ### Requirement: LongLive sends no placeholder query
 

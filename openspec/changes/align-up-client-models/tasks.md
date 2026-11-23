@@ -12,5 +12,6 @@
   - `UpClientRealEnvE2eTest` 增加 `Filename` 与新响应字段断言；
   - proposal 列出发版说明需要写的行为变化。
 - [x] 在 JDK 8 上重新执行 `mvn -B clean test`：`hiagent-api` 44 个（跳过 1 个端到端），`hibot` 51 个（跳过 4 个端到端）。
-- [ ] 执行 `openspec-cn validate align-up-client-models`。
+- [x] 执行 `openspec-cn validate align-up-client-models`（`@studyzy/openspec-cn@1.16.0`）：验证通过。工具提示归档时会拒绝本增量，因为 `MODIFIED` 需要 `java-sdk-up-client` 的 spec 已存在。
+- [ ] 归档顺序：先归档 `fix-up-client-signature`（生成 `openspec/specs/java-sdk-up-client/spec.md`），再归档本变更。
 - [ ] 在关闭匿名访问的真实 UP 上执行 `UpClientRealEnvE2eTest`。

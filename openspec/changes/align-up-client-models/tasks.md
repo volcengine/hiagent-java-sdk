@@ -1,0 +1,16 @@
+- [x] 对照 UP `v3.1.0`、`release-v3.1.1`、`main` 的 IDL、`api-contract.golden`、dispatcher 绑定逻辑和五个 handler，列出 SDK 模型与契约的差异；确认这五个 Action 的结构体在三处一致。
+- [x] 在 `UpClientTest` 增加用例（先失败）：新 query 与 JSON 字段、`Size = 3000000000`、请求体不含 `SaveTo`、大写哈希转小写、缺 `Id` 不发请求、`DownloadKey` 参数名、新响应字段。先编译失败；补模型后 6 个用例按预期失败（`DownloadKey` 参数名 2 个、上传哈希大小写、`Filename`/`ImageCompress` query、缺 `Id`、`Download` 请求体）。
+- [x] 修改模型：补字段，`LongLiveResponse` 内部改 `Long` 并保留 `@Deprecated` 的 `Integer` 访问器，`DownloadRequest.saveTo` 改 `transient`，补注释。
+- [x] 修改 `UpClient`：`UploadRaw` 的 `Filename`、`ImageCompress` query，`Id` 本地检查，哈希规范化，`DownloadKey` 参数名。
+- [x] Gson 默认转义 HTML 字符，`Range` 的 `=` 在请求体里是 `=`，UP 的 `encoding/json` 能正确解码。用例改为解析 JSON 再比较字段，不比较原始字符串。
+- [x] 变异验证：去掉 `saveTo` 的 `transient` 后，`downloadSendsOptionalFieldsButNotTheLocalPath` 因请求体含本地路径而失败。
+- [x] 在 JDK 8 上执行 `mvn -B clean test`：`hiagent-api` 40 个（跳过 1 个端到端），`hibot` 51 个（跳过 4 个端到端）。
+- [x] 代码 review：无 CRITICAL/HIGH。据此补充：
+  - 规范化扩到 `download`、`delete` 请求体里的 `Sha256`（在 JSON 树上改写，不动调用方对象），先补用例确认失败再实现；
+  - 与 `fix-up-client-signature` 的 "Payload hash matches the body" 冲突，改写为 MODIFIED；
+  - 补用例：缺 `Id` 时文件不存在也先报 `Id`、空白 `Id` 照发、`ImageCompress=false`、206 部分内容落盘；
+  - `UpClientRealEnvE2eTest` 增加 `Filename` 与新响应字段断言；
+  - proposal 列出发版说明需要写的行为变化。
+- [x] 在 JDK 8 上重新执行 `mvn -B clean test`：`hiagent-api` 44 个（跳过 1 个端到端），`hibot` 51 个（跳过 4 个端到端）。
+- [ ] 执行 `openspec-cn validate align-up-client-models`。
+- [ ] 在关闭匿名访问的真实 UP 上执行 `UpClientRealEnvE2eTest`。

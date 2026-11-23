@@ -14,7 +14,9 @@
 // limitations under the License.
 package com.volcengine.hiagent.api;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import com.squareup.okhttp.HttpUrl;
@@ -47,6 +49,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -68,6 +71,7 @@ public class UpClient {
   private static final String ACCEPT = "Accept";
   private static final String JSON_ACCEPT = "application/json";
   private static final String RESPONSE_METADATA = "ResponseMetadata";
+  private static final String SHA256 = "Sha256";
 
   private ApiClient apiClient;
 
@@ -87,12 +91,18 @@ public class UpClient {
    * Upload Raw File. The file is streamed; when {@code body.getSha256()} is not
    * set, the SDK first streams the file once to compute its SHA-256.
    *
+   * @param body UploadRawRequest; {@code id} is required, like UP requires it
    * @param file File to upload (required)
    * @return UploadRawResponse
-   * @throws ApiException If fail to call the API, e.g. server error or cannot
+   * @throws ApiException If {@code id} is missing, the file cannot be read, or
+   *                      the call fails, e.g. server error or cannot
    *                      deserialize the response body
    */
   public UploadRawResponse uploadRaw(UploadRawRequest body, File file) throws ApiException {
+    // Same test as UP's validate:"required", made before the file is read or sent.
+    if (body.getId() == null || body.getId().isEmpty()) {
+      throw new ApiException("UploadRawRequest.id must be set");
+    }
     if (file == null || !file.isFile() || !file.canRead()) {
       throw new ApiException("Failed to read file: " + (file == null ? "null" : file.getPath()));
     }
@@ -100,6 +110,8 @@ public class UpClient {
     Map<String, String> query = new LinkedHashMap<String, String>();
     putIfPresent(query, "Expire", body.getExpire());
     putIfPresent(query, "Id", body.getId());
+    putIfPresent(query, "Filename", body.getFilename());
+    putIfPresent(query, "ImageCompress", body.getImageCompress() == null ? null : body.getImageCompress().toString());
 
     RequestBody requestBody = RequestBody.create(MediaType.parse(contentType), file);
     Response response = execute("UploadRaw", query, headers(contentType, uploadHash(body, file)), requestBody);
@@ -120,7 +132,7 @@ public class UpClient {
   }
 
   /**
-   * Get Download Key. UP reads {@code path} and {@code sha256} from the query only.
+   * Get Download Key. UP reads {@code Path} and {@code Sha256} from the query only.
    *
    * @param body DownloadKeyRequest (required)
    * @return DownloadKeyResponse
@@ -129,8 +141,8 @@ public class UpClient {
    */
   public DownloadKeyResponse downloadKey(DownloadKeyRequest body) throws ApiException {
     Map<String, String> query = new LinkedHashMap<String, String>();
-    putIfPresent(query, "path", body.getPath());
-    putIfPresent(query, "sha256", body.getSha256());
+    putIfPresent(query, "Path", body.getPath());
+    putIfPresent(query, SHA256, normalizeSha256(body.getSha256()));
     Response response = executeJson("DownloadKey", query, new byte[0]);
     return handle(response, DownloadKeyResponse.class);
   }
@@ -321,20 +333,38 @@ public class UpClient {
     return null;
   }
 
+  /**
+   * Serializes {@code body}, lowercasing its {@code Sha256} on the JSON tree so
+   * the caller's request object is left as it was.
+   */
   private byte[] toJson(Object body) {
-    return apiClient.getJSON().serialize(body).getBytes(StandardCharsets.UTF_8);
+    Gson gson = apiClient.getJSON().getGson();
+    JsonElement tree = gson.toJsonTree(body);
+    if (tree.isJsonObject()) {
+      JsonObject object = tree.getAsJsonObject();
+      JsonElement sha256 = object.get(SHA256);
+      if (sha256 != null && sha256.isJsonPrimitive()) {
+        object.addProperty(SHA256, normalizeSha256(sha256.getAsString()));
+      }
+    }
+    return gson.toJson(tree).getBytes(StandardCharsets.UTF_8);
   }
 
   private static String uploadHash(UploadRawRequest body, File file) throws ApiException {
     String given = body.getSha256();
     if (given != null && !given.trim().isEmpty()) {
-      return given.trim();
+      return normalizeSha256(given);
     }
     try {
       return UpSigner.sha256Hex(file);
     } catch (IOException e) {
       throw new ApiException("Failed to read file: " + e.getMessage());
     }
+  }
+
+  /** UP writes and stores SHA-256 as lowercase hex and compares it as a string. */
+  private static String normalizeSha256(String sha256) {
+    return sha256 == null ? null : sha256.trim().toLowerCase(Locale.ROOT);
   }
 
   private static void putIfPresent(Map<String, String> query, String name, String value) {

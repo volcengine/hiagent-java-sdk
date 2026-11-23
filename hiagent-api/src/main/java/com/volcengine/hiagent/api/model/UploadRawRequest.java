@@ -18,7 +18,8 @@ import org.jetbrains.annotations.Nullable;
 
 public class UploadRawRequest {
   /**
-   * 文件的过期时间 (可选)
+   * 关联的过期时间 (可选)，Go duration 格式，如 "15h"、"30m"；
+   * 不设置、空串、"0" 或 "-1" 表示不过期
    * 示例: "15h"
    */
   @SerializedName("Expire")
@@ -26,26 +27,42 @@ public class UploadRawRequest {
   private String expire = null;
 
   /**
-   * 文件 ID (必填)
+   * 文件 ID (必填，不能为空串)，删除文件时要用同一个 ID
    * 示例: "wcxxxxxxxxxxxxxxxxxxx"
    */
   @SerializedName("Id")
   private String id = null;
 
   /**
-   * content type
-   * 示例: "application/octet-stream"
+   * 文件的 MIME 类型 (可选)，作为 Content-Type 请求头发送，不设置时为 "application/octet-stream"。
+   * 建议填文件的真实类型：UP 按内容只存一份类型，同一内容最后一次上传声明的类型会覆盖之前的值
+   * 示例: "image/png"
    */
   @SerializedName("ContentType")
   @Nullable
   private String contentType = null;
 
   /**
-   * 文件的哈希值
-   * 示例: "sha256hashvalue"
+   * 文件 SHA-256 的十六进制串 (可选)；不设置时 SDK 先读一遍文件计算，发送前去空白并转小写
+   * 示例: "84add60e154d3625fa5424bfb98bdc5782a078853a4a2c0845b906985ebceb8c"
    */
   @SerializedName("Sha256")
   private String sha256 = null;
+
+  /**
+   * 文件名 (可选)，写入本次关联的元数据；含 UP 无法存储的字符时返回 400
+   * 示例: "报告.pdf"
+   */
+  @SerializedName("Filename")
+  @Nullable
+  private String filename = null;
+
+  /**
+   * 是否为图片额外保存一份压缩副本 (可选)；只对 UP 配置的图片类型和大小生效
+   */
+  @SerializedName("ImageCompress")
+  @Nullable
+  private Boolean imageCompress = null;
 
   public UploadRawRequest() {
   }
@@ -94,6 +111,24 @@ public class UploadRawRequest {
 
   public void setSha256(String sha256) {
     this.sha256 = sha256;
+  }
+
+  @Nullable
+  public String getFilename() {
+    return filename;
+  }
+
+  public void setFilename(@Nullable String filename) {
+    this.filename = filename;
+  }
+
+  @Nullable
+  public Boolean getImageCompress() {
+    return imageCompress;
+  }
+
+  public void setImageCompress(@Nullable Boolean imageCompress) {
+    this.imageCompress = imageCompress;
   }
 }
 // class UploadRawRequest(BaseModel):

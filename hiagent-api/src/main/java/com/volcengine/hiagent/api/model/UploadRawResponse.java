@@ -44,6 +44,12 @@ public class UploadRawResponse {
   @SerializedName("ShortLink")
   private String shortLink = null;
 
+  /**
+   * 预签名 Key，在 UP 配置的 presign 有效期内可用于预签名下载
+   */
+  @SerializedName("PresignKey")
+  private String presignKey = null;
+
   public UploadRawResponse() {
   }
 
@@ -84,5 +90,13 @@ public class UploadRawResponse {
 
   public void setShortLink(String shortLink) {
     this.shortLink = shortLink;
+  }
+
+  public String getPresignKey() {
+    return presignKey;
+  }
+
+  public void setPresignKey(String presignKey) {
+    this.presignKey = presignKey;
   }
 }

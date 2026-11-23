@@ -1,5 +1,7 @@
 package com.volcengine.hiagent.api;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
 import com.sun.net.httpserver.HttpExchange;
@@ -67,6 +69,8 @@ class UpClientTest {
     private static final String EMPTY_SHA256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
     private static final int LARGE_FILE_BYTES = 300 * 1024;
     private static final long TRUNCATED_READ_TIMEOUT_MS = 500;
+    private static final long BEYOND_INT_SIZE = 3_000_000_000L;
+    private static final String DEFAULT_LONG_LIVE_RESULT = "{\"Path\":\"temp/long\"}";
 
     @TempDir
     Path tmp;
@@ -76,6 +80,7 @@ class UpClientTest {
     private volatile int downloadStatus = 200;
     private volatile byte[] downloadBody = new byte[0];
     private volatile boolean truncateDownload;
+    private volatile String longLiveResult = DEFAULT_LONG_LIVE_RESULT;
 
     @BeforeEach
     void startServer() throws IOException {
@@ -220,12 +225,239 @@ class UpClientTest {
         DownloadKeyResponse resp = client("", null).downloadKey(req);
 
         Captured c = single();
-        assertEquals(Arrays.asList(path), c.query().get("path"));
-        assertEquals(Arrays.asList(EMPTY_SHA256), c.query().get("sha256"));
+        assertEquals(Arrays.asList(path), c.query().get("Path"));
+        assertEquals(Arrays.asList(EMPTY_SHA256), c.query().get("Sha256"));
+        assertFalse(c.query().containsKey("path"), "UP's contract names the parameter Path");
+        assertFalse(c.query().containsKey("sha256"), "UP's contract names the parameter Sha256");
         assertEquals(0, c.body.length);
         assertEquals(EMPTY_SHA256, c.header("x-content-sha256"));
         assertSignatureMatchesReceived(c);
         assertEquals("download-key", resp.getKey());
+        assertEquals(Long.valueOf(BEYOND_INT_SIZE), resp.getSize());
+        assertEquals("application/pdf", resp.getContentType());
+    }
+
+    @Test
+    void downloadKeySendsTheHashInLowercase() throws Exception {
+        DownloadKeyRequest req = new DownloadKeyRequest();
+        req.setSha256(" " + EMPTY_SHA256.toUpperCase(Locale.ROOT) + " ");
+
+        client("", null).downloadKey(req);
+
+        Captured c = single();
+        assertEquals(Arrays.asList(EMPTY_SHA256), c.query().get("Sha256"));
+        assertSignatureMatchesReceived(c);
+    }
+
+    @Test
+    void uploadRawSendsFilenameAndImageCompressInTheSignedQuery() throws Exception {
+        Path file = Files.write(tmp.resolve("a.png"), binaryContent(64));
+        UploadRawRequest req = new UploadRawRequest();
+        req.setId("id-1");
+        req.setFilename("报告 a+b=c&d.pdf");
+        req.setImageCompress(true);
+
+        UploadRawResponse resp = client("", null).uploadRaw(req, file.toFile());
+
+        Captured c = single();
+        assertEquals(Arrays.asList("报告 a+b=c&d.pdf"), c.query().get("Filename"));
+        assertEquals(Arrays.asList("true"), c.query().get("ImageCompress"));
+        assertSignatureMatchesReceived(c);
+        assertEquals("presign-key", resp.getPresignKey());
+    }
+
+    @Test
+    void uploadRawLeavesUnsetOptionalFieldsOutOfTheQuery() throws Exception {
+        Path file = Files.write(tmp.resolve("a.bin"), binaryContent(16));
+        UploadRawRequest req = new UploadRawRequest();
+        req.setId("id-1");
+
+        client("", null).uploadRaw(req, file.toFile());
+
+        Map<String, List<String>> query = single().query();
+        assertEquals(Arrays.asList("Action", "Version", "Id"), new ArrayList<>(query.keySet()));
+    }
+
+    @Test
+    void uploadRawSendsAnUppercaseCallerHashInLowercase() throws Exception {
+        Path file = Files.write(tmp.resolve("a.txt"), "hello".getBytes(StandardCharsets.UTF_8));
+        String callerHash = "2CF24DBA5FB0A30E26E83B2AC5B9E29E1B161E5C1FA7425E73043362938B9824";
+        UploadRawRequest req = new UploadRawRequest();
+        req.setId("id-1");
+        req.setSha256(" " + callerHash + " ");
+
+        client("", null).uploadRaw(req, file.toFile());
+
+        Captured c = single();
+        assertEquals(callerHash.toLowerCase(Locale.ROOT), c.header("x-content-sha256"));
+        assertPayloadHashMatchesBody(c);
+        assertSignatureMatchesReceived(c);
+    }
+
+    @Test
+    void uploadRawWithoutIdFailsBeforeTheFileIsTouched() {
+        // The file does not exist: reaching the Id error proves the check runs first.
+        Path missingFile = tmp.resolve("missing.bin");
+        UploadRawRequest missing = new UploadRawRequest();
+        UploadRawRequest empty = new UploadRawRequest();
+        empty.setId("");
+
+        for (UploadRawRequest req : Arrays.asList(missing, empty)) {
+            ApiException e = assertThrows(ApiException.class,
+                    () -> client("", null).uploadRaw(req, missingFile.toFile()));
+            assertEquals("UploadRawRequest.id must be set", e.getMessage());
+        }
+        assertTrue(captured.isEmpty(), "nothing may be sent");
+    }
+
+    @Test
+    void uploadRawSendsAWhitespaceIdBecauseUpAcceptsIt() throws Exception {
+        Path file = Files.write(tmp.resolve("a.bin"), binaryContent(16));
+        UploadRawRequest req = new UploadRawRequest();
+        req.setId(" ");
+
+        client("", null).uploadRaw(req, file.toFile());
+
+        assertEquals(Arrays.asList(" "), single().query().get("Id"));
+    }
+
+    @Test
+    void uploadRawSendsImageCompressFalse() throws Exception {
+        Path file = Files.write(tmp.resolve("a.bin"), binaryContent(16));
+        UploadRawRequest req = new UploadRawRequest();
+        req.setId("id-1");
+        req.setImageCompress(false);
+
+        client("", null).uploadRaw(req, file.toFile());
+
+        Captured c = single();
+        assertEquals(Arrays.asList("false"), c.query().get("ImageCompress"));
+        assertSignatureMatchesReceived(c);
+    }
+
+    @Test
+    void jsonBodiesCarryHashesInLowercaseWithoutTouchingTheRequest() throws Exception {
+        String upper = " " + EMPTY_SHA256.toUpperCase(Locale.ROOT) + " ";
+        DeleteRequest delete = new DeleteRequest();
+        delete.setId("id-12345");
+        delete.setSha256(upper);
+        DownloadRequest download = new DownloadRequest();
+        download.setKey("download-key");
+        download.setSha256(upper);
+        download.setSaveTo(tmp.resolve("dl.bin").toString());
+        UpClient client = client("", null);
+
+        client.delete(delete);
+        client.download(download);
+
+        assertEquals(2, captured.size());
+        for (Captured c : captured) {
+            JsonObject body = JsonParser.parseString(new String(c.body, StandardCharsets.UTF_8)).getAsJsonObject();
+            assertEquals(EMPTY_SHA256, body.get("Sha256").getAsString(), c.action());
+            assertPayloadHashMatchesBody(c);
+            assertSignatureMatchesReceived(c);
+        }
+        assertEquals(upper, delete.getSha256(), "the caller's request must not be modified");
+        assertEquals(upper, download.getSha256(), "the caller's request must not be modified");
+    }
+
+    @Test
+    void partialContentIsSavedForARangeDownload() throws Exception {
+        downloadStatus = 206;
+        downloadBody = "part".getBytes(StandardCharsets.UTF_8);
+        Path target = tmp.resolve("range.bin");
+        DownloadRequest req = new DownloadRequest();
+        req.setKey("download-key");
+        req.setPath("temp/x");
+        req.setRange("bytes=0-3");
+        req.setSaveTo(target.toString());
+
+        client("", null).download(req);
+
+        assertArrayEquals(downloadBody, Files.readAllBytes(target));
+    }
+
+    @Test
+    void longLiveParsesSizesBeyondTheIntRange() throws Exception {
+        longLiveResult = "{\"Path\":\"temp/long\",\"Size\":" + BEYOND_INT_SIZE
+                + ",\"Sha256\":\"" + EMPTY_SHA256 + "\",\"ShortLink\":\"short\"}";
+        LongLiveRequest req = new LongLiveRequest();
+        req.setPath("temp/x");
+        req.setId("id-1");
+
+        LongLiveResponse resp = client("", null).longLive(req);
+
+        assertEquals(Long.valueOf(BEYOND_INT_SIZE), resp.getSizeAsLong());
+        assertThrows(ArithmeticException.class, resp::getSize);
+        assertEquals(EMPTY_SHA256, resp.getSha256());
+        assertEquals("short", resp.getShortLink());
+    }
+
+    @Test
+    void longLiveKeepsTheIntAccessorsForSizesThatFit() throws Exception {
+        longLiveResult = "{\"Path\":\"temp/long\",\"Size\":1024}";
+        LongLiveRequest req = new LongLiveRequest();
+        req.setPath("temp/x");
+        req.setId("id-1");
+
+        LongLiveResponse resp = client("", null).longLive(req);
+
+        assertEquals(Integer.valueOf(1024), resp.getSize());
+        assertEquals(Long.valueOf(1024), resp.getSizeAsLong());
+        LongLiveResponse built = new LongLiveResponse("p", 7);
+        assertEquals(Long.valueOf(7), built.getSizeAsLong());
+        built.setSize(null);
+        assertNull(built.getSize());
+        assertNull(built.getSizeAsLong());
+    }
+
+    @Test
+    void longLiveSendsFilenameInTheBody() throws Exception {
+        LongLiveRequest req = new LongLiveRequest();
+        req.setPath("temp/x");
+        req.setId("id-1");
+        req.setFilename("报告.pdf");
+
+        client("", null).longLive(req);
+
+        Captured c = single();
+        String json = new String(c.body, StandardCharsets.UTF_8);
+        assertTrue(json.contains("\"Filename\":\"报告.pdf\""), json);
+        assertPayloadHashMatchesBody(c);
+        assertSignatureMatchesReceived(c);
+    }
+
+    @Test
+    void downloadSendsOptionalFieldsButNotTheLocalPath() throws Exception {
+        downloadBody = "part".getBytes(StandardCharsets.UTF_8);
+        Path target = tmp.resolve("secret-local-dir/out.bin");
+        DownloadRequest req = new DownloadRequest();
+        req.setKey("download-key");
+        req.setPath("temp/x");
+        req.setSha256(EMPTY_SHA256);
+        req.setId("id-1");
+        req.setRange("bytes=0-3");
+        req.setImageCompress(true);
+        req.setFilename("报告.pdf");
+        req.setSaveTo(target.toString());
+
+        client("", null).download(req);
+
+        Captured c = single();
+        String json = new String(c.body, StandardCharsets.UTF_8);
+        JsonObject body = JsonParser.parseString(json).getAsJsonObject();
+        assertEquals("download-key", body.get("Key").getAsString());
+        assertEquals("temp/x", body.get("Path").getAsString());
+        assertEquals(EMPTY_SHA256, body.get("Sha256").getAsString());
+        assertEquals("id-1", body.get("ID").getAsString());
+        assertEquals("bytes=0-3", body.get("Range").getAsString());
+        assertTrue(body.get("ImageCompress").getAsBoolean());
+        assertEquals("报告.pdf", body.get("Filename").getAsString());
+        assertFalse(body.has("SaveTo"), json);
+        assertFalse(json.contains("secret-local-dir"), json);
+        assertPayloadHashMatchesBody(c);
+        assertSignatureMatchesReceived(c);
+        assertArrayEquals(downloadBody, Files.readAllBytes(target));
     }
 
     @Test
@@ -464,11 +696,12 @@ class UpClientTest {
         }
         String result;
         if ("UploadRaw".equals(action)) {
-            result = "{\"Path\":\"temp/uploaded\",\"Sha256\":\"" + c.header("x-content-sha256") + "\"}";
+            result = "{\"Path\":\"temp/uploaded\",\"Sha256\":\"" + c.header("x-content-sha256")
+                    + "\",\"PresignKey\":\"presign-key\"}";
         } else if ("LongLive".equals(action)) {
-            result = "{\"Path\":\"temp/long\"}";
+            result = longLiveResult;
         } else if ("DownloadKey".equals(action)) {
-            result = "{\"Key\":\"download-key\"}";
+            result = "{\"Key\":\"download-key\",\"Size\":" + BEYOND_INT_SIZE + ",\"ContentType\":\"application/pdf\"}";
         } else {
             result = "{}";
         }

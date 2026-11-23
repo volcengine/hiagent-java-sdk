@@ -56,10 +56,12 @@ class UpClientRealEnvE2eTest {
         upload.setContentType("application/octet-stream");
         upload.setFilename("e2e.bin");
         UploadRawResponse uploaded = client.uploadRaw(upload, file.toFile());
-        assertEquals(UpSigner.sha256Hex(content), uploaded.getSha256());
-        assertNotNull(uploaded.getPath());
-        assertNotNull(uploaded.getPresignKey());
+        // Every check after the upload sits inside the try, so a failing one still deletes the file.
         try {
+            assertEquals(UpSigner.sha256Hex(content), uploaded.getSha256());
+            assertNotNull(uploaded.getPath());
+            assertNotNull(uploaded.getPresignKey());
+
             LongLiveRequest longLive = new LongLiveRequest();
             longLive.setPath(uploaded.getPath());
             longLive.setId(id);

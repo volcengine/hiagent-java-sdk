@@ -5,7 +5,7 @@
 - `LongLiveResponse.size` 是 `Integer`，UP 返回 `int64`。文件不小于 2 GiB 时，Gson 解析失败，`longLive` 抛异常，但服务端此时已经写入了长期关联。
 - `DownloadRequest.saveTo` 是本地保存路径，却被序列化进 `Download` 的 JSON 请求体，把调用方的本地路径发给了 UP。UP 不读这个字段。
 - 模型缺少 UP 已有的字段，调用方无法使用：
-  - 请求：`UploadRaw` 的 `Filename`、`ImageCompress`；`LongLive` 的 `Filename`；`Download` 的 `Sha256`、`ID`、`Range`、`ImageCompress`、`Filename`。
+  - 请求：`UploadRaw` 的 `Filename`、`ImageCompress`；`LongLive` 的 `Filename`；`Download` 的 `Sha256`、`ID`、`ImageCompress`、`Filename`。
   - 响应：`UploadRaw` 的 `PresignKey`；`LongLive` 的 `Sha256`、`ShortLink`；`DownloadKey` 的 `Size`、`ContentType`。
 - `uploadRaw` 把调用方的 `Sha256` 原样放进 `X-Content-Sha256`，`downloadKey` 原样放进 query。UP 生成和保存的都是小写十六进制，按字符串比较，大写会被判为不匹配或查不到。
 - `downloadKey` 的 query 参数名是 `path`、`sha256`，UP 契约是 `Path`、`Sha256`。现在能用，只是因为 echo 绑定 query 时有不区分大小写的兜底。
@@ -20,12 +20,13 @@
 - SDK 发出的所有 SHA-256 去首尾空白并转小写：`uploadRaw` 的 `X-Content-Sha256`、`downloadKey` 的 `Sha256` query、`download` 和 `delete` 请求体里的 `Sha256`。请求体在序列化后的 JSON 树上改写，不修改调用方的请求对象。只规范化上传会造成不一致：大写哈希的上传从失败变成成功，同一个哈希的 `delete` 却在大小写敏感的库上什么也不删、也不报错。
 - `downloadKey` 的 query 参数名改为 `Path`、`Sha256`；`DownloadKeyRequest` 的序列化名同步改为 `Path`、`Sha256`。
 - `uploadRaw` 在 `Id` 为 `null` 或空串时直接抛 `ApiException`，不发请求。判断条件与 UP 的 `validate:"required"` 一致。
-- 补全相关字段的注释：`Expire` 格式与不过期写法、`ContentType` 建议填真实类型、`Range` 只保存所请求的片段。
+- 补全相关字段的注释：`Expire` 格式与不过期写法、`ContentType` 建议填真实类型。
 
 ## 非目标
 
 - 不改 `uploadRaw` 未设置 `ContentType` 时的默认值 `application/octet-stream`。按扩展名推断类型，会让 UP `contentType.mustMatch` 开启时原本能上传的文件变成 400（UP known-issues 实测：线上默认配置下声明 `video/x-msvideo`、`video/avi` 的 AVI 被拒，只有 `application/octet-stream` 通过）。只在注释里建议调用方填真实类型。
 - 不补 `Download` 的 `IsAnonymous`。匿名放行是部署级开关，SDK 的请求总是签名，不引导调用方依赖它。
+- 不补 `Download` 的 `Range`。`download` 用 `Files.write` 覆盖 `saveTo`，而 `Range` 最常见的用途是用 `bytes=N-` 续传：对同一个 `saveTo` 续传会只剩尾部，前 N 字节丢失且不报错。正确的续传要按 `Content-Range` 的偏移写入并校验已有文件长度，和"失败不留文件、不破坏已有文件"所需的临时文件机制是同一件事，留到下载流式落盘的变更里一起做。（PR #41 合入后 review 指出，在 3.1.1 发版前移除，没有兼容成本。）
 - 不新增 Action（分片上传、Batch、Presign、Blob、Artifact）、`InputStream` 上传、下载流式落盘、国密。
 - 不改签名、URL 形状以外的请求行为，不改 `hibot`。
 

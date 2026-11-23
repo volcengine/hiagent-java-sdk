@@ -2,7 +2,7 @@
 
 ### Requirement: Models follow UP's Action contract
 
-The request and response models used by `UpClient` MUST carry the fields UP defines for `UploadRaw`, `LongLive`, `DownloadKey`, `Download` and `Delete`, except `Download.IsAnonymous`, and MUST send each request field where UP binds it: `UploadRaw` fields in the query, `LongLive` and `Download` fields in the JSON body, and `DownloadKey` fields in the query under the names `Path` and `Sha256`. Optional fields left `null` MUST NOT be sent.
+The request and response models used by `UpClient` MUST carry the fields UP defines for `UploadRaw`, `LongLive`, `DownloadKey`, `Download` and `Delete`, except `Download.IsAnonymous` and `Download.Range`, and MUST send each request field where UP binds it: `UploadRaw` fields in the query, `LongLive` and `Download` fields in the JSON body, and `DownloadKey` fields in the query under the names `Path` and `Sha256`. Optional fields left `null` MUST NOT be sent.
 
 #### Scenario: UploadRaw optional query fields
 
@@ -31,9 +31,10 @@ The request and response models used by `UpClient` MUST carry the fields UP defi
 
 #### Scenario: Download optional fields
 
-- GIVEN a `DownloadRequest` with `Sha256`, `ID`, `Range`, `ImageCompress` and `Filename`
+- GIVEN a `DownloadRequest` with `Sha256`, `ID`, `ImageCompress` and `Filename`
 - WHEN `download` sends the request
-- THEN the JSON body contains `Sha256`, `ID`, `Range`, `ImageCompress` and `Filename`
+- THEN the JSON body contains `Sha256`, `ID`, `ImageCompress` and `Filename`
+- AND the JSON body contains no `Range`
 
 #### Scenario: DownloadKey parameter names
 
@@ -106,17 +107,6 @@ Every SHA-256 value `UpClient` sends MUST be trimmed and converted to lowercase 
 - GIVEN an `UploadRawRequest` whose `Id` is a single space
 - WHEN `uploadRaw` sends the file
 - THEN the `Id` query parameter is a single space
-
-### Requirement: Range downloads save the returned part
-
-When `DownloadRequest.range` is set and UP answers 206 Partial Content, `download` MUST save the returned bytes to `saveTo`.
-
-#### Scenario: Partial content
-
-- GIVEN a `DownloadRequest` with `Range` = `bytes=0-3`
-- AND UP answers with status 206 and a 4-byte body
-- WHEN `download` is called
-- THEN `saveTo` contains exactly those 4 bytes
 
 ## MODIFIED Requirements
 

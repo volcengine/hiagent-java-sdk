@@ -122,7 +122,7 @@ class UpClientTest {
     }
 
     @Test
-    void uploadRawSendsTheCallerHashAsGiven() throws Exception {
+    void uploadRawUsesTheCallerHashInsteadOfHashingTheFile() throws Exception {
         Path file = Files.write(tmp.resolve("a.txt"), "hello".getBytes(StandardCharsets.UTF_8));
         String callerHash = "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08";
         UploadRawRequest req = new UploadRawRequest();
@@ -362,22 +362,6 @@ class UpClientTest {
     }
 
     @Test
-    void partialContentIsSavedForARangeDownload() throws Exception {
-        downloadStatus = 206;
-        downloadBody = "part".getBytes(StandardCharsets.UTF_8);
-        Path target = tmp.resolve("range.bin");
-        DownloadRequest req = new DownloadRequest();
-        req.setKey("download-key");
-        req.setPath("temp/x");
-        req.setRange("bytes=0-3");
-        req.setSaveTo(target.toString());
-
-        client("", null).download(req);
-
-        assertArrayEquals(downloadBody, Files.readAllBytes(target));
-    }
-
-    @Test
     void longLiveParsesSizesBeyondTheIntRange() throws Exception {
         longLiveResult = "{\"Path\":\"temp/long\",\"Size\":" + BEYOND_INT_SIZE
                 + ",\"Sha256\":\"" + EMPTY_SHA256 + "\",\"ShortLink\":\"short\"}";
@@ -436,7 +420,6 @@ class UpClientTest {
         req.setPath("temp/x");
         req.setSha256(EMPTY_SHA256);
         req.setId("id-1");
-        req.setRange("bytes=0-3");
         req.setImageCompress(true);
         req.setFilename("报告.pdf");
         req.setSaveTo(target.toString());
@@ -450,7 +433,7 @@ class UpClientTest {
         assertEquals("temp/x", body.get("Path").getAsString());
         assertEquals(EMPTY_SHA256, body.get("Sha256").getAsString());
         assertEquals("id-1", body.get("ID").getAsString());
-        assertEquals("bytes=0-3", body.get("Range").getAsString());
+        assertFalse(body.has("Range"), "Range is not exposed: download would truncate saveTo on resume");
         assertTrue(body.get("ImageCompress").getAsBoolean());
         assertEquals("报告.pdf", body.get("Filename").getAsString());
         assertFalse(body.has("SaveTo"), json);

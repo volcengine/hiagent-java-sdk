@@ -17,6 +17,13 @@ public class LongLiveRequest {
   @SerializedName("Id")
   private String id = null;
 
+  /**
+   * 文件名 (可选)，写入本次关联的元数据；含 UP 无法存储的字符时返回 400
+   * 示例: "报告.pdf"
+   */
+  @SerializedName("Filename")
+  private String filename = null;
+
   public LongLiveRequest() {
   }
 
@@ -39,5 +46,13 @@ public class LongLiveRequest {
 
   public void setId(String id) {
     this.id = id;
+  }
+
+  public String getFilename() {
+    return filename;
+  }
+
+  public void setFilename(String filename) {
+    this.filename = filename;
   }
 }

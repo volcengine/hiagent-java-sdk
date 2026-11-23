@@ -54,20 +54,26 @@ class UpClientRealEnvE2eTest {
         upload.setId(id);
         upload.setExpire("1h");
         upload.setContentType("application/octet-stream");
+        upload.setFilename("e2e.bin");
         UploadRawResponse uploaded = client.uploadRaw(upload, file.toFile());
         assertEquals(UpSigner.sha256Hex(content), uploaded.getSha256());
         assertNotNull(uploaded.getPath());
+        assertNotNull(uploaded.getPresignKey());
         try {
             LongLiveRequest longLive = new LongLiveRequest();
             longLive.setPath(uploaded.getPath());
             longLive.setId(id);
+            longLive.setFilename("e2e.bin");
             LongLiveResponse longLived = client.longLive(longLive);
             assertNotNull(longLived.getPath());
+            assertEquals(Long.valueOf(FILE_BYTES), longLived.getSizeAsLong());
+            assertEquals(uploaded.getSha256(), longLived.getSha256());
 
             DownloadKeyRequest downloadKey = new DownloadKeyRequest();
             downloadKey.setPath(longLived.getPath());
             DownloadKeyResponse key = client.downloadKey(downloadKey);
             assertNotNull(key.getKey());
+            assertEquals(Long.valueOf(FILE_BYTES), key.getSize());
 
             // UP checks the Key against the file named by Path, so both are required.
             Path saved = tmp.resolve("downloaded/e2e.bin");

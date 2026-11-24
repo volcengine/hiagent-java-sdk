@@ -19,7 +19,7 @@ UP 不按路径路由，`?Action=<Name>` 反射到同名 handler（`pkg/server/m
 | Download | `Path`、`Sha256`、`Key`、`IsAnonymous`、`ID`、`Range`、`ImageCompress`、`Filename`（JSON，`Range` 也可走 header）；响应是文件流 |
 | Delete | `Sha256`（必填，64 位）、`Id`（必填，8 至 256 位）（JSON）；响应为空 |
 
-`LongLive` 的 `ID` 在 SDK 里序列化为 `Id`，Go 的 `encoding/json` 按字段名不区分大小写匹配，能正确绑定，本次不改。
+`LongLive` 的 `ID` 原先在 SDK 里序列化为 `Id`。UP 用 echo 默认的 JSON 序列化器（`encoding/json`，仓库里没有替换；jsoniter 只用于 ccsdk），它在没有精确匹配时按不区分大小写匹配，所以能绑定。但这和 `DownloadKey` 的小写 query 名是同一类隐式依赖，而且一旦匹配不上，`LongLive` 不会报错，只会悄悄建一条 ID 为空的关联，e2e 也发现不了。因此改为精确的 `ID`（见"决策"）。`Delete` 的 tag 是 `json:"Id"`，SDK 本来就一致。
 
 ### 哈希比较
 
@@ -72,13 +72,19 @@ UP 读 JSON 里的 `Range` 这一点（dispatcher 先 `BindBody`，请求没有 
 
 只规范化上传会制造不一致：大写哈希的 `uploadRaw` 由失败变为成功，同一调用方随后用这个哈希 `delete`，UP 的 `DeleteFileAssociates` 在没有匹配行时也返回成功，在大小写敏感的库上就成了静默不删。所以要么全部规范化，要么都不做，这里选全部。
 
-### `downloadKey` 的 query 参数名
+### `downloadKey` 的 query 参数名、`LongLive` 的 `ID`
 
-改为契约中的 `Path`、`Sha256`。两个名字都签进 canonical query，签名不受影响；UP 走精确匹配，不再依赖 echo 的大小写兜底。
+`downloadKey` 的 query 改为契约中的 `Path`、`Sha256`。两个名字都签进 canonical query，签名不受影响；UP 走精确匹配，不再依赖 echo 的大小写兜底。
+
+`LongLiveRequest.id` 的序列化名由 `Id` 改为 `ID`，与 UP 的 `json:"ID"` 精确一致（PR #42 合入后对照 UP v3.1.1 时补上）。请求体变化只在键名，`X-Content-Sha256` 按最终字节计算，签名不受影响。Java 侧的 `getId()`/`setId()` 不变。
+
+反序列化用 `@SerializedName(value = "ID", alternate = {"Id"})` 继续接受旧键。调用方若用 Gson 保存过旧版 SDK 的请求对象，读回时 `id` 不会变成 `null`；否则这个请求会因缺 `ID` 在本地失败（见下一节）。
 
 ### `Id` 的本地检查
 
 UP 对 `Id` 的校验是 `validate:"required"`，对字符串即"非空"。SDK 用同一条件（`null` 或 `isEmpty()`），不额外拒绝空白字符串，避免和服务端口径不一致。检查放在读文件、算哈希之前。
+
+`LongLive` 的 `ID` 在 `idl/upload.thrift` 中是 `required`，但 `api-contract.golden` 里没有 `validate` tag，handler 把 `req.ID` 原样存为关联的 `Tag`，空串也照存。`Delete` 要求 `Id` 为 8 至 256 位，所以 ID 为空的长期关联无法通过 SDK 释放。SDK 按 IDL 的 `required` 用同一条件（`null` 或 `isEmpty()`）在发请求前检查，两个方法共用一个私有方法。不按 `Delete` 的长度限制拒绝更短的 ID：那是 `Delete` 的约束，UP 的 `LongLive` 接受这些值。
 
 ## 风险
 
@@ -89,6 +95,8 @@ UP 对 `Id` 的校验是 `validate:"required"`，对字符串即"非空"。SDK �
 ## 验证
 
 - `UpClientTest` 的本地 `HttpServer` 覆盖：新 query 和 JSON 字段确实发出且签名正确；`ImageCompress=false` 照发；`Size = 3000000000` 能解析；请求体不含 `SaveTo`；上传、`downloadKey`、`download`、`delete` 的大写哈希发出时为小写且请求对象不变；缺 `Id` 时在读文件前失败、空白 `Id` 照发；`download` 请求体不含 `Range`；新响应字段能解析。
+- `UpClientTest` 还覆盖：`longLive` 缺 `ID` 时不发请求；含旧键 `Id` 的 JSON 仍能反序列化出 `id`。
 - `UpClientRealEnvE2eTest` 增加 `Filename` 与新响应字段（`PresignKey`、`Size`、`Sha256`）的断言，在真实 UP 上补充验证。上传之后的所有断言都放在 `try` 里，任何一个失败，`finally` 都会删除已上传的文件。
+- e2e 无法发现 `LongLive` 的 `ID` 绑定错误，因为 SDK 的公开 Action 都观察不到关联：`Delete` 没有匹配行时也返回成功；`DownloadKey` 只查文件行，不查关联；`Download` 的 `ID` 只影响 `Content-Disposition` 里的文件名，而 `DownloadResponse` 不暴露响应头。在 e2e 里断言"删除后 `downloadKey` 失败"也不成立，因为 `Delete` 只删关联，文件行要等回收。这一点由单测断言 JSON 键与 UP 的 `json` tag 一致来保证。
 - 先写测试确认失败，再改实现。
 - JDK 8 上执行 `mvn -B -pl hiagent-api -am test`。

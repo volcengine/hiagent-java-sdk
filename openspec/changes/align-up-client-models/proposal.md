@@ -10,6 +10,7 @@
 - `uploadRaw` 把调用方的 `Sha256` 原样放进 `X-Content-Sha256`，`downloadKey` 原样放进 query。UP 生成和保存的都是小写十六进制，按字符串比较，大写会被判为不匹配或查不到。
 - `downloadKey` 的 query 参数名是 `path`、`sha256`，UP 契约是 `Path`、`Sha256`。现在能用，只是因为 echo 绑定 query 时有不区分大小写的兜底。
 - `UploadRaw` 的 `Id` 是 UP 的必填项，SDK 不检查，调用方要等整个文件发出去后才收到 400。
+- `LongLive` 的 `ID` 在 UP IDL 中是 `required`，但 UP 不校验，SDK 也不检查。缺 `ID` 时 UP 返回成功并建一条 ID 为空的关联，而 `Delete` 要求 `Id` 为 8 至 256 位，这条关联无法通过 SDK 释放。
 - `Expire` 的注释只有示例，没有说明格式（Go duration）和"不传、空串、`0`、`-1` 表示不过期"。
 
 ## 变更内容
@@ -19,7 +20,9 @@
 - 按 UP 契约补齐上面列出的请求和响应字段。`UploadRaw` 的 `Filename`、`ImageCompress` 走 query，`LongLive` 和 `Download` 的新字段走 JSON 请求体，与 UP 的绑定方式一致。
 - SDK 发出的所有 SHA-256 去首尾空白并转小写：`uploadRaw` 的 `X-Content-Sha256`、`downloadKey` 的 `Sha256` query、`download` 和 `delete` 请求体里的 `Sha256`。请求体在序列化后的 JSON 树上改写，不修改调用方的请求对象。只规范化上传会造成不一致：大写哈希的上传从失败变成成功，同一个哈希的 `delete` 却在大小写敏感的库上什么也不删、也不报错。
 - `downloadKey` 的 query 参数名改为 `Path`、`Sha256`；`DownloadKeyRequest` 的序列化名同步改为 `Path`、`Sha256`。
+- `LongLiveRequest.id` 的序列化名由 `Id` 改为 UP 契约中的 `ID`。原先靠 Go `encoding/json` 不区分大小写的匹配才能绑定；一旦匹配不上，`LongLive` 会悄悄建一条 ID 为空的关联，不报错。反序列化仍接受旧键 `Id`。
 - `uploadRaw` 在 `Id` 为 `null` 或空串时直接抛 `ApiException`，不发请求。判断条件与 UP 的 `validate:"required"` 一致。
+- `longLive` 在 `ID` 为 `null` 或空串时同样直接抛 `ApiException`，不发请求，按 UP IDL 的 `required` 检查。
 - 补全相关字段的注释：`Expire` 格式与不过期写法、`ContentType` 建议填真实类型。
 
 ## 非目标
@@ -38,7 +41,9 @@
 
 ### 修改功能
 
-- `java-sdk-up-client`: 增加"模型与 UP 接口契约一致"等要求；修改 `fix-up-client-signature` 的 "Payload hash matches the body"：调用方哈希由"原样发送"改为"去空白并转小写后发送"。
+- `java-sdk-up-client`: 增加"模型与 UP 接口契约一致"等要求；修改 `fix-up-client-signature` 的两条要求：
+  - "Payload hash matches the body"：调用方哈希由"原样发送"改为"去空白并转小写后发送"；
+  - "LongLive sends no placeholder query"：JSON 请求体的键由 `Id` 改为 UP 契约中的 `ID`。
 
 ## 影响
 
@@ -47,11 +52,14 @@
 - 线上行为：
   - `download` 的请求体不再含 `SaveTo`。
   - `downloadKey` 的 query 参数名由 `path`、`sha256` 变为 `Path`、`Sha256`，UP 按精确名匹配，结果不变。
+  - `longLive` 请求体的键由 `Id` 变为 `ID`，UP 按精确名匹配，结果不变。
   - 调用方传大写哈希时，SDK 发出小写。原先这类请求会被 UP 拒绝或查不到。
-  - `uploadRaw` 缺 `Id` 时在本地失败，不再发出请求。
+  - `uploadRaw` 缺 `Id`、`longLive` 缺 `ID` 时在本地失败，不再发出请求。
 - 发版说明需要写明的行为变化：
   - `uploadRaw` 缺 `Id` 时抛出的 `ApiException` 状态码为 0、没有 `ResponseMetadata`，原先是 UP 返回的 400。
+  - `longLive` 缺 `ID` 时抛出同样的 `ApiException`。原先 UP 返回成功，并留下一条无法通过 `delete` 释放的长期关联。
   - `DownloadRequest.saveTo` 是 `transient`，用 Gson 反序列化含 `SaveTo` 的 JSON 时同样会被忽略。
   - `LongLiveResponse.getSize()` 在 `Size` 超出 `int` 时抛 `ArithmeticException`；用反射序列化该对象的框架（如 Jackson）会因此失败，并会看到新属性 `sizeAsLong`。
   - `DownloadKeyRequest` 的 Gson 序列化名由 `path`、`sha256` 变为 `Path`、`Sha256`，只影响自行序列化这个类的调用方。
+  - `LongLiveRequest` 的 Gson 序列化名由 `Id` 变为 `ID`，只影响自行序列化这个类的调用方；反序列化仍接受 `Id`。
 - 发布：随下一个 3.1.x 补丁版本发布。

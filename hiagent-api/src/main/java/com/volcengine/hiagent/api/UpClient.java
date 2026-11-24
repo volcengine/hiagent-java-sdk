@@ -100,9 +100,7 @@ public class UpClient {
    */
   public UploadRawResponse uploadRaw(UploadRawRequest body, File file) throws ApiException {
     // Same test as UP's validate:"required", made before the file is read or sent.
-    if (body.getId() == null || body.getId().isEmpty()) {
-      throw new ApiException("UploadRawRequest.id must be set");
-    }
+    requireId(body.getId(), "UploadRawRequest.id");
     if (file == null || !file.isFile() || !file.canRead()) {
       throw new ApiException("Failed to read file: " + (file == null ? "null" : file.getPath()));
     }
@@ -121,12 +119,16 @@ public class UpClient {
   /**
    * Long Live File
    *
-   * @param body LongLiveRequest (required)
+   * @param body LongLiveRequest; {@code id} is required, and the same ID must
+   *             be passed to {@link #delete} to release the file
    * @return LongLiveResponse
-   * @throws ApiException If fail to call the API, e.g. server error or cannot
-   *                      deserialize the response body
+   * @throws ApiException If {@code id} is missing, or the call fails, e.g.
+   *                      server error or cannot deserialize the response body
    */
   public LongLiveResponse longLive(LongLiveRequest body) throws ApiException {
+    // UP's IDL marks ID required but does not validate it: an empty ID is stored
+    // as is, and Delete (Id: 8 to 256 characters) can never release it.
+    requireId(body.getId(), "LongLiveRequest.id");
     Response response = executeJson("LongLive", new LinkedHashMap<String, String>(), toJson(body));
     return handle(response, LongLiveResponse.class);
   }
@@ -191,6 +193,12 @@ public class UpClient {
   public DeleteResponse delete(DeleteRequest body) throws ApiException {
     Response response = executeJson("Delete", new LinkedHashMap<String, String>(), toJson(body));
     return handle(response, DeleteResponse.class);
+  }
+
+  private static void requireId(String id, String name) throws ApiException {
+    if (id == null || id.isEmpty()) {
+      throw new ApiException(name + " must be set");
+    }
   }
 
   private Response executeJson(String action, Map<String, String> query, byte[] json) throws ApiException {

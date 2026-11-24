@@ -29,6 +29,19 @@ The request and response models used by `UpClient` MUST carry the fields UP defi
 - WHEN `longLive` sends the request
 - THEN the JSON body contains `Filename`
 
+#### Scenario: LongLive ID key
+
+- GIVEN a `LongLiveRequest` with `Id` = `id-1`
+- WHEN `longLive` sends the request
+- THEN the JSON body contains `"ID":"id-1"`, the exact key of UP's `json` tag
+- AND the JSON body contains no `Id`
+
+#### Scenario: Old LongLive ID key
+
+- GIVEN JSON written by an older SDK, with the key `Id` = `id-old`
+- WHEN Gson deserializes it into a `LongLiveRequest`
+- THEN `getId()` returns `id-old`
+
 #### Scenario: Download optional fields
 
 - GIVEN a `DownloadRequest` with `Sha256`, `ID`, `ImageCompress` and `Filename`
@@ -108,7 +121,28 @@ Every SHA-256 value `UpClient` sends MUST be trimmed and converted to lowercase 
 - WHEN `uploadRaw` sends the file
 - THEN the `Id` query parameter is a single space
 
+### Requirement: LongLive requires ID before sending
+
+`longLive` MUST throw an `ApiException` when `LongLiveRequest.id` is `null` or empty, without sending any request. UP's IDL marks `ID` as required but UP does not validate it, and `Delete` cannot release an association whose ID is empty.
+
+#### Scenario: Missing ID
+
+- GIVEN a `LongLiveRequest` whose `ID` is `null` or empty
+- WHEN `longLive` is called
+- THEN an `ApiException` about the missing ID is thrown
+- AND no request reaches the server
+
 ## MODIFIED Requirements
+
+### Requirement: LongLive sends no placeholder query
+
+`longLive` MUST NOT send the `Id=test` query parameter. `Path` and `ID` MUST be sent in the JSON body only, under the exact keys of UP's `json` tags.
+
+#### Scenario: LongLive query
+
+- WHEN `longLive` sends a request
+- THEN the query contains only `Action` and `Version`
+- AND the JSON body carries `Path` and `ID`
 
 ### Requirement: Payload hash matches the body
 

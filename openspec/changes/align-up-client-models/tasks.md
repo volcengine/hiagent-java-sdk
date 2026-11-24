@@ -20,6 +20,6 @@
   - 修复本文件第 5 条丢失的 `\u003d` 转义；
   - 不改 `LongLiveResponse.getSize()` 超出 `int` 时抛 `ArithmeticException`：返回 `Integer.MAX_VALUE` 是错误的值，返回 `null` 时 `int s = getSize()` 同样崩。review 的前提"原先抛受检的 `ApiException`"不成立：core 0.2.30 的 `ApiClient.deserialize` 不包装 Gson 解析异常，原先抛的是非受检的 `JsonSyntaxException`。发版说明照写。
 - [x] 在 JDK 8 上重新执行 `mvn -B clean test`：`hiagent-api` 43 个（跳过 1 个端到端），`hibot` 51 个（跳过 4 个端到端）。
-- [ ] 重新执行 `openspec-cn validate align-up-client-models`。
+- [x] 重新执行 `openspec-cn validate align-up-client-models`（`@studyzy/openspec-cn@1.16.0`）：验证通过，归档提示同上；`fix-up-client-signature` 同样通过。
 - [ ] 归档顺序：先归档 `fix-up-client-signature`（生成 `openspec/specs/java-sdk-up-client/spec.md`），再归档本变更。
 - [ ] 在关闭匿名访问的真实 UP 上执行 `UpClientRealEnvE2eTest`。

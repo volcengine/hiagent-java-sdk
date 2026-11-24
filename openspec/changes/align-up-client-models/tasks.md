@@ -25,6 +25,13 @@
   - 先把 `longLiveSendsOnlyActionAndVersionInTheQuery` 改为解析 JSON、断言键为 `ID` 且没有 `Id`，确认失败（请求体为 `"Id":"id-1"`）；
   - 序列化名改为 `ID`；`fix-up-client-signature` 的 "LongLive sends no placeholder query" 写的是 `Id`，在本变更中以 MODIFIED 改写；
   - JDK 8 下 `mvn -B clean test`：`hiagent-api` 43 个（跳过 1 个端到端），`hibot` 51 个（跳过 4 个端到端）。
-- [ ] 重新执行 `openspec-cn validate align-up-client-models`（PR #43）。
+- [x] PR #43 的 review 跟进：
+  - 对照 UP v3.1.1 源码确认：`LongLive` 的 `ID` 在 IDL 中是 `required`，`api-contract.golden` 却没有 `validate` tag，handler 把空串原样存为关联的 `Tag`；`Delete` 要求 `Id` 为 8 至 256 位，无法释放这条关联；
+  - 先补用例 `longLiveWithoutIdFailsWithoutSendingARequest`、`longLiveRequestStillReadsTheOldIdKey`，确认失败（未抛异常；旧键 `Id` 读出 `null`）；
+  - `longLive` 在 `ID` 为 `null` 或空串时抛 `ApiException`，与 `uploadRaw` 共用 `requireId`；`LongLiveRequest.id` 加 `alternate = {"Id"}`；
+  - proposal 补 `修改功能` 中的 "LongLive sends no placeholder query"，发版说明补 `LongLiveRequest` 序列化名和 `longLive` 缺 `ID` 两条；
+  - 不采纳"e2e 删除后断言 `downloadKey` 失败"：`Delete` 只删关联，`DownloadKey` 只查文件行，这个断言在真实 UP 上永远失败。原因记入 design「验证」；
+  - JDK 8 下 `mvn -B clean test`：`hiagent-api` 45 个（跳过 1 个端到端），`hibot` 51 个（跳过 4 个端到端）。
+- [x] 重新执行 `openspec-cn validate align-up-client-models`（PR #43，`@studyzy/openspec-cn@1.16.0`）：验证通过，归档提示同上。
 - [ ] 归档顺序：先归档 `fix-up-client-signature`（生成 `openspec/specs/java-sdk-up-client/spec.md`），再归档本变更。
 - [x] 在关闭匿名访问的真实 UP 上执行 `UpClientRealEnvE2eTest`（UP v3.2.1，`6bc34a2`，JDK 8）：通过。UP 配置 `anonymous.enableIsAnonymous: false`、`unsignedActions: []`，未签名请求在签名阶段被拒；用例以 IAM 用户身份（非服务身份）通过验签，服务端日志依次记录 `UploadRaw` → `LongLive` → `DownloadKey` → `Download` → `Delete` 均成功，`finally` 已删除测试文件。五个 Action 的契约在 v3.1.1 与 v3.2.1 之间一致。

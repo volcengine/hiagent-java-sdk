@@ -1,5 +1,6 @@
 package com.volcengine.hiagent.api;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.squareup.okhttp.Request;
@@ -464,6 +465,31 @@ class UpClientTest {
         assertSignatureMatchesReceived(c);
         assertPayloadHashMatchesBody(c);
         assertEquals("temp/long", resp.getPath());
+    }
+
+    @Test
+    void longLiveWithoutIdFailsWithoutSendingARequest() {
+        // UP stores an empty ID as is, and Delete (Id: 8 to 256 characters) can never release it.
+        LongLiveRequest missing = new LongLiveRequest("temp/x", null);
+        LongLiveRequest empty = new LongLiveRequest("temp/x", "");
+
+        for (LongLiveRequest req : Arrays.asList(missing, empty)) {
+            ApiException e = assertThrows(ApiException.class, () -> client("", null).longLive(req));
+            assertEquals("LongLiveRequest.id must be set", e.getMessage());
+        }
+        assertTrue(captured.isEmpty(), "nothing may be sent");
+    }
+
+    @Test
+    void longLiveRequestStillReadsTheOldIdKey() {
+        // Gson now writes "ID"; JSON written by older SDKs with "Id" must still fill id.
+        Gson gson = new Gson();
+
+        LongLiveRequest old = gson.fromJson("{\"Path\":\"p\",\"Id\":\"id-old\"}", LongLiveRequest.class);
+        LongLiveRequest current = gson.fromJson("{\"Path\":\"p\",\"ID\":\"id-new\"}", LongLiveRequest.class);
+
+        assertEquals("id-old", old.getId());
+        assertEquals("id-new", current.getId());
     }
 
     @Test

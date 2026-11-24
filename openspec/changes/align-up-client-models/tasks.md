@@ -22,4 +22,4 @@
 - [x] 在 JDK 8 上重新执行 `mvn -B clean test`：`hiagent-api` 43 个（跳过 1 个端到端），`hibot` 51 个（跳过 4 个端到端）。
 - [x] 重新执行 `openspec-cn validate align-up-client-models`（`@studyzy/openspec-cn@1.16.0`）：验证通过，归档提示同上；`fix-up-client-signature` 同样通过。
 - [ ] 归档顺序：先归档 `fix-up-client-signature`（生成 `openspec/specs/java-sdk-up-client/spec.md`），再归档本变更。
-- [ ] 在关闭匿名访问的真实 UP 上执行 `UpClientRealEnvE2eTest`。
+- [x] 在关闭匿名访问的真实 UP 上执行 `UpClientRealEnvE2eTest`（UP v3.2.1，`6bc34a2`，JDK 8）：通过。UP 配置 `anonymous.enableIsAnonymous: false`、`unsignedActions: []`，未签名请求在签名阶段被拒；用例以 IAM 用户身份（非服务身份）通过验签，服务端日志依次记录 `UploadRaw` → `LongLive` → `DownloadKey` → `Download` → `Delete` 均成功，`finally` 已删除测试文件。五个 Action 的契约在 v3.1.1 与 v3.2.1 之间一致。

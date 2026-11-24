@@ -454,8 +454,11 @@ class UpClientTest {
         Captured c = single();
         assertEquals(Arrays.asList("Action", "Version"), new ArrayList<>(c.query().keySet()));
         String json = new String(c.body, StandardCharsets.UTF_8);
-        assertTrue(json.contains("\"Path\":\"temp/中文 报告.pdf\""), json);
-        assertTrue(json.contains("\"Id\":\"id-1\""), json);
+        JsonObject body = JsonParser.parseString(json).getAsJsonObject();
+        assertEquals("temp/中文 报告.pdf", body.get("Path").getAsString());
+        // UP's tag is json:"ID"; do not lean on Go's case-insensitive fallback.
+        assertEquals("id-1", body.has("ID") ? body.get("ID").getAsString() : null, json);
+        assertFalse(body.has("Id"), json);
         assertTrue(c.header("content-type").startsWith("application/json"));
         assertEquals("application/json", c.header("accept"));
         assertSignatureMatchesReceived(c);

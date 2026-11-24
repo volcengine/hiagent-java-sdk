@@ -11,10 +11,10 @@ public class LongLiveRequest {
   private String path = null;
 
   /**
-   * 文件 ID
+   * 文件 ID，删除文件时要用同一个 ID。序列化为 UP 契约中的 "ID"
    * 示例: "wcxxxxxxxxxxxxxxxxxxx"
    */
-  @SerializedName("Id")
+  @SerializedName("ID")
   private String id = null;
 
   /**

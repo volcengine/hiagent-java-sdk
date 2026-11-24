@@ -29,6 +29,13 @@ The request and response models used by `UpClient` MUST carry the fields UP defi
 - WHEN `longLive` sends the request
 - THEN the JSON body contains `Filename`
 
+#### Scenario: LongLive ID key
+
+- GIVEN a `LongLiveRequest` with `Id` = `id-1`
+- WHEN `longLive` sends the request
+- THEN the JSON body contains `"ID":"id-1"`, the exact key of UP's `json` tag
+- AND the JSON body contains no `Id`
+
 #### Scenario: Download optional fields
 
 - GIVEN a `DownloadRequest` with `Sha256`, `ID`, `ImageCompress` and `Filename`
@@ -109,6 +116,16 @@ Every SHA-256 value `UpClient` sends MUST be trimmed and converted to lowercase 
 - THEN the `Id` query parameter is a single space
 
 ## MODIFIED Requirements
+
+### Requirement: LongLive sends no placeholder query
+
+`longLive` MUST NOT send the `Id=test` query parameter. `Path` and `ID` MUST be sent in the JSON body only, under the exact keys of UP's `json` tags.
+
+#### Scenario: LongLive query
+
+- WHEN `longLive` sends a request
+- THEN the query contains only `Action` and `Version`
+- AND the JSON body carries `Path` and `ID`
 
 ### Requirement: Payload hash matches the body
 

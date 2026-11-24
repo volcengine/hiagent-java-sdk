@@ -19,7 +19,7 @@ UP 不按路径路由，`?Action=<Name>` 反射到同名 handler（`pkg/server/m
 | Download | `Path`、`Sha256`、`Key`、`IsAnonymous`、`ID`、`Range`、`ImageCompress`、`Filename`（JSON，`Range` 也可走 header）；响应是文件流 |
 | Delete | `Sha256`（必填，64 位）、`Id`（必填，8 至 256 位）（JSON）；响应为空 |
 
-`LongLive` 的 `ID` 在 SDK 里序列化为 `Id`，Go 的 `encoding/json` 按字段名不区分大小写匹配，能正确绑定，本次不改。
+`LongLive` 的 `ID` 原先在 SDK 里序列化为 `Id`。UP 用 echo 默认的 JSON 序列化器（`encoding/json`，仓库里没有替换；jsoniter 只用于 ccsdk），它在没有精确匹配时按不区分大小写匹配，所以能绑定。但这和 `DownloadKey` 的小写 query 名是同一类隐式依赖，而且一旦匹配不上，`LongLive` 不会报错，只会悄悄建一条 ID 为空的关联，e2e 也发现不了。因此改为精确的 `ID`（见"决策"）。`Delete` 的 tag 是 `json:"Id"`，SDK 本来就一致。
 
 ### 哈希比较
 
@@ -72,9 +72,11 @@ UP 读 JSON 里的 `Range` 这一点（dispatcher 先 `BindBody`，请求没有 
 
 只规范化上传会制造不一致：大写哈希的 `uploadRaw` 由失败变为成功，同一调用方随后用这个哈希 `delete`，UP 的 `DeleteFileAssociates` 在没有匹配行时也返回成功，在大小写敏感的库上就成了静默不删。所以要么全部规范化，要么都不做，这里选全部。
 
-### `downloadKey` 的 query 参数名
+### `downloadKey` 的 query 参数名、`LongLive` 的 `ID`
 
-改为契约中的 `Path`、`Sha256`。两个名字都签进 canonical query，签名不受影响；UP 走精确匹配，不再依赖 echo 的大小写兜底。
+`downloadKey` 的 query 改为契约中的 `Path`、`Sha256`。两个名字都签进 canonical query，签名不受影响；UP 走精确匹配，不再依赖 echo 的大小写兜底。
+
+`LongLiveRequest.id` 的序列化名由 `Id` 改为 `ID`，与 UP 的 `json:"ID"` 精确一致（PR #42 合入后对照 UP v3.1.1 时补上）。请求体变化只在键名，`X-Content-Sha256` 按最终字节计算，签名不受影响。Java 侧的 `getId()`/`setId()` 不变。
 
 ### `Id` 的本地检查
 

@@ -19,6 +19,7 @@
 - 按 UP 契约补齐上面列出的请求和响应字段。`UploadRaw` 的 `Filename`、`ImageCompress` 走 query，`LongLive` 和 `Download` 的新字段走 JSON 请求体，与 UP 的绑定方式一致。
 - SDK 发出的所有 SHA-256 去首尾空白并转小写：`uploadRaw` 的 `X-Content-Sha256`、`downloadKey` 的 `Sha256` query、`download` 和 `delete` 请求体里的 `Sha256`。请求体在序列化后的 JSON 树上改写，不修改调用方的请求对象。只规范化上传会造成不一致：大写哈希的上传从失败变成成功，同一个哈希的 `delete` 却在大小写敏感的库上什么也不删、也不报错。
 - `downloadKey` 的 query 参数名改为 `Path`、`Sha256`；`DownloadKeyRequest` 的序列化名同步改为 `Path`、`Sha256`。
+- `LongLiveRequest.id` 的序列化名由 `Id` 改为 UP 契约中的 `ID`。原先靠 Go `encoding/json` 不区分大小写的匹配才能绑定；一旦匹配不上，`LongLive` 会悄悄建一条 ID 为空的关联，不报错。
 - `uploadRaw` 在 `Id` 为 `null` 或空串时直接抛 `ApiException`，不发请求。判断条件与 UP 的 `validate:"required"` 一致。
 - 补全相关字段的注释：`Expire` 格式与不过期写法、`ContentType` 建议填真实类型。
 
@@ -47,6 +48,7 @@
 - 线上行为：
   - `download` 的请求体不再含 `SaveTo`。
   - `downloadKey` 的 query 参数名由 `path`、`sha256` 变为 `Path`、`Sha256`，UP 按精确名匹配，结果不变。
+  - `longLive` 请求体的键由 `Id` 变为 `ID`，UP 按精确名匹配，结果不变。
   - 调用方传大写哈希时，SDK 发出小写。原先这类请求会被 UP 拒绝或查不到。
   - `uploadRaw` 缺 `Id` 时在本地失败，不再发出请求。
 - 发版说明需要写明的行为变化：

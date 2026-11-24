@@ -2,16 +2,24 @@
 - [x] 在 `UpClientTest` 增加用例（先失败）：新 query 与 JSON 字段、`Size = 3000000000`、请求体不含 `SaveTo`、大写哈希转小写、缺 `Id` 不发请求、`DownloadKey` 参数名、新响应字段。先编译失败；补模型后 6 个用例按预期失败（`DownloadKey` 参数名 2 个、上传哈希大小写、`Filename`/`ImageCompress` query、缺 `Id`、`Download` 请求体）。
 - [x] 修改模型：补字段，`LongLiveResponse` 内部改 `Long` 并保留 `@Deprecated` 的 `Integer` 访问器，`DownloadRequest.saveTo` 改 `transient`，补注释。
 - [x] 修改 `UpClient`：`UploadRaw` 的 `Filename`、`ImageCompress` query，`Id` 本地检查，哈希规范化，`DownloadKey` 参数名。
-- [x] Gson 默认转义 HTML 字符，`Range` 的 `=` 在请求体里是 `=`，UP 的 `encoding/json` 能正确解码。用例改为解析 JSON 再比较字段，不比较原始字符串。
+- [x] Gson 默认转义 HTML 字符，`Range` 的 `=` 在请求体里是 `\u003d`，UP 的 `encoding/json` 能正确解码。用例改为解析 JSON 再比较字段，不比较原始字符串。
 - [x] 变异验证：去掉 `saveTo` 的 `transient` 后，`downloadSendsOptionalFieldsButNotTheLocalPath` 因请求体含本地路径而失败。
 - [x] 在 JDK 8 上执行 `mvn -B clean test`：`hiagent-api` 40 个（跳过 1 个端到端），`hibot` 51 个（跳过 4 个端到端）。
 - [x] 代码 review：无 CRITICAL/HIGH。据此补充：
   - 规范化扩到 `download`、`delete` 请求体里的 `Sha256`（在 JSON 树上改写，不动调用方对象），先补用例确认失败再实现；
   - 与 `fix-up-client-signature` 的 "Payload hash matches the body" 冲突，改写为 MODIFIED；
-  - 补用例：缺 `Id` 时文件不存在也先报 `Id`、空白 `Id` 照发、`ImageCompress=false`、206 部分内容落盘；
+  - 补用例：缺 `Id` 时文件不存在也先报 `Id`、空白 `Id` 照发、`ImageCompress=false`、206 部分内容落盘（后随 `Range` 一并移除）；
   - `UpClientRealEnvE2eTest` 增加 `Filename` 与新响应字段断言；
   - proposal 列出发版说明需要写的行为变化。
 - [x] 在 JDK 8 上重新执行 `mvn -B clean test`：`hiagent-api` 44 个（跳过 1 个端到端），`hibot` 51 个（跳过 4 个端到端）。
 - [x] 执行 `openspec-cn validate align-up-client-models`（`@studyzy/openspec-cn@1.16.0`）：验证通过。工具提示归档时会拒绝本增量，因为 `MODIFIED` 需要 `java-sdk-up-client` 的 spec 已存在。
+- [x] PR #41 合入后的 review 跟进（3.1.1 发版前，PR #42）：
+  - 移除 `DownloadRequest.range`：`download` 覆盖 `saveTo`，用 `bytes=N-` 续传会只剩尾部且不报错，见 design「不暴露 `Download.Range`」。删除 206 用例，`download` 用例改为断言请求体不含 `Range`；
+  - `UpClientRealEnvE2eTest` 上传后的断言全部移入 `try`，任一失败 `finally` 都会删除文件。review 认为"UP 只在配置 presign 时返回 `PresignKey`"不成立：UP v3.1.x 的 `UploadRaw` 成功时总会返回，`presign.expire=0` 会让整个请求失败；
+  - `uploadRawSendsTheCallerHashAsGiven` 改名为 `uploadRawUsesTheCallerHashInsteadOfHashingTheFile`；
+  - 修复本文件第 5 条丢失的 `\u003d` 转义；
+  - 不改 `LongLiveResponse.getSize()` 超出 `int` 时抛 `ArithmeticException`：返回 `Integer.MAX_VALUE` 是错误的值，返回 `null` 时 `int s = getSize()` 同样崩。review 的前提"原先抛受检的 `ApiException`"不成立：core 0.2.30 的 `ApiClient.deserialize` 不包装 Gson 解析异常，原先抛的是非受检的 `JsonSyntaxException`。发版说明照写。
+- [x] 在 JDK 8 上重新执行 `mvn -B clean test`：`hiagent-api` 43 个（跳过 1 个端到端），`hibot` 51 个（跳过 4 个端到端）。
+- [x] 重新执行 `openspec-cn validate align-up-client-models`（`@studyzy/openspec-cn@1.16.0`）：验证通过，归档提示同上；`fix-up-client-signature` 同样通过。
 - [ ] 归档顺序：先归档 `fix-up-client-signature`（生成 `openspec/specs/java-sdk-up-client/spec.md`），再归档本变更。
-- [ ] 在关闭匿名访问的真实 UP 上执行 `UpClientRealEnvE2eTest`。
+- [x] 在关闭匿名访问的真实 UP 上执行 `UpClientRealEnvE2eTest`（UP v3.2.1，`6bc34a2`，JDK 8）：通过。UP 配置 `anonymous.enableIsAnonymous: false`、`unsignedActions: []`，未签名请求在签名阶段被拒；用例以 IAM 用户身份（非服务身份）通过验签，服务端日志依次记录 `UploadRaw` → `LongLive` → `DownloadKey` → `Download` → `Delete` 均成功，`finally` 已删除测试文件。五个 Action 的契约在 v3.1.1 与 v3.2.1 之间一致。

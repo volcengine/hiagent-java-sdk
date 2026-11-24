@@ -5,6 +5,11 @@ import com.google.gson.annotations.SerializedName;
 /**
  * Sent as the JSON body of {@code Download}, except {@code saveTo}, which stays
  * local. UP needs {@code Path} or {@code Sha256}.
+ *
+ * <p>UP's {@code Range} is deliberately not exposed: {@code download} replaces
+ * {@code saveTo}, so resuming with {@code bytes=N-} would silently keep only
+ * the tail. Range support belongs with streaming downloads, which can write at
+ * an offset.
  */
 public class DownloadRequest {
   /**
@@ -32,12 +37,6 @@ public class DownloadRequest {
    */
   @SerializedName("ID")
   private String id = null;
-
-  /**
-   * HTTP Range (可选)，如 "bytes=0-1023"；设置后 saveTo 只保存所请求的片段
-   */
-  @SerializedName("Range")
-  private String range = null;
 
   /**
    * 是否下载图片的压缩副本 (可选)；没有压缩副本时返回原文件
@@ -96,14 +95,6 @@ public class DownloadRequest {
 
   public void setId(String id) {
     this.id = id;
-  }
-
-  public String getRange() {
-    return range;
-  }
-
-  public void setRange(String range) {
-    this.range = range;
   }
 
   public Boolean getImageCompress() {

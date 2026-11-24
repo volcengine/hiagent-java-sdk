@@ -50,8 +50,18 @@ UP 不按路径路由，`?Action=<Name>` 反射到同名 handler（`pkg/server/m
 与 UP 的绑定方式一致，不做额外映射：
 
 - `UploadRaw` 的请求体是文件，新字段只能走 query：`Filename` 原样，`ImageCompress` 写成 `true`/`false`。都只在非 `null` 时发送。
-- `LongLive`、`Download` 的新字段加在模型上，由 Gson 写进 JSON 请求体。序列化名与 UP 的 `json` tag 一致：`Filename`、`Sha256`、`ID`、`Range`、`ImageCompress`。
-- `Download` 的 `Range` 走 JSON 而不是 HTTP `Range` 头：UP 的 `BindHeaders` 在请求没有 `Range` 头时保留 JSON 的值，两种方式等价，走 JSON 不需要在 `UpClient` 里特殊处理。设置 `Range` 后 UP 返回 206 和部分内容，`download` 把这部分写入 `saveTo`，在字段注释中说明。
+- `LongLive`、`Download` 的新字段加在模型上，由 Gson 写进 JSON 请求体。序列化名与 UP 的 `json` tag 一致：`Filename`、`Sha256`、`ID`、`ImageCompress`。
+
+### 不暴露 `Download.Range`
+
+PR #41 曾加入 `Range`，合入后 review 指出它与 `download` 的落盘方式冲突，在 3.1.1 发版前移除：
+
+- `download` 读完响应后用 `Files.write` 写 `saveTo`，会先清空已有文件。
+- `Range` 的主要用途是 `bytes=N-` 续传。对同一个 `saveTo` 续传，结果只剩尾部，前 N 字节丢失，没有任何报错。
+- 只在注释里提醒，等于留一个已知的坑；拒绝"`saveTo` 已存在时带 `Range`"又与 `download` 本来就覆盖已有文件的语义不一致。
+- 正确的续传要按 `Content-Range` 的偏移写入、校验已有文件长度，与"失败不留文件、不破坏已有文件"所需的临时文件和原子替换是同一套机制，归入下载流式落盘的后续变更。
+
+UP 读 JSON 里的 `Range` 这一点（dispatcher 先 `BindBody`，请求没有 `Range` 头时 `BindHeaders` 不覆盖，handler 把 `req.Range` 交给 `parseRange`）留给那个变更在真实环境验证。
 
 ### 哈希规范化覆盖 SDK 发出的所有 SHA-256
 
@@ -78,7 +88,7 @@ UP 对 `Id` 的校验是 `validate:"required"`，对字符串即"非空"。SDK �
 
 ## 验证
 
-- `UpClientTest` 的本地 `HttpServer` 覆盖：新 query 和 JSON 字段确实发出且签名正确；`ImageCompress=false` 照发；`Size = 3000000000` 能解析；请求体不含 `SaveTo`；上传、`downloadKey`、`download`、`delete` 的大写哈希发出时为小写且请求对象不变；缺 `Id` 时在读文件前失败、空白 `Id` 照发；206 部分内容写入 `saveTo`；新响应字段能解析。
-- `UpClientRealEnvE2eTest` 增加 `Filename` 与新响应字段（`PresignKey`、`Size`、`Sha256`）的断言，在真实 UP 上补充验证。
+- `UpClientTest` 的本地 `HttpServer` 覆盖：新 query 和 JSON 字段确实发出且签名正确；`ImageCompress=false` 照发；`Size = 3000000000` 能解析；请求体不含 `SaveTo`；上传、`downloadKey`、`download`、`delete` 的大写哈希发出时为小写且请求对象不变；缺 `Id` 时在读文件前失败、空白 `Id` 照发；`download` 请求体不含 `Range`；新响应字段能解析。
+- `UpClientRealEnvE2eTest` 增加 `Filename` 与新响应字段（`PresignKey`、`Size`、`Sha256`）的断言，在真实 UP 上补充验证。上传之后的所有断言都放在 `try` 里，任何一个失败，`finally` 都会删除已上传的文件。
 - 先写测试确认失败，再改实现。
 - JDK 8 上执行 `mvn -B -pl hiagent-api -am test`。

@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.volcengine</groupId>
   <artifactId>hiagent-java-sdk</artifactId>
-  <version>3.1.0</version>
+  <version>3.1.1-rc1</version>
   <packaging>pom</packaging>
   <name>HiAgent Java SDK</name>
   <modules>
@@ -17,17 +17,17 @@
     <module>hibot</module>
   </modules>
   <properties>
-    <maven.compiler.target>${java.version}</maven.compiler.target>
-    <okhttp.version>4.12.0</okhttp.version>
-    <kotlin.version>2.2.0</kotlin.version>
+    <junit.jupiter.version>5.11.3</junit.jupiter.version>
     <java.version>1.8</java.version>
     <gson.version>2.11.0</gson.version>
-    <maven.compiler.source>${java.version}</maven.compiler.source>
+    <maven.compiler.target>${java.version}</maven.compiler.target>
+    <okhttp.version>4.12.0</okhttp.version>
     <okhttp-jvm.version>5.1.0</okhttp-jvm.version>
+    <kotlin.version>2.2.0</kotlin.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <volcengine.version>0.2.30</volcengine.version>
-    <junit.jupiter.version>5.11.3</junit.jupiter.version>
-    <revision>3.1.0</revision>
+    <revision>3.1.1-rc1</revision>
+    <maven.compiler.source>${java.version}</maven.compiler.source>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -74,6 +74,10 @@
             <source>${java.version}</source>
             <target>${java.version}</target>
           </configuration>
+        </plugin>
+        <plugin>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>3.2.5</version>
         </plugin>
       </plugins>
     </pluginManagement>

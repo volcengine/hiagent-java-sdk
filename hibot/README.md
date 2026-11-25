@@ -20,7 +20,7 @@ Then depend on it from another local Maven module:
 <dependency>
   <groupId>com.volcengine</groupId>
   <artifactId>hibot</artifactId>
-  <version>1.0.0</version>
+  <version>3.1.1-rc1</version>
 </dependency>
 ```
 

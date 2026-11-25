@@ -21,7 +21,7 @@
     </modules>
 
     <properties>
-        <revision>3.1.0</revision>
+        <revision>3.1.1-rc1</revision>
         <java.version>1.8</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
